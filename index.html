@@ -62,28 +62,66 @@
 
         /* LIQUID GLASS WIDGETS & ANTI-GLITCH FIX */
         .glass-panel {
-            background: var(--widget-bg); backdrop-filter: blur(var(--widget-blur)); -webkit-backdrop-filter: blur(var(--widget-blur));
-            border: 1px solid var(--widget-border); box-shadow: var(--widget-shadow);
-            border-radius: 32px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            transform: translateZ(0); -webkit-transform: translateZ(0);
+            background: var(--widget-bg); 
+            backdrop-filter: blur(var(--widget-blur)); 
+            -webkit-backdrop-filter: blur(var(--widget-blur));
+            box-shadow: inset 0 0 0 1px var(--widget-border), var(--widget-shadow);
+            border-radius: 32px; 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
+
+        /* ÖZEL ANTİ-GLITCH KATMANI (Sadece Grid Widget'ları İçin) */
+        #bento-grid > .glass-panel {
+            background: transparent !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            box-shadow: none !important;
+            z-index: 1; /* Kapsayıcı hiyerarşi yaratır */
+            position: relative;
+        }
+
+        #bento-grid > .glass-panel::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: var(--widget-bg); 
+            backdrop-filter: blur(var(--widget-blur)); 
+            -webkit-backdrop-filter: blur(var(--widget-blur));
+            box-shadow: inset 0 0 0 1px var(--widget-border), var(--widget-shadow);
+            z-index: -1;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            
+            /* Webkit tarayıcılardaki çizgi/sızıntı hatalarını fiziksel olarak izole eder */
+            transform: translate3d(0, 0, 0); 
+            -webkit-transform: translate3d(0, 0, 0);
+            backface-visibility: hidden; 
+            -webkit-backface-visibility: hidden;
+            will-change: transform;
+            -webkit-mask-image: -webkit-radial-gradient(white, black);
+        }
+
+        #bento-grid > .transparent-box::before { display: none !important; }
+
         .widget-content-wrapper {
-            border-radius: inherit; overflow: hidden; height: 100%; width: 100%; position: relative;
-            isolation: isolate; -webkit-mask-image: -webkit-radial-gradient(white, black);
-        }
-        /* Fixes the 1px white border glitch under images/boxes */
-        .widget-content-wrapper > img.absolute { 
             border-radius: inherit; 
-            width: calc(100% + 2px) !important; 
-            height: calc(100% + 2px) !important; 
-            top: -1px !important; 
-            left: -1px !important; 
-            max-width: none;
+            overflow: hidden; 
+            height: 100%; 
+            width: 100%; 
+            position: relative;
+            z-index: 2;
+            isolation: isolate; 
+            -webkit-mask-image: -webkit-radial-gradient(white, black); 
+            mask-image: radial-gradient(white, black);
         }
 
         .transparent-box {
-            background: transparent !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
-            border-color: transparent !important; box-shadow: none !important;
+            background: transparent !important; 
+            backdrop-filter: none !important; 
+            -webkit-backdrop-filter: none !important;
+            border-color: transparent !important; 
+            box-shadow: none !important;
         }
 
         /* EDIT MODE JIGGLE & ARC RESIZE HANDLE */
@@ -303,7 +341,7 @@
                     <label class="block font-semibold mb-2 text-[10px] uppercase tracking-widest opacity-80">Global Text Color</label>
                     <div class="flex items-center gap-3 bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/10">
                         <div class="color-dot shrink-0" id="cp-wrap-text"><input type="color" id="colorText" oninput="updateTempTextColor(this.value)"></div>
-                        <input type="text" id="hexText" oninput="updateTempTextColor(this.value)" class="w-full bg-black/5 dark:bg-white/10 rounded-lg px-3 py-1.5 text-sm outline-none font-mono uppercase border border-transparent focus:border-blue-500">
+                        <input type="text" id="hexText" oninput="updateTempHex('Text')" class="w-full bg-black/5 dark:bg-white/10 rounded-lg px-3 py-1.5 text-sm outline-none font-mono uppercase border border-transparent focus:border-blue-500">
                         <button onclick="resetTempTextColor()" class="p-2 opacity-50 hover:opacity-100 text-red-500 cursor-pointer" title="Reset"><i data-lucide="rotate-ccw" class="w-4 h-4"></i></button>
                     </div>
                 </div>
@@ -362,8 +400,8 @@
                     <div class="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/10 flex flex-col gap-3">
                         <div class="flex items-center justify-between w-full">
                             <span class="text-[10px] font-bold opacity-80 uppercase tracking-widest">Require Password</span>
-                            <label class="cursor-pointer">
-                                <input type="checkbox" id="ew-req-pass" class="sr-only" onchange="togglePasswordField()">
+                            <label class="cursor-pointer relative inline-flex items-center">
+                                <input type="checkbox" id="ew-req-pass" class="sr-only peer" onchange="togglePasswordField()">
                                 <div class="ios-toggle"></div>
                             </label>
                         </div>
@@ -375,16 +413,16 @@
                     <div class="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/10 flex flex-col gap-3">
                         <div class="flex items-center justify-between w-full">
                             <span class="text-[10px] font-bold opacity-80 uppercase tracking-widest">Transparent Box</span>
-                            <label class="cursor-pointer">
-                                <input type="checkbox" id="ew-trans" class="sr-only">
+                            <label class="cursor-pointer relative inline-flex items-center">
+                                <input type="checkbox" id="ew-trans" class="sr-only peer">
                                 <div class="ios-toggle"></div>
                             </label>
                         </div>
                         <div class="w-full h-px bg-black/10 dark:bg-white/10"></div>
                         <div class="flex items-center justify-between w-full">
                             <span class="text-[10px] font-bold opacity-80 uppercase tracking-widest">Custom Text Color</span>
-                            <label class="cursor-pointer">
-                                <input type="checkbox" id="ew-use-text-color" class="sr-only" onchange="document.getElementById('ew-text-color-wrap').style.display = this.checked ? 'flex' : 'none'">
+                            <label class="cursor-pointer relative inline-flex items-center">
+                                <input type="checkbox" id="ew-use-text-color" class="sr-only peer" onchange="document.getElementById('ew-text-color-wrap').style.display = this.checked ? 'flex' : 'none'">
                                 <div class="ios-toggle"></div>
                             </label>
                         </div>
@@ -405,8 +443,8 @@
                         <div class="w-full h-px bg-black/10 dark:bg-white/10"></div>
                         <div class="flex items-center justify-between w-full">
                             <span class="text-[10px] font-bold opacity-80 uppercase tracking-widest">Tint Image</span>
-                            <label class="cursor-pointer">
-                                <input type="checkbox" id="ew-img-overlay" class="sr-only">
+                            <label class="cursor-pointer relative inline-flex items-center">
+                                <input type="checkbox" id="ew-img-overlay" class="sr-only peer">
                                 <div class="ios-toggle"></div>
                             </label>
                         </div>
@@ -496,7 +534,6 @@
                 return parsed;
             }
             
-            // Github veya Key güncellemesi sonrası verilerin kaybolmaması için eski versiyonları tarayan akıllı göç (migration) sistemi
             for (let i = 50; i >= 15; i--) {
                 let old = localStorage.getItem('dashboard_v' + i);
                 if (old) {
@@ -662,7 +699,7 @@
         function getWidgetContent(w) {
             switch(w.type) {
                 case 'spacer':
-                    return isEditMode ? `<div class="w-full h-full border-2 border-dashed border-black/30 dark:border-white/30 rounded-[32px] flex items-center justify-center opacity-40"><i data-lucide="square-dashed" class="w-8 h-8"></i></div>` : `<div class="w-full h-full"></div>`;
+                    return isEditMode ? `<div class="w-full h-full border-2 border-dashed border-black/30 dark:border-white/30 flex items-center justify-center opacity-40"><i data-lucide="square-dashed" class="w-8 h-8"></i></div>` : `<div class="w-full h-full"></div>`;
 
                 case 'smart': 
                     let bgImg = '';
@@ -676,16 +713,16 @@
                     const actionHtml = `onclick="executeSmartAction('${w.id}')"`;
                     const lockIcon = w.data.password && isEditMode ? `<div class="absolute top-3 left-3 z-20 p-1.5 bg-black/40 rounded-full text-white backdrop-blur"><i data-lucide="lock" class="w-3 h-3"></i></div>` : '';
                     
-                    if(w.data.action === 'none') { return `<div class="w-full h-full relative rounded-[32px] overflow-hidden">${lockIcon}${w.data.bgImage && !w.data.icon && !w.data.title ? `<img src="${w.data.bgImage}" class="absolute inset-0 w-full h-full object-cover" />` : contentHtml}</div>`; } 
-                    else if(w.data.action === 'copy') { return `<div ${actionHtml} class="cursor-pointer w-full h-full relative flex group/action rounded-[32px] overflow-hidden">${lockIcon}${contentHtml}<div class="copy-overlay absolute inset-0 z-20 is-copy flex flex-col items-center justify-center text-white"><i data-lucide="copy" class="w-8 h-8 mb-2"></i><span class="text-xs font-bold uppercase tracking-widest">Copy</span></div></div>`; } 
-                    else { return `<div ${actionHtml} class="cursor-pointer w-full h-full relative flex hover:bg-black/5 dark:hover:bg-white/5 transition-colors rounded-[32px] overflow-hidden">${lockIcon}${contentHtml}</div>`; }
+                    if(w.data.action === 'none') { return `<div class="w-full h-full relative">${lockIcon}${w.data.bgImage && !w.data.icon && !w.data.title ? `<img src="${w.data.bgImage}" class="absolute inset-0 w-full h-full object-cover" />` : contentHtml}</div>`; } 
+                    else if(w.data.action === 'copy') { return `<div ${actionHtml} class="cursor-pointer w-full h-full relative flex group/action">${lockIcon}${contentHtml}<div class="copy-overlay absolute inset-0 z-20 is-copy flex flex-col items-center justify-center text-white"><i data-lucide="copy" class="w-8 h-8 mb-2"></i><span class="text-xs font-bold uppercase tracking-widest">Copy</span></div></div>`; } 
+                    else { return `<div ${actionHtml} class="cursor-pointer w-full h-full relative flex hover:bg-black/5 dark:hover:bg-white/5 transition-colors">${lockIcon}${contentHtml}</div>`; }
 
                 case 'clock': 
                     let clockBgImg = '';
                     if(w.data.bgImage) { const overlay = w.data.overlay !== false ? 'opacity-50 dark:opacity-40' : 'opacity-100'; clockBgImg = `<img src="${w.data.bgImage}" class="absolute inset-0 w-full h-full object-cover z-0 ${overlay} transition-opacity duration-300" />`; }
                     
                     return `
-                    <div class="w-full h-full flex flex-col items-center justify-center relative overflow-hidden rounded-[32px]">
+                    <div class="w-full h-full flex flex-col items-center justify-center relative">
                         ${clockBgImg}
                         <div class="flex items-center gap-1 z-10">
                             <h1 class="clock-time-h text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tighter drop-shadow-sm leading-none">00</h1>
@@ -740,20 +777,22 @@
                     return `<div class="w-full h-full flex p-6"><textarea id="note-${w.id}" onblur="saveNoteData('${w.id}')" class="text-current ${isEditMode ? 'pointer-events-none' : ''} flex-1 w-full h-full bg-transparent resize-none border-none outline-none font-medium text-sm leading-relaxed no-scrollbar placeholder-current opacity-60 focus:opacity-100 transition-opacity" placeholder="Write something...">${w.data.text || ''}</textarea></div>`;
 
                 case 'calendar': 
-                    return generateCalendarHTML(w.id, Math.min(w.w, window.innerWidth < 768 ? 4 : 6), w.h);
+                    return generateCalendarHTML(w, Math.min(w.w, window.innerWidth < 768 ? 4 : 6), w.h);
             }
         }
 
         /** CALENDAR VIEW GENERATOR **/
-        function generateCalendarHTML(id, w, h) {
+        function generateCalendarHTML(wObj, w, h) {
+            const id = wObj.id;
             const offset = calendarOffsets[id] || 0;
+            const accentColor = wObj.data.accentColor || '#ef4444';
             const now = new Date(); const viewingDate = new Date(now.getFullYear(), now.getMonth() + offset, 1);
             const isCurrentMonth = offset === 0; const today = now.getDate();
             const monthStr = viewingDate.toLocaleString('en-US', {month:'long'}).toUpperCase();
             const dayStr = now.toLocaleString('en-US', {weekday:'short'}).toUpperCase();
             const daysArr = appState.settings.weekStart === 1 ? ['M','T','W','T','F','S','S'] : ['S','M','T','W','T','F','S'];
 
-            if(w === 1 && h === 1) { return `<div class="w-full h-full flex flex-col items-center justify-center p-4"><span class="text-[10px] font-bold text-red-500 uppercase tracking-widest mb-1">${dayStr}</span><span class="text-4xl font-black tracking-tighter">${today}</span></div>`; }
+            if(w === 1 && h === 1) { return `<div class="w-full h-full flex flex-col items-center justify-center p-4"><span class="text-[10px] font-bold uppercase tracking-widest mb-1" style="color: ${accentColor};">${dayStr}</span><span class="text-4xl font-black tracking-tighter">${today}</span></div>`; }
             
             // Dikey Takvim (Vertical)
             if(w === 1 && h > 1) { 
@@ -765,7 +804,7 @@
                 let html = `<div class="w-full h-full flex flex-col items-center justify-between p-4 md:p-5">`;
                 for(let i=0; i<7; i++) {
                     let isT = weekDates[i].isToday;
-                    html += `<div class="flex flex-col items-center justify-center w-full h-[13%] rounded-xl md:rounded-2xl ${isT ? 'bg-red-500 text-white shadow-md' : 'opacity-70 text-current'}"><span class="text-[9px] font-bold uppercase mb-0.5">${daysArr[i]}</span><span class="text-sm font-bold">${weekDates[i].date}</span></div>`;
+                    html += `<div class="flex flex-col items-center justify-center flex-1 w-full h-[13%] rounded-xl md:rounded-2xl ${isT ? 'text-white shadow-md' : 'opacity-70 text-current'}" ${isT ? `style="background-color: ${accentColor};"` : ''}><span class="text-[9px] font-bold uppercase mb-0.5">${daysArr[i]}</span><span class="text-sm font-bold">${weekDates[i].date}</span></div>`;
                 }
                 html += `</div>`; return html;
             }
@@ -780,7 +819,7 @@
                 let html = `<div class="w-full h-full flex justify-between items-center p-4 md:p-5">`;
                 for(let i=0; i<7; i++) {
                     let isT = weekDates[i].isToday;
-                    html += `<div class="flex flex-col items-center justify-center h-full w-[13%] rounded-xl md:rounded-2xl ${isT ? 'bg-red-500 text-white shadow-md' : 'opacity-70 text-current'}"><span class="text-[10px] font-bold uppercase mb-0.5 ${isT?'opacity-100':'opacity-50'}">${daysArr[i]}</span><span class="text-base md:text-xl font-bold">${weekDates[i].date}</span></div>`;
+                    html += `<div class="flex flex-col items-center justify-center h-full w-[13%] rounded-xl md:rounded-2xl ${isT ? 'text-white shadow-md' : 'opacity-70 text-current'}" ${isT ? `style="background-color: ${accentColor};"` : ''}><span class="text-[10px] font-bold uppercase mb-0.5 ${isT?'opacity-100':'opacity-50'}">${daysArr[i]}</span><span class="text-base md:text-xl font-bold">${weekDates[i].date}</span></div>`;
                 }
                 html += `</div>`; return html;
             }
@@ -795,8 +834,8 @@
             const cellLayoutClass = isGiant ? 'flex items-center justify-center h-full' : 'flex items-center justify-center h-7 md:h-8';
 
             let html = `<div class="flex flex-col h-full p-4 md:p-5 w-full mx-auto relative group/cal">
-                <div class="flex items-center justify-between mb-2 md:mb-4 w-full" style="padding-left: calc(100% / 14 - 10px); padding-right: calc(100% / 14 - 10px);">
-                    <div class="${headClass} font-bold text-red-500 uppercase tracking-widest text-left leading-none">${monthStr} ${viewingDate.getFullYear()}</div>
+                <div class="flex items-center justify-between mb-2 md:mb-4 w-full" style="padding-left: calc(100% / 14 - 6px); padding-right: calc(100% / 14 - 6px);">
+                    <div class="${headClass} font-bold uppercase tracking-widest text-left leading-none" style="color: ${accentColor};">${monthStr} ${viewingDate.getFullYear()}</div>
                     <div class="flex items-center gap-1 opacity-0 group-hover/cal:opacity-100 transition-opacity ${isEditMode ? 'hidden' : ''}">
                         ${!isCurrentMonth ? `<button onclick="changeCalOffset('${id}', 0)" class="text-[10px] font-bold px-2 py-1 bg-black/10 dark:bg-white/10 rounded mr-2 uppercase transition cursor-pointer">Today</button>` : ''}
                         <button onclick="changeCalOffset('${id}', -1)" class="p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded transition cursor-pointer"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
@@ -812,7 +851,7 @@
             for(let i=0; i<startOffset; i++) html += `<div></div>`;
             for(let i=1; i<=new Date(viewingDate.getFullYear(), viewingDate.getMonth() + 1, 0).getDate(); i++) {
                 if(isCurrentMonth && i === today) {
-                    html += `<div class="${cellLayoutClass}"><div class="flex items-center justify-center ${circleSize} bg-red-500 text-white rounded-full font-bold shadow-md m-0">${i}</div></div>`;
+                    html += `<div class="${cellLayoutClass}"><div class="flex items-center justify-center ${circleSize} text-white rounded-full font-bold shadow-md m-0" style="background-color: ${accentColor};">${i}</div></div>`;
                 } else {
                     html += `<div class="${cellLayoutClass} font-medium opacity-80">${i}</div>`;
                 }
@@ -929,8 +968,8 @@
             return `
             <div class="flex items-center justify-between w-full">
                 <span class="text-[10px] font-bold opacity-80 uppercase tracking-widest">${label}</span>
-                <label class="cursor-pointer">
-                    <input type="checkbox" id="${id}" class="sr-only" ${isChecked ? 'checked' : ''} ${onChangeStr ? `onchange="${onChangeStr}"` : ''}>
+                <label class="cursor-pointer relative inline-flex items-center">
+                    <input type="checkbox" id="${id}" class="sr-only peer" ${isChecked ? 'checked' : ''} ${onChangeStr ? `onchange="${onChangeStr}"` : ''}>
                     <div class="ios-toggle"></div>
                 </label>
             </div>
@@ -1014,6 +1053,20 @@
                         setTimeout(() => refreshUploadUI(hasImg), 10);
                     } else if(w.type === 'calendar' || w.type === 'notes') {
                         document.getElementById('eb-title').innerText = `Edit ` + w.type.charAt(0).toUpperCase() + w.type.slice(1);
+                        if (w.type === 'calendar') {
+                            const useAccentColor = !!w.data.accentColor;
+                            specificHtml = `
+                                <div class="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/10 flex flex-col gap-3 mb-3">
+                                    ${createSettingRow('eb-use-accent-color', 'Custom Accent Color', useAccentColor, "document.getElementById('eb-accent-color-wrap').style.display = this.checked ? 'flex' : 'none'")}
+                                    <div id="eb-accent-color-wrap" class="pt-1 flex items-center gap-3" style="display: ${useAccentColor ? 'flex' : 'none'};">
+                                        <div class="color-dot w-8 h-8 shrink-0" style="background-color: ${w.data.accentColor || '#ef4444'}">
+                                            <input type="color" id="eb-accent-color" value="${w.data.accentColor || '#ef4444'}" oninput="this.parentElement.style.backgroundColor = this.value">
+                                        </div>
+                                        <span class="text-[10px] font-bold opacity-60 uppercase tracking-widest">Pick Color</span>
+                                    </div>
+                                </div>
+                            `;
+                        }
                     }
 
                     const useTextColor = !!w.data.textColor;
@@ -1103,6 +1156,7 @@
             if(w.type === 'weather') { w.data.city = document.getElementById('eb-city').value; }
             if(w.type === 'timer') { w.data.timerMinutes = parseInt(document.getElementById('eb-timer-min').value)||25; w.data.direction = document.getElementById('eb-timer-dir').value; w.data.playSound = document.getElementById('eb-timer-sound')?.checked || false; resetTimer(w.id); }
             if(w.type === 'clock') { w.data.overlay = document.getElementById('eb-img-overlay') ? document.getElementById('eb-img-overlay').checked : true; }
+            if(w.type === 'calendar') { w.data.accentColor = document.getElementById('eb-use-accent-color')?.checked ? document.getElementById('eb-accent-color').value : null; }
             
             saveState(); closeModals(); renderDashboard();
         }
@@ -1308,7 +1362,13 @@
                 const isD = tempSettings.theme === 'dark' || (tempSettings.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
                 const val = document.getElementById(`hex${id}`).value;
                 document.getElementById(`color${id}`).value = val; 
-                if(isD) tempSettings.darkColors[`c${id}`] = val; else tempSettings.lightColors[`c${id}`] = val;
+                
+                if(id === 'Text') {
+                    tempSettings.customTextColor = val;
+                } else {
+                    if(isD) tempSettings.darkColors[`c${id}`] = val; else tempSettings.lightColors[`c${id}`] = val;
+                }
+                
                 applyThemeAndBg(tempSettings); updateSettingsUI(tempSettings);
             } catch(e) {}
         }
@@ -1333,8 +1393,9 @@
                 
                 const wrapC1 = document.getElementById('wrap-c1'); if(wrapC1) wrapC1.querySelector('.color-dot').style.backgroundColor = c.c1;
                 const wrapC2el = document.getElementById('wrap-c2'); if(wrapC2el) wrapC2el.querySelector('.color-dot').style.backgroundColor = c.c2;
-                const hex1 = document.getElementById('hex1'); if(hex1) hex1.value = c.c1; 
-                const hex2 = document.getElementById('hex2'); if(hex2) hex2.value = c.c2;
+                
+                const hex1 = document.getElementById('hex1'); if(hex1 && document.activeElement !== hex1) hex1.value = c.c1; 
+                const hex2 = document.getElementById('hex2'); if(hex2 && document.activeElement !== hex2) hex2.value = c.c2;
                 const angleVal = document.getElementById('angle-val'); if(angleVal) angleVal.innerText = s.angle + '°';
                 
                 const btnTrashBg = document.getElementById('btn-trash-bg'); 
@@ -1344,7 +1405,7 @@
 
                 const tCol = s.customTextColor || (isD ? '#ffffff' : '#000000');
                 const cpWrapText = document.getElementById('cp-wrap-text'); if(cpWrapText) cpWrapText.style.backgroundColor = tCol; 
-                const hexText = document.getElementById('hexText'); if(hexText) hexText.value = tCol;
+                const hexText = document.getElementById('hexText'); if(hexText && document.activeElement !== hexText) hexText.value = tCol;
                 
                 let wCol = isD ? '#1a1a1a' : '#ffffff';
                 if (s.widgetBgColor && typeof s.widgetBgColor === 'object') { wCol = isD ? s.widgetBgColor.dark : s.widgetBgColor.light; } 
