@@ -23,7 +23,7 @@
         tailwind.config = {
             darkMode: 'class',
             theme: {
-                extend: { gridTemplateColumns: { 'bento': 'repeat(4, minmax(0, 1fr))' } }
+                extend: { gridTemplateColumns: { 'bento': 'repeat(6, minmax(0, 1fr))' } }
             }
         }
     </script>
@@ -73,7 +73,7 @@
         }
 
         /* EDIT MODE JIGGLE & ARC RESIZE HANDLE */
-        .edit-mode #bento-grid > div { animation: jiggle 0.3s infinite; cursor: grab; }
+        .edit-mode #bento-grid > div:not(.no-jiggle) { animation: jiggle 0.3s infinite; cursor: grab; }
         .edit-mode #bento-grid > div:active { cursor: grabbing; }
         @keyframes jiggle { 0% { transform: rotate(-0.5deg); } 50% { transform: rotate(0.5deg); } 100% { transform: rotate(-0.5deg); } }
 
@@ -98,7 +98,7 @@
         .peek-active input[type="text"] { background-color: rgba(255,255,255,0.1) !important; border: none; }
 
         input[type="color"] { opacity: 0; width: 100%; height: 100%; cursor: pointer; position: absolute; top:0; left:0; }
-        .color-dot { width: 32px; height: 32px; flex-shrink: 0; border-radius: 50%; border: 2px solid rgba(255,255,255,0.8); box-shadow: 0 2px 8px rgba(0,0,0,0.2); position: relative; overflow: hidden; }
+        .color-dot { width: 32px; height: 32px; flex-shrink: 0; border-radius: 50%; border: 2px solid rgba(255,255,255,0.8); box-shadow: 0 2px 8px rgba(0,0,0,0.2); position: relative; overflow: hidden; background-color: currentColor; }
 
         /* SEARCH BAR */
         #search-container.active { width: 320px; }
@@ -177,6 +177,8 @@
             <button onclick="addWidget('notes', 2, 2)" class="w-11 h-11 rounded-full hover:bg-white/40 dark:hover:bg-white/20 transition flex items-center justify-center text-gray-800 dark:text-white shadow-sm shrink-0 cursor-pointer" title="Sticky Note"><i data-lucide="sticky-note" class="w-5 h-5"></i></button>
             <button onclick="addWidget('calendar', 2, 2)" class="w-11 h-11 rounded-full hover:bg-white/40 dark:hover:bg-white/20 transition flex items-center justify-center text-gray-800 dark:text-white shadow-sm shrink-0 cursor-pointer" title="Calendar"><i data-lucide="calendar" class="w-5 h-5"></i></button>
             
+            <button onclick="addWidget('spacer', 1, 1)" class="w-11 h-11 rounded-full hover:bg-white/40 dark:hover:bg-white/20 transition flex items-center justify-center text-gray-800 dark:text-white shadow-sm shrink-0 cursor-pointer opacity-70" title="Invisible Spacer"><i data-lucide="square-dashed" class="w-5 h-5"></i></button>
+            
             <div class="w-px h-6 bg-black/20 dark:bg-white/20 mx-1 hidden md:block"></div>
             
             <button onclick="toggleSettings()" class="w-11 h-11 rounded-full hover:bg-white/40 dark:hover:bg-white/20 transition flex items-center justify-center text-gray-800 dark:text-white shadow-sm shrink-0 cursor-pointer" title="Appearance"><i data-lucide="palette" class="w-5 h-5"></i></button>
@@ -212,7 +214,7 @@
             
             <div class="space-y-6">
                 <div>
-                    <label class="block font-semibold mb-2 text-[10px] uppercase tracking-widest opacity-60">System Theme</label>
+                    <label class="block font-semibold mb-2 text-[10px] uppercase tracking-widest opacity-80">System Theme</label>
                     <div class="flex gap-2 p-1 bg-black/5 dark:bg-white/5 rounded-xl border border-black/5 dark:border-white/10">
                         <button onclick="setTempTheme('system')" id="btn-theme-system" class="flex-1 py-1.5 rounded-lg text-sm font-bold transition cursor-pointer">System</button>
                         <button onclick="setTempTheme('light')" id="btn-theme-light" class="flex-1 py-1.5 rounded-lg text-sm font-bold transition cursor-pointer">Light</button>
@@ -221,7 +223,7 @@
                 </div>
 
                 <div>
-                    <label class="block font-semibold mb-2 text-[10px] uppercase tracking-widest opacity-60">Typography</label>
+                    <label class="block font-semibold mb-2 text-[10px] uppercase tracking-widest opacity-80">Typography</label>
                     <div class="grid grid-cols-2 gap-2 p-1 bg-black/5 dark:bg-white/5 rounded-xl border border-black/5 dark:border-white/10">
                         <button onclick="setTempFont('inter')" id="btn-font-inter" class="py-1.5 rounded-lg text-sm font-bold transition font-inter cursor-pointer">Inter</button>
                         <button onclick="setTempFont('serif')" id="btn-font-serif" class="py-1.5 rounded-lg text-sm font-bold transition font-serif cursor-pointer">Serif</button>
@@ -231,20 +233,20 @@
                 </div>
 
                 <div>
-                    <label class="block font-semibold mb-2 text-[10px] uppercase tracking-widest opacity-60">Widget Box Style</label>
+                    <label class="block font-semibold mb-2 text-[10px] uppercase tracking-widest opacity-80">Widget Box Style</label>
                     <div class="flex gap-2 p-1 bg-black/5 dark:bg-white/5 rounded-xl border border-black/5 dark:border-white/10">
                         <button onclick="setTempWidgetStyle('glass')" id="btn-ws-glass" class="flex-1 py-1.5 rounded-lg text-sm font-bold transition cursor-pointer">Glass</button>
                         <button onclick="setTempWidgetStyle('solid')" id="btn-ws-solid" class="flex-1 py-1.5 rounded-lg text-sm font-bold transition cursor-pointer">Solid</button>
                         <button onclick="setTempWidgetStyle('transparent')" id="btn-ws-transparent" class="flex-1 py-1.5 rounded-lg text-sm font-bold transition cursor-pointer">Hidden</button>
                     </div>
                     <div id="widget-color-wrap" class="mt-2 flex items-center gap-3 bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/10 hidden">
-                        <span class="text-xs font-semibold opacity-70">Box Color:</span>
-                        <div class="color-dot w-6 h-6" id="cp-wrap-widget"><input type="color" id="colorWidget" oninput="updateTempSettings()"></div>
+                        <span class="text-[10px] font-bold opacity-80 uppercase tracking-widest">Box Color:</span>
+                        <div class="color-dot w-6 h-6" id="cp-wrap-widget"><input type="color" id="colorWidget" oninput="this.parentElement.style.backgroundColor = this.value; updateTempSettings()"></div>
                     </div>
                 </div>
 
                 <div>
-                    <label class="block font-semibold mb-2 text-[10px] uppercase tracking-widest opacity-60">Dashboard Background</label>
+                    <label class="block font-semibold mb-2 text-[10px] uppercase tracking-widest opacity-80">Dashboard Background</label>
                     <div class="flex gap-2 mb-3 p-1 bg-black/5 dark:bg-white/5 rounded-xl border border-black/5 dark:border-white/10">
                         <button onclick="setTempBgType('gradient')" id="btn-bg-gradient" class="flex-1 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer">Gradient</button>
                         <button onclick="setTempBgType('solid')" id="btn-bg-solid" class="flex-1 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer">Solid</button>
@@ -253,32 +255,33 @@
 
                     <div id="bg-colors-block" class="flex flex-col gap-3 bg-black/5 dark:bg-white/5 p-4 rounded-xl border border-black/5 dark:border-white/10 relative">
                         <div class="flex items-center gap-3" id="wrap-c1">
-                            <div class="color-dot"><input type="color" id="color1" oninput="updateTempSettings()"></div>
+                            <div class="color-dot"><input type="color" id="color1" oninput="this.parentElement.style.backgroundColor = this.value; updateTempSettings()"></div>
                             <input type="text" id="hex1" oninput="updateTempHex(1)" class="w-full bg-black/5 dark:bg-white/10 rounded-lg px-3 py-1.5 text-sm outline-none font-mono uppercase border border-transparent focus:border-blue-500">
                         </div>
                         <div class="flex items-center gap-3" id="wrap-c2">
-                            <div class="color-dot"><input type="color" id="color2" oninput="updateTempSettings()"></div>
+                            <div class="color-dot"><input type="color" id="color2" oninput="this.parentElement.style.backgroundColor = this.value; updateTempSettings()"></div>
                             <input type="text" id="hex2" oninput="updateTempHex(2)" class="w-full bg-black/5 dark:bg-white/10 rounded-lg px-3 py-1.5 text-sm outline-none font-mono uppercase border border-transparent focus:border-blue-500">
                         </div>
                         <div class="mt-2" id="wrap-angle" onmousedown="startPeek('wrap-angle')" ontouchstart="startPeek('wrap-angle')">
-                            <div class="flex justify-between text-xs opacity-60 mb-1 font-bold tracking-widest uppercase"><span>Angle</span><span id="angle-val">90°</span></div>
+                            <div class="flex justify-between text-[10px] opacity-80 mb-1 font-bold tracking-widest uppercase"><span>Angle</span><span id="angle-val">90°</span></div>
                             <input type="range" id="angle" min="0" max="360" class="w-full accent-blue-500" oninput="updateTempSettings()" onmouseup="endPeek()" ontouchend="endPeek()">
                         </div>
                     </div>
 
                     <div id="bg-image-block" class="hidden flex-col items-center gap-3 bg-black/5 dark:bg-white/5 p-4 rounded-xl border border-black/5 dark:border-white/10">
-                        <label class="w-full py-2.5 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 transition flex items-center justify-center gap-2 cursor-pointer text-sm font-bold shadow-sm">
-                            <i data-lucide="image-plus" class="w-4 h-4"></i> Upload Wallpaper
-                            <input type="file" id="bg-upload" class="hidden" accept="image/*" onchange="handleTempBgImageUpload(event)">
-                        </label>
-                        <button onclick="clearTempBgImage()" id="btn-trash-bg" class="text-xs font-bold text-red-500 opacity-80 hover:opacity-100 hidden cursor-pointer"><i data-lucide="trash-2" class="w-3 h-3 inline"></i> Remove Image</button>
+                        <div class="flex items-center gap-2 w-full">
+                            <label id="main-bg-upload-label" class="flex-1 py-2 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-black/10 transition flex justify-center cursor-pointer text-[10px] font-bold uppercase tracking-widest">
+                                Upload Image <input type="file" id="bg-upload" class="hidden" accept="image/*" onchange="handleTempBgImageUpload(event)">
+                            </label>
+                            <button id="btn-trash-bg" onclick="clearTempBgImage()" class="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition cursor-pointer" style="display: none;"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </div>
                     </div>
                 </div>
 
                 <div>
-                    <label class="block font-semibold mb-2 text-[10px] uppercase tracking-widest opacity-60">Global Text Color</label>
+                    <label class="block font-semibold mb-2 text-[10px] uppercase tracking-widest opacity-80">Global Text Color</label>
                     <div class="flex items-center gap-3 bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/10">
-                        <div class="color-dot shrink-0" id="cp-wrap-text"><input type="color" id="colorText" oninput="updateTempHex('Text')"></div>
+                        <div class="color-dot shrink-0" id="cp-wrap-text"><input type="color" id="colorText" oninput="this.parentElement.style.backgroundColor = this.value; updateTempHex('Text')"></div>
                         <input type="text" id="hexText" oninput="updateTempHex('Text')" class="w-full bg-black/5 dark:bg-white/10 rounded-lg px-3 py-1.5 text-sm outline-none font-mono uppercase border border-transparent focus:border-blue-500">
                         <button onclick="resetTempTextColor()" class="p-2 opacity-50 hover:opacity-100 text-red-500 cursor-pointer" title="Reset"><i data-lucide="rotate-ccw" class="w-4 h-4"></i></button>
                     </div>
@@ -298,77 +301,126 @@
         <div class="glass-panel max-w-sm w-full p-6 relative max-h-[90vh] overflow-y-auto no-scrollbar shadow-2xl mx-4">
             <h2 class="text-xl font-bold mb-4 opacity-90">Edit Smart Box</h2>
             
-            <div class="space-y-5">
+            <div class="space-y-4">
                 <div>
-                    <label class="block text-[10px] font-bold opacity-60 mb-2 uppercase tracking-widest">Action</label>
+                    <label class="block text-[10px] font-bold opacity-80 mb-2 uppercase tracking-widest">Action</label>
                     <div class="grid grid-cols-2 gap-2">
-                        <button id="btn-act-none" onclick="setSmartAction('none')" class="p-2 rounded-xl border border-black/10 dark:border-white/10 text-xs font-bold flex flex-col items-center gap-1 transition cursor-pointer"><i data-lucide="image" class="w-5 h-5"></i> Visual</button>
-                        <button id="btn-act-link" onclick="setSmartAction('link')" class="p-2 rounded-xl border border-black/10 dark:border-white/10 text-xs font-bold flex flex-col items-center gap-1 transition cursor-pointer"><i data-lucide="link" class="w-5 h-5"></i> Open Link</button>
-                        <button id="btn-act-copy" onclick="setSmartAction('copy')" class="p-2 rounded-xl border border-black/10 dark:border-white/10 text-xs font-bold flex flex-col items-center gap-1 transition cursor-pointer"><i data-lucide="copy" class="w-5 h-5"></i> Copy Data</button>
-                        <button id="btn-act-space" onclick="setSmartAction('space')" class="p-2 rounded-xl border border-black/10 dark:border-white/10 text-xs font-bold flex flex-col items-center gap-1 transition cursor-pointer"><i data-lucide="folder" class="w-5 h-5"></i> Folder</button>
+                        <button id="btn-act-none" onclick="setSmartAction('none', true)" class="p-2 rounded-xl border border-black/10 dark:border-white/10 text-xs font-bold flex flex-col items-center gap-1 transition cursor-pointer"><i data-lucide="image" class="w-5 h-5"></i> Visual</button>
+                        <button id="btn-act-link" onclick="setSmartAction('link', true)" class="p-2 rounded-xl border border-black/10 dark:border-white/10 text-xs font-bold flex flex-col items-center gap-1 transition cursor-pointer"><i data-lucide="link" class="w-5 h-5"></i> Open Link</button>
+                        <button id="btn-act-copy" onclick="setSmartAction('copy', true)" class="p-2 rounded-xl border border-black/10 dark:border-white/10 text-xs font-bold flex flex-col items-center gap-1 transition cursor-pointer"><i data-lucide="copy" class="w-5 h-5"></i> Copy Data</button>
+                        <button id="btn-act-space" onclick="setSmartAction('space', true)" class="p-2 rounded-xl border border-black/10 dark:border-white/10 text-xs font-bold flex flex-col items-center gap-1 transition cursor-pointer"><i data-lucide="folder" class="w-5 h-5"></i> Folder</button>
                     </div>
                     <input type="hidden" id="ew-type" value="none">
                 </div>
                 
                 <div>
-                    <label class="block text-[10px] font-bold opacity-60 mb-1 uppercase tracking-widest">Display Text</label>
+                    <label class="block text-[10px] font-bold opacity-80 mb-1 uppercase tracking-widest">Display Text</label>
                     <input type="text" id="ew-title" class="w-full p-2.5 rounded-xl bg-black/5 dark:bg-white/10 outline-none font-medium text-sm mb-3" placeholder="Leave empty for no text">
                     
-                    <label class="block text-[10px] font-bold opacity-60 mb-2 uppercase tracking-widest">Select Icon</label>
+                    <label class="block text-[10px] font-bold opacity-80 mb-2 uppercase tracking-widest">Select Icon</label>
                     <div class="flex gap-2 mb-2 p-1 rounded-lg bg-black/5 dark:bg-white/5">
-                        <button onclick="toggleIconTab('icons')" id="tab-icons" class="flex-1 py-1.5 text-xs font-bold bg-white dark:bg-white/20 rounded shadow-sm cursor-pointer">Icons</button>
-                        <button onclick="toggleIconTab('emojis')" id="tab-emojis" class="flex-1 py-1.5 text-xs font-medium rounded opacity-60 cursor-pointer">Emojis</button>
+                        <button onclick="toggleIconTab('icons')" id="tab-icons" class="flex-1 py-1.5 text-[10px] tracking-widest uppercase font-bold bg-white dark:bg-white/20 rounded shadow-sm cursor-pointer">Icons</button>
+                        <button onclick="toggleIconTab('emojis')" id="tab-emojis" class="flex-1 py-1.5 text-[10px] tracking-widest uppercase font-medium rounded opacity-60 cursor-pointer">Emojis</button>
                     </div>
                     <div id="grid-icons" class="grid grid-cols-6 gap-1 bg-black/5 dark:bg-white/5 p-2 rounded-xl h-40 overflow-y-auto no-scrollbar"></div>
                     <div id="grid-emojis" class="grid grid-cols-6 gap-1 bg-black/5 dark:bg-white/5 p-2 rounded-xl h-40 overflow-y-auto no-scrollbar hidden"></div>
                     
                     <div class="mt-2 flex items-center justify-between">
-                        <div class="text-[10px] font-bold uppercase tracking-widest opacity-60 flex items-center gap-2">Selected: <span id="ew-selected-display" class="text-xl normal-case"></span></div>
+                        <div class="text-[10px] font-bold uppercase tracking-widest opacity-80 flex items-center gap-2">Selected: <span id="ew-selected-display" class="text-xl normal-case"></span></div>
                         <button onclick="setTempIcon('', false)" class="text-[10px] font-bold uppercase bg-red-500/20 text-red-500 px-3 py-1.5 rounded cursor-pointer">Clear</button>
                     </div>
                 </div>
 
-                <div id="ew-content-wrap" class="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/5">
-                    <label class="block text-[10px] font-bold opacity-60 mb-1 uppercase tracking-widest" id="ew-content-label">Content</label>
-                    <input type="text" id="ew-content" class="w-full p-2.5 rounded-lg bg-black/5 dark:bg-white/10 outline-none font-medium text-sm mb-3">
-                    
-                    <label class="flex items-center gap-2 cursor-pointer mb-2">
-                        <input type="checkbox" id="ew-req-pass" class="w-4 h-4 accent-blue-500" onchange="togglePasswordField()">
-                        <span class="text-xs font-bold opacity-80 uppercase tracking-widest">Require Password</span>
-                    </label>
-                    <input type="password" id="ew-password" placeholder="Enter secret..." class="w-full p-2.5 rounded-lg bg-black/5 dark:bg-white/10 outline-none font-medium text-sm hidden">
+                <div id="ew-content-wrap" class="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/5 hidden">
+                    <label class="block text-[10px] font-bold opacity-80 mb-1 uppercase tracking-widest" id="ew-content-label">Content</label>
+                    <input type="text" id="ew-content" class="w-full p-2.5 rounded-lg bg-black/5 dark:bg-white/10 outline-none font-medium text-sm">
                 </div>
 
+                <!-- Shared Row Style: Require Password -->
                 <div class="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/5">
-                    <label class="block text-[10px] font-bold opacity-60 mb-2 uppercase tracking-widest">Image Background</label>
-                    <div class="flex items-center gap-2 mb-3">
-                        <label class="flex-1 py-2 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-black/10 transition flex justify-center cursor-pointer text-xs font-bold uppercase">
-                            Upload <input type="file" id="ew-photo" class="hidden" accept="image/*" onchange="handleWidgetPhoto(event)">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-bold opacity-80 uppercase tracking-widest">Require Password</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="ew-req-pass" class="sr-only peer" onchange="togglePasswordField()">
+                            <div class="w-9 h-5 bg-black/20 dark:bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-500"></div>
                         </label>
-                        <button onclick="clearWidgetPhoto()" class="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition cursor-pointer"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                     </div>
-                    <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" id="ew-img-overlay" class="w-4 h-4 accent-blue-500">
-                        <span class="text-[10px] font-bold opacity-80 uppercase tracking-widest">Darken Image</span>
-                    </label>
+                    <div id="ew-password-wrap" class="mt-3 hidden">
+                        <input type="password" id="ew-password" placeholder="Enter secret..." class="w-full p-2.5 rounded-lg bg-black/5 dark:bg-white/10 outline-none font-medium text-sm">
+                    </div>
+                </div>
+
+                <!-- Shared Row Style: Transparent Box -->
+                <div class="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/5">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-bold opacity-80 uppercase tracking-widest">Transparent Box</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="ew-trans" class="sr-only peer">
+                            <div class="w-9 h-5 bg-black/20 dark:bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-500"></div>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Shared Row Style: Custom Text Color -->
+                <div class="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/5">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-bold opacity-80 uppercase tracking-widest">Custom Text Color</span>
+                        <div class="flex items-center gap-3">
+                            <div id="ew-text-color-wrap" class="color-dot w-6 h-6 shrink-0 hidden">
+                                <input type="color" id="ew-text-color" value="#ffffff" oninput="this.parentElement.style.backgroundColor = this.value">
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="ew-use-text-color" class="sr-only peer" onchange="document.getElementById('ew-text-color-wrap').style.display = this.checked ? 'block' : 'none'">
+                                <div class="w-9 h-5 bg-black/20 dark:bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-500"></div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Shared Row Style: Image Background -->
+                <div class="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/5">
+                    <label class="block text-[10px] font-bold opacity-80 mb-3 uppercase tracking-widest">Image Background</label>
+                    <div class="flex items-center gap-2 mb-4">
+                        <label id="ew-upload-label" class="flex-1 py-2 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-black/10 transition flex justify-center cursor-pointer text-[10px] font-bold uppercase tracking-widest">
+                            Upload Image <input type="file" id="ew-photo" class="hidden" accept="image/*" onchange="handleWidgetPhoto(event)">
+                        </label>
+                        <button id="ew-trash-btn" onclick="clearWidgetPhoto()" class="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition cursor-pointer" style="display: none;"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>
+                    <div class="flex items-center justify-between pt-3 border-t border-black/10 dark:border-white/10">
+                        <span class="text-[10px] font-bold opacity-80 uppercase tracking-widest">Tint Image</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="ew-img-overlay" class="sr-only peer">
+                            <div class="w-9 h-5 bg-black/20 dark:bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-500"></div>
+                        </label>
+                    </div>
                 </div>
             </div>
 
-            <div class="mt-6 flex gap-3">
-                <button onclick="hideModal('edit-smart-modal')" class="flex-1 py-2.5 rounded-xl bg-black/5 dark:bg-white/10 font-bold opacity-80 hover:opacity-100 cursor-pointer">Cancel</button>
-                <button onclick="saveSmartWidget()" class="flex-1 py-2.5 rounded-xl bg-blue-500 text-white font-bold hover:bg-blue-600 shadow-md cursor-pointer">Save</button>
+            <div class="mt-6 flex flex-col gap-3">
+                <div class="flex gap-3">
+                    <button onclick="hideModal('edit-smart-modal')" class="flex-1 py-2.5 rounded-xl bg-black/5 dark:bg-white/10 font-bold opacity-80 hover:opacity-100 cursor-pointer">Cancel</button>
+                    <button onclick="saveSmartWidget()" class="flex-1 py-2.5 rounded-xl bg-blue-500 text-white font-bold hover:bg-blue-600 shadow-md cursor-pointer">Save</button>
+                </div>
+                <button onclick="duplicateWidget()" class="w-full py-2.5 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 font-bold hover:bg-purple-500/20 transition cursor-pointer flex items-center justify-center gap-2">
+                    <i data-lucide="copy" class="w-4 h-4"></i> Duplicate
+                </button>
             </div>
         </div>
     </div>
 
     <!-- MODAL: EDIT BASIC WIDGET -->
     <div id="edit-basic-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center modal-overlay opacity-0 transition-opacity duration-300">
-        <div class="glass-panel max-w-sm w-full p-6 relative shadow-2xl mx-4">
+        <div class="glass-panel max-w-sm w-full p-6 relative shadow-2xl mx-4 max-h-[90vh] overflow-y-auto no-scrollbar">
             <h2 class="text-xl font-bold mb-4 opacity-90" id="eb-title">Edit</h2>
             <div id="eb-body" class="space-y-4"></div>
-            <div class="mt-6 flex gap-3">
-                <button onclick="hideModal('edit-basic-modal')" class="flex-1 py-2.5 rounded-xl bg-black/5 dark:bg-white/10 font-bold opacity-80 hover:opacity-100 cursor-pointer">Cancel</button>
-                <button onclick="saveBasicWidget()" class="flex-1 py-2.5 rounded-xl bg-blue-500 text-white font-bold hover:bg-blue-600 shadow-md cursor-pointer">Save</button>
+            <div class="mt-6 flex flex-col gap-3">
+                <div class="flex gap-3">
+                    <button onclick="hideModal('edit-basic-modal')" class="flex-1 py-2.5 rounded-xl bg-black/5 dark:bg-white/10 font-bold opacity-80 hover:opacity-100 cursor-pointer">Cancel</button>
+                    <button onclick="saveBasicWidget()" class="flex-1 py-2.5 rounded-xl bg-blue-500 text-white font-bold hover:bg-blue-600 shadow-md cursor-pointer">Save</button>
+                </div>
+                <button onclick="duplicateWidget()" class="w-full py-2.5 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 font-bold hover:bg-purple-500/20 transition cursor-pointer flex items-center justify-center gap-2">
+                    <i data-lucide="copy" class="w-4 h-4"></i> Duplicate
+                </button>
             </div>
         </div>
     </div>
@@ -395,11 +447,11 @@
         const LIGHT_DEFAULTS = { c1: '#e6e6e6', c2: '#e6e6e6' };
         const DARK_DEFAULTS = { c1: '#262626', c2: '#262626' };
         
-        const ICONS = ['mail','hard-drive','link','youtube','twitter','github','music','map','video','message-circle','camera','shopping-cart','coffee','monitor','smartphone','pen-tool','folder','image','star','heart','settings','book','briefcase','calendar','clock','cloud','globe','key','lock','mic','moon','sun','umbrella','zap','battery','bell','activity','airplay','alarm-check','align-center','anchor','aperture','archive','award','bar-chart','bluetooth','bookmark','box','cast','check','chrome','clipboard','code','compass','copy','cpu','crosshair','database','download','droplet','eye','feather','film','flag','gift','headphones','home','info','instagram','layout','life-buoy','linkedin','list','map-pin','maximize','menu','navigation','package','paperclip','pie-chart','play','power','printer','radio','refresh-cw','save','search','send','server','share','shield','slack','sliders','speaker','square','target','terminal','thermometer','thumbs-up','toggle-left','tool','trash','trello','trending-up','tv','twitch','type','unlock','upload','user','users','wifi','wind','x','zoom-in','sticky-note', 'accessibility', 'alarm-clock', 'alert-circle', 'alert-octagon', 'alert-triangle', 'align-justify', 'align-left', 'align-right', 'battery-charging', 'bell-off', 'bold', 'book-open', 'camera-off', 'check-circle', 'check-square', 'chevron-down', 'chevron-left', 'chevron-right', 'chevron-up', 'chevrons-down', 'chevrons-left', 'chevrons-right', 'chevrons-up', 'cloud-drizzle', 'cloud-lightning', 'cloud-off', 'cloud-rain', 'cloud-snow', 'codesandbox', 'command', 'corner-down-left', 'corner-down-right', 'corner-left-down', 'corner-left-up', 'corner-right-down', 'corner-right-up', 'corner-up-left', 'corner-up-right', 'credit-card', 'crop', 'delete', 'disc', 'divide', 'divide-circle', 'divide-square', 'download-cloud', 'edit', 'edit-2', 'edit-3', 'external-link', 'fast-forward', 'file', 'file-minus', 'file-plus', 'file-text', 'filter', 'folder-minus', 'folder-plus', 'frown', 'grid', 'hash', 'help-circle', 'hexagon', 'inbox', 'italic', 'layers', 'link-2', 'loader', 'log-in', 'log-out', 'maximize-2', 'meh', 'mic-off', 'minimize', 'minimize-2', 'minus', 'minus-circle', 'minus-square', 'more-horizontal', 'more-vertical', 'mouse-pointer', 'move', 'navigation-2', 'octagon', 'pause', 'pause-circle', 'percent', 'phone', 'phone-call', 'phone-forwarded', 'phone-incoming', 'phone-missed', 'phone-off', 'phone-outgoing', 'play-circle', 'plus', 'plus-circle', 'plus-square', 'pocket', 'refresh-ccw', 'repeat', 'rewind', 'rotate-ccw', 'rotate-cw', 'rss', 'scissors', 'shield-off', 'shopping-bag', 'shuffle', 'sidebar', 'skip-back', 'skip-forward', 'slash', 'smile', 'stop-circle', 'sunrise', 'sunset', 'tablet', 'tag', 'thumbs-down', 'toggle-right', 'trash-2', 'trending-down', 'triangle', 'truck', 'underline', 'upload-cloud', 'user-check', 'user-minus', 'user-plus', 'user-x', 'video-off', 'voicemail', 'volume', 'volume-1', 'volume-2', 'volume-x', 'watch', 'wifi-off', 'x-circle', 'x-octagon', 'x-square', 'zap-off', 'zoom-out', 'gamepad', 'bus', 'car', 'bike', 'train', 'plane'];
+        const ICONS = ['mail','hard-drive','link','youtube','twitter','github','music','map','video','message-circle','camera','shopping-cart','coffee','monitor','smartphone','pen-tool','folder','image','star','heart','settings','book','briefcase','calendar','clock','cloud','globe','key','lock','mic','moon','sun','umbrella','zap','battery','bell','activity','airplay','alarm-check','align-center','anchor','aperture','archive','award','bar-chart','bluetooth','bookmark','box','cast','check','chrome','clipboard','code','compass','copy','cpu','crosshair','database','download','droplet','eye','feather','film','flag','gift','headphones','home','info','instagram','layout','life-buoy','linkedin','list','map-pin','maximize','menu','navigation','package','paperclip','pie-chart','play','power','printer','radio','refresh-cw','save','search','send','server','share','shield','slack','sliders','speaker','square','target','terminal','thermometer','thumbs-up','toggle-left','tool','trash','trello','trending-up','tv','twitch','type','unlock','upload','user','users','wifi','wind','x','zoom-in','sticky-note', 'accessibility', 'alarm-clock', 'alert-circle', 'alert-octagon', 'alert-triangle', 'align-justify', 'align-left', 'align-right', 'battery-charging', 'bell-off', 'bold', 'book-open', 'camera-off', 'check-circle', 'check-square', 'chevron-down', 'chevron-left', 'chevron-right', 'chevron-up', 'chevrons-down', 'chevrons-left', 'chevrons-right', 'chevrons-up', 'cloud-drizzle', 'cloud-lightning', 'cloud-off', 'cloud-rain', 'cloud-snow', 'codesandbox', 'command', 'corner-down-left', 'corner-down-right', 'corner-left-down', 'corner-left-up', 'corner-right-down', 'corner-right-up', 'corner-up-left', 'corner-up-right', 'credit-card', 'crop', 'delete', 'disc', 'divide', 'divide-circle', 'divide-square', 'download-cloud', 'edit', 'edit-2', 'edit-3', 'external-link', 'fast-forward', 'file', 'file-minus', 'file-plus', 'file-text', 'filter', 'folder-minus', 'folder-plus', 'frown', 'grid', 'hash', 'help-circle', 'hexagon', 'inbox', 'italic', 'layers', 'link-2', 'loader', 'log-in', 'log-out', 'maximize-2', 'meh', 'mic-off', 'minimize', 'minimize-2', 'minus', 'minus-circle', 'minus-square', 'more-horizontal', 'more-vertical', 'mouse-pointer', 'move', 'navigation-2', 'octagon', 'pause', 'pause-circle', 'percent', 'phone', 'phone-call', 'phone-forwarded', 'phone-incoming', 'phone-missed', 'phone-off', 'phone-outgoing', 'play-circle', 'plus', 'plus-circle', 'plus-square', 'pocket', 'refresh-ccw', 'repeat', 'rewind', 'rotate-ccw', 'rotate-cw', 'rss', 'scissors', 'shield-off', 'shopping-bag', 'shuffle', 'sidebar', 'skip-back', 'skip-forward', 'slash', 'smile', 'stop-circle', 'sunrise', 'sunset', 'tablet', 'tag', 'thumbs-down', 'toggle-right', 'trash-2', 'trending-down', 'triangle', 'truck', 'underline', 'upload-cloud', 'user-check', 'user-minus', 'user-plus', 'user-x', 'video-off', 'voicemail', 'volume', 'volume-1', 'volume-2', 'volume-x', 'watch', 'wifi-off', 'x-circle', 'x-octagon', 'x-square', 'zap-off', 'zoom-out', 'gamepad', 'bus', 'car', 'bike', 'train', 'plane', 'square-dashed'];
         const EMOJIS = ['🍎','🚀','💻','🧠','🔥','✨','🎵','🎮','📚','☕','💡','🎉','🌍','❤️','✅','🍕','🍔','🥑','🚗','✈️','⚽','🏀','🏆','🎨','🎭','🎬','🎧','📱','⌚','💰','💎','🔑','🎈','🎁','👑','🐶','🐱','🐼','🦊','🦋','🍀','🌻','☀️','🌙','⭐','🌈','🍉','🍓','🍩','🍣','🍷','🍹','⛺','🏖️','🗽','🗼','🚁','⛵','⏰','⌛','⏳','⚖️','⚙️','🛡️','💊','💉','🩸','🧬','🦠','🔭','🔮','🪄','🧿','🧸','🧹','🧺','🧻','🧼','🧽','🪣','🧴','🛎️','🧳','伞','✂️','📌','✏️','✒️','📝','📁','📊','📈','📉','📅','🗓️','📇','🗑️','🔒','🔓','🔗','💬','💭','📣','🔔','🎶','🏁','🚩','🏳️‍🌈', '😀','😂','😅','😉','😊','😇','🥰','😍','🤩','😘','😗','😚','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🤐','🤨','😐','😑','😶','😏','😒','🙄','😬','🤥','😌','😔','😪','🤤','😴','😷','🤒','🤕','🤢','🤮','🤧','🥵','🥶','🥴','😵','🤯','🤠','🥳','😎','🤓','🧐','😕','😟','🙁','☹️','😮','😯','😲','😳','🥺','😦','😧','😨','😰','😥','😢','😭','😱','😖','😣','😞','😓','😩','😫','🥱','😤','😡','😠','🤬','😈','👿','💀','☠️','💩','🤡','👹','👺','👻','👽','👾','🤖','😺','😸','😹','😻','😼','😽','🙀','😿','😾','🙈','🙉','🙊','💋','💌','💘','💝','💖','💗','💓','💞','💕','💟','❣️','💔','❤️‍🔥','❤️‍🩹','💯','💢','💥','💫','💦','💨','🕳️','💣','👁️‍🗨️','🗨️','🗯️','💤', '👋','🤚','🖐️','✋','🖖','👌','🤌','🤏','✌️','🤞','🫰','🤟','🤘','🤙','👈','👉','👆','🖕','👇','☝️','👍','👎','✊','👊','🤛','🤜','👏','🙌','👐','🤲','🤝','🙏','✍️','💅','🤳','💪','🦾','🦿','🦵','🦶','👂','🦻','👃','🫀','🫁','🦷','🦴','👀','👁️','👅','👄', '🍇','🍈','🍊','🍋','🍌','🍍','🥭','🍏','🍐','🍑','🍒','🫐','🥝','🍅','🫒','🥥','🍆','🥔','🥕','🌽','🌶️','🫑','🥒','🥬','🥦','🧄','🧅','🍄','🥜','🌰','🍞','🥐','🥖','🫓','🥨','🥯','🥞','🧇','🧀','🍖','🍗','🥩','🥓','🌭','🥪','🌮','🌯','🫔','🥙','🧆','🥚','🍳','🥘','🍲','🫕','🥣','🥗','🍿','🧈','🧂','🥫','🍱','🍘','🍙','🍚','🍛','🍜','🍝','🍠','🍢','🍤','🍥','🥮','🍡','🥟','🥠','🥡','🦀','🦞','🦐','🦑','🦪','🍦','🍧','🍨','🍪','🎂','🍰','🧁','🥧','🍫','🍬','🍭','🍮','🍯','🍼','🥛','🫖','🍵','🍶','🍾','🍸','🍺','🍻','🥂','🥃','🫗','🥤','🧋','🧃','🧉','🧊','🥢','🍽️','🍴','🥄','🔪','🏺', '🏈','⚾','🥎','🎾','🏐','🏉','🥏','🎱','🪀','🏓','🏸','🏒','🏑','🥍','🏏','🪃','🥅','⛳','🪁','🏹','🎣','🤿','🥊','🥋','🎽','🛹','🛼','🛷','⛸️','🥌','🎿','⛷️','🏂','🪂','🏋️','🤼','🤸','⛹️','🤺','🤾','🏌️','🏇','🧘','🏄','🏊','🤽','🚣','🧗','🚵','🚴'];
 
         const DEFAULT_STATE = {
-            settings: { theme: 'system', bgType: 'solid', angle: 90, weekStart: 1, customTextColor: null, bgImage: null, lightColors: { ...LIGHT_DEFAULTS }, darkColors: { ...DARK_DEFAULTS }, fontFamily: 'serif', widgetBgMode: 'glass', widgetBgColor: '#000000' },
+            settings: { theme: 'system', bgType: 'solid', angle: 90, weekStart: 1, customTextColor: null, bgImage: null, lightColors: { ...LIGHT_DEFAULTS }, darkColors: { ...DARK_DEFAULTS }, fontFamily: 'inter', widgetBgMode: 'glass', widgetBgColor: { light: '#ffffff', dark: '#1a1a1a' } },
             spaces: {
                 'root': {
                     title: 'Home',
@@ -416,7 +468,12 @@
             }
         };
 
-        let appState = JSON.parse(localStorage.getItem('dashboard_v21')) || DEFAULT_STATE;
+        let appState = JSON.parse(localStorage.getItem('dashboard_v28')) || DEFAULT_STATE;
+        
+        if (typeof appState.settings.widgetBgColor === 'string') {
+            appState.settings.widgetBgColor = { light: '#ffffff', dark: '#1a1a1a' };
+        }
+        
         let tempSettings = null; 
         
         let spaceStack = ['root']; let calendarOffsets = {}; 
@@ -449,7 +506,7 @@
         }
 
         function getCurrentWidgets() { return isSearching ? searchResults : appState.spaces[spaceStack[spaceStack.length - 1]].widgets; }
-        function saveState() { if(!isSearching) localStorage.setItem('dashboard_v21', JSON.stringify(appState)); }
+        function saveState() { if(!isSearching) localStorage.setItem('dashboard_v28', JSON.stringify(appState)); }
         function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.classList.remove('opacity-0'); setTimeout(()=>t.classList.add('opacity-0'), 2000); }
 
         function populateIconGrids() {
@@ -462,7 +519,6 @@
         }
 
         window.onload = () => {
-            if(appState.settings.fontFamily === 'system') appState.settings.fontFamily = 'serif'; 
             applyThemeAndBg();
             window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if(appState.settings.theme === 'system') applyThemeAndBg(); });
             
@@ -509,7 +565,7 @@
             let newW = startW + Math.round((e.clientX - startX) / (cellW + gap)); let newH = startH + Math.round((e.clientY - startY) / (cellH + gap));
             const activeCols = window.innerWidth < 768 ? 4 : 6;
 
-            if(resizeWidget.type === 'smart') { newW = Math.max(1, Math.min(4, newW)); newH = Math.max(1, Math.min(4, newH)); }
+            if(resizeWidget.type === 'smart' || resizeWidget.type === 'spacer') { newW = Math.max(1, Math.min(4, newW)); newH = Math.max(1, Math.min(4, newH)); }
             if(resizeWidget.type === 'weather') { newW = Math.max(1, Math.min(2, newW)); newH = 1; }
             if(resizeWidget.type === 'clock') { newW = Math.max(2, Math.min(6, newW)); newH = Math.max(1, Math.min(2, newH)); }
             if(resizeWidget.type === 'timer') { newW = Math.max(1, Math.min(2, newW)); newH = 1; }
@@ -536,13 +592,24 @@
             grid.classList.remove('hidden'); emptyState.style.display = 'none';
 
             widgets.forEach(widget => {
-                const el = document.createElement('div'); const isTrans = widget.data?.transparent;
+                const el = document.createElement('div'); 
                 const renderW = Math.min(widget.w, activeCols);
                 
-                el.className = `glass-panel group relative col-span-${renderW} row-span-${widget.h} ${isTrans ? 'transparent-box' : ''}`; el.dataset.id = widget.id;
+                if (widget.type === 'spacer') {
+                    el.className = `group relative col-span-${renderW} row-span-${widget.h} transparent-box ${isEditMode ? '' : 'no-jiggle pointer-events-none'}`;
+                } else {
+                    const isTrans = widget.data?.transparent;
+                    el.className = `glass-panel group relative col-span-${renderW} row-span-${widget.h} ${isTrans ? 'transparent-box' : ''}`; 
+                }
+                
+                el.dataset.id = widget.id;
+                
+                if(widget.data?.textColor) {
+                    el.style.color = widget.data.textColor;
+                }
 
                 const controls = document.createElement('div'); controls.className = `absolute top-3 right-3 z-30 gap-2 ${isEditMode && !isSearching ? 'flex' : 'hidden'}`;
-                if (['smart', 'weather', 'clock', 'calendar', 'timer'].includes(widget.type)) { controls.innerHTML += `<button onclick="openEditWidget('${widget.id}')" class="p-2.5 bg-black/20 dark:bg-white/20 rounded-full hover:scale-110 text-white backdrop-blur shadow-xl transition cursor-pointer"><i data-lucide="edit-2" class="w-4 h-4"></i></button>`; }
+                if (['smart', 'weather', 'clock', 'calendar', 'timer', 'notes'].includes(widget.type)) { controls.innerHTML += `<button onclick="openEditWidget('${widget.id}')" class="p-2.5 bg-black/20 dark:bg-white/20 rounded-full hover:scale-110 text-white backdrop-blur shadow-xl transition cursor-pointer"><i data-lucide="edit-2" class="w-4 h-4"></i></button>`; }
                 controls.innerHTML += `<button onclick="deleteWidget('${widget.id}')" class="p-2.5 bg-red-500/90 rounded-full hover:scale-110 text-white backdrop-blur shadow-xl transition cursor-pointer"><i data-lucide="trash-2" class="w-4 h-4"></i></button>`;
                 el.appendChild(controls);
 
@@ -559,6 +626,9 @@
 
         function getWidgetContent(w) {
             switch(w.type) {
+                case 'spacer':
+                    return isEditMode ? `<div class="w-full h-full border-2 border-dashed border-black/30 dark:border-white/30 rounded-[32px] flex items-center justify-center opacity-40"><i data-lucide="square-dashed" class="w-8 h-8"></i></div>` : `<div class="w-full h-full"></div>`;
+
                 case 'smart': 
                     let bgImg = '';
                     if(w.data.bgImage) { const overlay = w.data.overlay !== false ? 'opacity-50 dark:opacity-40' : 'opacity-100'; bgImg = `<img src="${w.data.bgImage}" class="absolute inset-0 w-full h-full object-cover z-0 ${overlay} transition-opacity duration-300" />`; }
@@ -632,7 +702,7 @@
                     return `<div id="weather-${w.id}" class="w-full h-full flex items-center justify-between px-6 py-4 md:px-8 relative"><div class="animate-pulse h-8 bg-black/10 rounded w-1/2"></div></div>`;
 
                 case 'notes': 
-                    return `<div class="w-full h-full flex p-6"><textarea id="note-${w.id}" onblur="saveNoteData('${w.id}')" class="${isEditMode ? 'pointer-events-none' : ''} flex-1 w-full h-full bg-transparent resize-none border-none outline-none font-medium text-sm leading-relaxed no-scrollbar placeholder-current opacity-50 focus:opacity-100 transition-opacity" placeholder="Write something...">${w.data.text || ''}</textarea></div>`;
+                    return `<div class="w-full h-full flex p-6"><textarea id="note-${w.id}" onblur="saveNoteData('${w.id}')" class="text-current ${isEditMode ? 'pointer-events-none' : ''} flex-1 w-full h-full bg-transparent resize-none border-none outline-none font-medium text-sm leading-relaxed no-scrollbar placeholder-current opacity-60 focus:opacity-100 transition-opacity" placeholder="Write something...">${w.data.text || ''}</textarea></div>`;
 
                 case 'calendar': 
                     return generateCalendarHTML(w.id, Math.min(w.w, window.innerWidth < 768 ? 4 : 6), w.h);
@@ -651,10 +721,10 @@
             if(w === 1 && h === 1) { return `<div class="w-full h-full flex flex-col items-center justify-center p-4"><span class="text-[10px] font-bold text-red-500 uppercase tracking-widest mb-1">${dayStr}</span><span class="text-4xl font-black tracking-tighter">${today}</span></div>`; }
             
             if(w === 1 && h > 1) { 
-                let html = `<div class="w-full h-full flex flex-col items-center justify-between py-4 px-2 gap-2">`;
+                let html = `<div class="w-full h-full flex flex-col items-center justify-between p-4 md:p-5 gap-2">`;
                 for(let i=0; i<7; i++) {
                     let d = new Date(); d.setDate(today+i); let isT = i === 0;
-                    html += `<div class="flex flex-col items-center justify-center flex-1 w-full rounded-2xl ${isT ? 'bg-red-500 text-white shadow-md' : 'opacity-70'}"><span class="text-[9px] font-bold uppercase mb-1">${daysArr[(d.getDay()-1+7)%7]}</span><span class="text-sm font-bold">${d.getDate()}</span></div>`;
+                    html += `<div class="flex flex-col items-center justify-center flex-1 w-full rounded-2xl ${isT ? 'bg-red-500 text-white shadow-md' : 'opacity-70'}"><span class="text-[10px] font-bold uppercase mb-0.5">${daysArr[(d.getDay()-1+7)%7]}</span><span class="text-base font-bold">${d.getDate()}</span></div>`;
                 }
                 html += `</div>`; return html;
             }
@@ -665,34 +735,40 @@
                 if(curr.getDay()===0 && appState.settings.weekStart===1) first -= 7; 
                 for(let i=0; i<7; i++) { let d = new Date(curr.getFullYear(), curr.getMonth(), first + i); weekDates.push({ date: d.getDate(), isToday: d.getDate() === today && d.getMonth() === now.getMonth() }); }
                 
-                let html = `<div class="w-full h-full flex flex-col justify-center px-4 md:px-6 w-full"><div class="flex justify-between w-full h-full items-center gap-2">`;
+                let html = `<div class="w-full h-full flex flex-col justify-center p-4 md:p-5"><div class="flex justify-between w-full h-full items-center gap-2 md:gap-4">`;
                 for(let i=0; i<7; i++) {
                     let isT = weekDates[i].isToday;
-                    html += `<div class="flex flex-col items-center justify-center flex-1 h-[80%] max-h-[80px] rounded-2xl ${isT ? 'bg-red-500 text-white shadow-md' : 'opacity-70'}"><span class="text-[10px] font-bold uppercase mb-1 ${isT?'opacity-100':'opacity-50'}">${daysArr[i]}</span><span class="text-base font-bold">${weekDates[i].date}</span></div>`;
+                    html += `<div class="flex flex-col items-center justify-center flex-1 h-full rounded-2xl ${isT ? 'bg-red-500 text-white shadow-md' : 'opacity-70'}"><span class="text-[10px] font-bold uppercase mb-0.5 ${isT?'opacity-100':'opacity-50'}">${daysArr[i]}</span><span class="text-base md:text-xl font-bold">${weekDates[i].date}</span></div>`;
                 }
                 html += `</div></div>`; return html;
             }
 
-            const headClass = w >= 4 ? 'text-lg' : 'text-xs';
-            let html = `<div class="flex flex-col h-full p-6 w-full max-w-2xl mx-auto relative group/cal">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="${headClass} font-bold text-red-500 uppercase tracking-widest text-left pl-2">${monthStr} ${viewingDate.getFullYear()}</div>
+            const headClass = w >= 4 ? 'text-lg md:text-xl' : 'text-sm md:text-base';
+            const numClass = w >= 3 ? 'text-sm md:text-lg' : 'text-xs md:text-sm';
+            const circleSize = w >= 4 ? 'w-8 h-8 md:w-10 md:h-10' : 'w-6 h-6 md:w-8 md:h-8';
+            
+            let html = `<div class="flex flex-col h-full p-4 md:p-5 w-full mx-auto relative group/cal">
+                <div class="flex items-center justify-between mb-2 md:mb-4">
+                    <div class="${headClass} font-bold text-red-500 uppercase tracking-widest text-left">${monthStr} ${viewingDate.getFullYear()}</div>
                     <div class="flex items-center gap-1 opacity-0 group-hover/cal:opacity-100 transition-opacity ${isEditMode ? 'hidden' : ''}">
                         ${!isCurrentMonth ? `<button onclick="changeCalOffset('${id}', 0)" class="text-[10px] font-bold px-2 py-1 bg-black/10 dark:bg-white/10 rounded mr-2 uppercase transition cursor-pointer">Today</button>` : ''}
                         <button onclick="changeCalOffset('${id}', -1)" class="p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded transition cursor-pointer"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
                         <button onclick="changeCalOffset('${id}', 1)" class="p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded transition cursor-pointer"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
                     </div>
                 </div>
-                <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold opacity-50 uppercase mb-2">`;
+                <div class="grid grid-cols-7 gap-1 text-center text-[9px] md:text-xs font-bold opacity-50 uppercase mb-1 md:mb-2">`;
             daysArr.forEach(d => html += `<div>${d}</div>`);
-            html += `</div><div class="grid grid-cols-7 gap-y-2 text-center flex-1 content-start ${w >= 4 ? 'text-lg gap-y-4' : 'text-sm'}">`;
+            html += `</div><div class="grid grid-cols-7 grid-rows-6 flex-1 text-center items-center ${numClass}">`;
 
             let startOffset = new Date(viewingDate.getFullYear(), viewingDate.getMonth(), 1).getDay() - appState.settings.weekStart;
             if(startOffset < 0) startOffset += 7;
             for(let i=0; i<startOffset; i++) html += `<div></div>`;
             for(let i=1; i<=new Date(viewingDate.getFullYear(), viewingDate.getMonth() + 1, 0).getDate(); i++) {
-                if(isCurrentMonth && i === today) html += `<div class="mx-auto w-7 h-7 md:w-8 md:h-8 flex items-center justify-center bg-red-500 text-white rounded-full font-bold shadow-md m-0">${i}</div>`;
-                else html += `<div class="flex items-center justify-center h-8 font-medium opacity-80">${i}</div>`;
+                if(isCurrentMonth && i === today) {
+                    html += `<div class="flex items-center justify-center"><div class="flex items-center justify-center ${circleSize} bg-red-500 text-white rounded-full font-bold shadow-md m-0">${i}</div></div>`;
+                } else {
+                    html += `<div class="flex items-center justify-center h-full font-medium opacity-80">${i}</div>`;
+                }
             }
             html += `</div></div>`; return html;
         }
@@ -771,109 +847,250 @@
             renderDashboard();
         }
 
+        function refreshUploadUI(hasImg) {
+            const ewLabel = document.getElementById('ew-upload-label');
+            if (ewLabel) ewLabel.innerHTML = `${hasImg ? 'Replace Image' : 'Upload Image'} <input type="file" id="ew-photo" class="hidden" accept="image/*" onchange="handleWidgetPhoto(event)">`;
+            const ewTrash = document.getElementById('ew-trash-btn');
+            if (ewTrash) ewTrash.style.display = hasImg ? 'block' : 'none';
+
+            const ebLabel = document.getElementById('eb-upload-label');
+            if (ebLabel) ebLabel.innerHTML = `${hasImg ? 'Replace Image' : 'Upload Image'} <input type="file" id="eb-photo" class="hidden" accept="image/*" onchange="handleWidgetPhoto(event)">`;
+            const ebTrash = document.getElementById('eb-trash-btn');
+            if (ebTrash) ebTrash.style.display = hasImg ? 'block' : 'none';
+        }
+
+        function setTimerMode(mode) {
+            const dirInput = document.getElementById('eb-timer-dir');
+            if (dirInput) dirInput.value = mode;
+            
+            const btnDown = document.getElementById('btn-timer-down');
+            const btnUp = document.getElementById('btn-timer-up');
+            const soundWrap = document.getElementById('sound-wrap');
+            
+            if (mode === 'down') {
+                if (btnDown) btnDown.className = 'flex-1 py-1.5 text-xs font-bold bg-white dark:bg-white/20 shadow-sm rounded cursor-pointer transition';
+                if (btnUp) btnUp.className = 'flex-1 py-1.5 text-xs font-medium opacity-60 rounded cursor-pointer transition hover:opacity-100';
+                if (soundWrap) soundWrap.style.display = 'flex';
+            } else {
+                if (btnUp) btnUp.className = 'flex-1 py-1.5 text-xs font-bold bg-white dark:bg-white/20 shadow-sm rounded cursor-pointer transition';
+                if (btnDown) btnDown.className = 'flex-1 py-1.5 text-xs font-medium opacity-60 rounded cursor-pointer transition hover:opacity-100';
+                if (soundWrap) soundWrap.style.display = 'none';
+            }
+        }
+
         function openEditWidget(id) {
             currentEditId = id; const w = getCurrentWidgets().find(w => w.id === id);
             requirePassword(w.data.password, () => {
                 if(w.type === 'smart') {
-                    setSmartAction(w.data.action);
+                    setSmartAction(w.data.action, false);
                     document.getElementById('ew-title').value = w.data.title || '';
                     document.getElementById('ew-content').value = w.data.content || '';
+                    
                     document.getElementById('ew-req-pass').checked = !!w.data.password;
                     document.getElementById('ew-password').value = w.data.password || '';
+                    document.getElementById('ew-password-wrap').style.display = !!w.data.password ? 'block' : 'none';
+                    
                     document.getElementById('ew-img-overlay').checked = w.data.overlay !== false;
+                    document.getElementById('ew-trans').checked = !!w.data.transparent;
+                    
+                    const useTextColor = !!w.data.textColor;
+                    document.getElementById('ew-use-text-color').checked = useTextColor;
+                    document.getElementById('ew-text-color-wrap').style.display = useTextColor ? 'block' : 'none';
+                    
+                    const ewTextColor = document.getElementById('ew-text-color');
+                    ewTextColor.value = w.data.textColor || '#ffffff';
+                    ewTextColor.parentElement.style.backgroundColor = w.data.textColor || '#ffffff';
+                    
                     togglePasswordField(); setTempIcon(w.data.icon || '', w.data.isEmoji || false);
+                    const hasImg = !!w.data.bgImage;
+                    setTimeout(() => refreshUploadUI(hasImg), 10);
                     showModal('edit-smart-modal');
                 } else {
                     const body = document.getElementById('eb-body');
+                    let specificHtml = '';
+                    
                     if(w.type === 'weather') {
                         document.getElementById('eb-title').innerText = "Edit Weather";
-                        body.innerHTML = `<label class="block text-[10px] font-bold opacity-60 mb-2 uppercase tracking-widest">City Name</label><input type="text" id="eb-city" value="${w.data.city}" class="w-full p-3 rounded-xl bg-black/5 dark:bg-white/10 outline-none font-medium mb-3 border border-transparent focus:border-blue-500">`;
+                        specificHtml = `
+                            <div class="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/5 mb-3">
+                                <label class="block text-[10px] font-bold opacity-80 mb-2 uppercase tracking-widest">City Name</label>
+                                <input type="text" id="eb-city" value="${w.data.city}" class="w-full p-2.5 rounded-lg bg-black/5 dark:bg-white/10 outline-none font-medium text-sm border border-transparent focus:border-blue-500">
+                            </div>`;
                     } else if(w.type === 'timer') {
                         document.getElementById('eb-title').innerText = "Edit Timer";
-                        body.innerHTML = `
-                            <label class="block text-[10px] font-bold opacity-60 mb-2 uppercase tracking-widest">Default Minutes</label>
-                            <input type="number" id="eb-timer-min" value="${w.data.timerMinutes || 25}" class="w-full p-3 rounded-xl bg-black/5 dark:bg-white/10 outline-none font-medium mb-3 border border-transparent focus:border-blue-500" min="1" max="90">
-                            <label class="block text-[10px] font-bold opacity-60 mb-2 uppercase tracking-widest">Mode</label>
-                            <select id="eb-timer-dir" class="w-full p-3 rounded-xl bg-black/5 dark:bg-white/10 outline-none font-medium mb-3 border border-transparent focus:border-blue-500" onchange="document.getElementById('sound-wrap').style.display = this.value === 'down' ? 'flex' : 'none'">
-                                <option value="down" ${w.data.direction !== 'up' ? 'selected' : ''}>Count Down</option>
-                                <option value="up" ${w.data.direction === 'up' ? 'selected' : ''}>Count Up (Stopwatch)</option>
-                            </select>
-                            <div id="sound-wrap" class="flex items-center gap-3 p-3 bg-black/5 dark:bg-white/5 rounded-xl cursor-pointer mb-3" style="display: ${w.data.direction !== 'up' ? 'flex' : 'none'}">
-                                <input type="checkbox" id="eb-timer-sound" ${w.data.playSound ? 'checked' : ''} class="w-5 h-5 accent-blue-500">
-                                <span class="font-medium opacity-90 text-sm">Play Sound on Finish</span>
+                        const isDown = w.data.direction !== 'up';
+                        specificHtml = `
+                            <div class="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/5 mb-3">
+                                <label class="block text-[10px] font-bold opacity-80 mb-2 uppercase tracking-widest">Default Minutes</label>
+                                <input type="number" id="eb-timer-min" value="${w.data.timerMinutes || 25}" class="w-full p-2.5 rounded-lg bg-black/5 dark:bg-white/10 outline-none font-medium text-sm mb-3 border border-transparent focus:border-blue-500" min="1" max="90">
+                                
+                                <label class="block text-[10px] font-bold opacity-80 mb-2 uppercase tracking-widest">Mode</label>
+                                <div class="flex gap-2 p-1 bg-black/5 dark:bg-white/10 rounded-lg mb-3">
+                                    <button id="btn-timer-down" onclick="setTimerMode('down')" class="flex-1 py-1.5 text-xs ${isDown ? 'font-bold bg-white dark:bg-white/20 shadow-sm' : 'font-medium opacity-60'} rounded cursor-pointer transition hover:opacity-100">Count Down</button>
+                                    <button id="btn-timer-up" onclick="setTimerMode('up')" class="flex-1 py-1.5 text-xs ${!isDown ? 'font-bold bg-white dark:bg-white/20 shadow-sm' : 'font-medium opacity-60'} rounded cursor-pointer transition hover:opacity-100">Count Up</button>
+                                </div>
+                                <input type="hidden" id="eb-timer-dir" value="${w.data.direction || 'down'}">
+
+                                <div id="sound-wrap" class="flex items-center justify-between pt-3 border-t border-black/10 dark:border-white/10" style="display: ${isDown ? 'flex' : 'none'}">
+                                    <span class="text-[10px] font-bold opacity-80 uppercase tracking-widest">Play Sound on Finish</span>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" id="eb-timer-sound" ${w.data.playSound ? 'checked' : ''} class="sr-only peer">
+                                        <div class="w-9 h-5 bg-black/20 dark:bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-500"></div>
+                                    </label>
+                                </div>
                             </div>
-                            <label class="flex items-center gap-3 p-4 bg-black/5 dark:bg-white/5 rounded-xl cursor-pointer"><input type="checkbox" id="eb-trans" ${w.data.transparent ? 'checked' : ''} class="w-5 h-5 accent-blue-500"><span class="font-medium opacity-90">Transparent Box</span></label>
                         `;
                     } else if(w.type === 'clock') {
                         document.getElementById('eb-title').innerText = `Edit Clock`;
-                        body.innerHTML = `
-                            <label class="flex items-center gap-3 p-4 bg-black/5 dark:bg-white/5 rounded-xl cursor-pointer mb-3"><input type="checkbox" id="eb-trans" ${w.data.transparent ? 'checked' : ''} class="w-5 h-5 accent-blue-500"><span class="font-medium opacity-90">Transparent Box</span></label>
-                            <div class="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/5">
-                                <label class="block text-[10px] font-bold opacity-60 mb-2 uppercase tracking-widest">Image Background</label>
-                                <div class="flex items-center gap-2 mb-3">
-                                    <label class="flex-1 py-2 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-black/10 transition flex justify-center cursor-pointer text-xs font-bold uppercase">
-                                        Upload <input type="file" id="eb-photo" class="hidden" accept="image/*" onchange="handleWidgetPhoto(event)">
+                        specificHtml = `
+                            <div class="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/5 mb-3">
+                                <label class="block text-[10px] font-bold opacity-80 mb-3 uppercase tracking-widest">Image Background</label>
+                                <div class="flex items-center gap-2 mb-4">
+                                    <label id="eb-upload-label" class="flex-1 py-2 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-black/10 transition flex justify-center cursor-pointer text-[10px] font-bold uppercase tracking-widest">
+                                        Upload Image <input type="file" id="eb-photo" class="hidden" accept="image/*" onchange="handleWidgetPhoto(event)">
                                     </label>
-                                    <button onclick="clearWidgetPhoto()" class="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition cursor-pointer"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                    <button id="eb-trash-btn" onclick="clearWidgetPhoto()" class="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition cursor-pointer" style="display: none;"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                                 </div>
-                                <label class="flex items-center gap-2 cursor-pointer">
-                                    <input type="checkbox" id="eb-img-overlay" ${w.data.overlay !== false ? 'checked' : ''} class="w-4 h-4 accent-blue-500">
-                                    <span class="text-[10px] font-bold opacity-80 uppercase tracking-widest">Darken Image</span>
-                                </label>
+                                <div class="flex items-center justify-between pt-3 border-t border-black/10 dark:border-white/10">
+                                    <span class="text-[10px] font-bold opacity-80 uppercase tracking-widest">Tint Image</span>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" id="eb-img-overlay" ${w.data.overlay !== false ? 'checked' : ''} class="sr-only peer">
+                                        <div class="w-9 h-5 bg-black/20 dark:bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-500"></div>
+                                    </label>
+                                </div>
                             </div>
                         `;
-                    } else if(w.type === 'calendar') {
-                        document.getElementById('eb-title').innerText = `Edit Calendar`;
-                        body.innerHTML = `<label class="flex items-center gap-3 p-4 bg-black/5 dark:bg-white/5 rounded-xl cursor-pointer"><input type="checkbox" id="eb-trans" ${w.data.transparent ? 'checked' : ''} class="w-5 h-5 accent-blue-500"><span class="font-medium opacity-90">Transparent Box</span></label>`;
+                        const hasImg = !!w.data.bgImage;
+                        setTimeout(() => refreshUploadUI(hasImg), 10);
+                    } else if(w.type === 'calendar' || w.type === 'notes') {
+                        document.getElementById('eb-title').innerText = `Edit ` + w.type.charAt(0).toUpperCase() + w.type.slice(1);
                     }
+
+                    const useTextColor = !!w.data.textColor;
+                    const styleHtml = `
+                        <div class="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/5 mb-3">
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-[10px] font-bold opacity-80 uppercase tracking-widest">Transparent Box</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="eb-trans" ${w.data.transparent ? 'checked' : ''} class="sr-only peer">
+                                    <div class="w-9 h-5 bg-black/20 dark:bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-500"></div>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/5 mb-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-[10px] font-bold opacity-80 uppercase tracking-widest">Custom Text Color</span>
+                                <div class="flex items-center gap-3">
+                                    <div id="eb-text-color-wrap" class="color-dot w-6 h-6 shrink-0" style="display: ${useTextColor ? 'block' : 'none'}; background-color: ${w.data.textColor || '#ffffff'}">
+                                        <input type="color" id="eb-text-color" value="${w.data.textColor || '#ffffff'}" oninput="this.parentElement.style.backgroundColor = this.value">
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" id="eb-use-text-color" ${useTextColor ? 'checked' : ''} class="sr-only peer" onchange="document.getElementById('eb-text-color-wrap').style.display = this.checked ? 'block' : 'none'">
+                                        <div class="w-9 h-5 bg-black/20 dark:bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-500"></div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    body.innerHTML = specificHtml + styleHtml;
                     showModal('edit-basic-modal');
                 }
             }, "Unlock to Edit");
         }
 
-        function setSmartAction(act) {
+        function setSmartAction(act, fromClick = false) {
             document.getElementById('ew-type').value = act;
             ['none', 'link', 'copy', 'space'].forEach(a => { document.getElementById(`btn-act-${a}`).className = a === act ? 'p-2 rounded-xl text-xs font-bold flex flex-col items-center gap-1 transition bg-blue-500 text-white shadow-md border-transparent cursor-pointer' : 'p-2 rounded-xl border border-black/10 dark:border-white/10 text-xs font-bold flex flex-col items-center gap-1 transition opacity-70 hover:opacity-100 cursor-pointer'; });
             const wrap = document.getElementById('ew-content-wrap'), lbl = document.getElementById('ew-content-label');
             if(act === 'none' || act === 'space') { wrap.style.display = 'none'; } else { wrap.style.display = 'block'; lbl.innerText = act === 'link' ? 'URL Link' : 'Text to Copy'; }
+            
+            if (fromClick) {
+                if(act === 'space') setTempIcon('folder', false);
+                else if(act === 'link') setTempIcon('link', false);
+                else if(act === 'copy') setTempIcon('copy', false);
+                else if(act === 'none') setTempIcon('image', false);
+            }
         }
-        function togglePasswordField() { document.getElementById('ew-password').style.display = document.getElementById('ew-req-pass').checked ? 'block' : 'none'; }
+        function togglePasswordField() { 
+            const wrap = document.getElementById('ew-password-wrap');
+            const chk = document.getElementById('ew-req-pass');
+            if(wrap && chk) wrap.style.display = chk.checked ? 'block' : 'none'; 
+        }
         function toggleIconTab(tab) {
             document.getElementById('grid-icons').classList.toggle('hidden', tab !== 'icons'); document.getElementById('grid-emojis').classList.toggle('hidden', tab !== 'emojis');
-            document.getElementById('tab-icons').className = tab === 'icons' ? 'flex-1 py-1.5 text-xs font-bold bg-white dark:bg-white/20 rounded shadow-sm cursor-pointer' : 'flex-1 py-1.5 text-xs font-medium rounded opacity-60 cursor-pointer';
-            document.getElementById('tab-emojis').className = tab === 'emojis' ? 'flex-1 py-1.5 text-xs font-bold bg-white dark:bg-white/20 rounded shadow-sm cursor-pointer' : 'flex-1 py-1.5 text-xs font-medium rounded opacity-60 cursor-pointer';
+            document.getElementById('tab-icons').className = tab === 'icons' ? 'flex-1 py-1.5 text-[10px] tracking-widest uppercase font-bold bg-white dark:bg-white/20 rounded shadow-sm cursor-pointer' : 'flex-1 py-1.5 text-[10px] tracking-widest uppercase font-medium rounded opacity-60 cursor-pointer';
+            document.getElementById('tab-emojis').className = tab === 'emojis' ? 'flex-1 py-1.5 text-[10px] tracking-widest uppercase font-bold bg-white dark:bg-white/20 rounded shadow-sm cursor-pointer' : 'flex-1 py-1.5 text-[10px] tracking-widest uppercase font-medium rounded opacity-60 cursor-pointer';
         }
         function setTempIcon(val, isEmoji) {
             tempIconData = { icon: val, isEmoji }; document.getElementById('ew-selected-display').innerHTML = isEmoji ? val : (val ? `<i data-lucide="${val}" class="w-6 h-6 inline-block"></i>` : 'None'); 
             try { lucide.createIcons(); } catch(e) {}
         }
         function handleWidgetPhoto(e) {
-            const file = e.target.files[0]; if(!file) return; compressImage(file, base64 => { const w = getCurrentWidgets().find(w => w.id === currentEditId); w.data.bgImage = base64; saveState(); renderDashboard(); });
+            const file = e.target.files[0]; if(!file) return; 
+            showToast("Uploading...");
+            compressImage(file, base64 => { 
+                const w = getCurrentWidgets().find(w => w.id === currentEditId); 
+                w.data.bgImage = base64; 
+                saveState(); renderDashboard(); 
+                refreshUploadUI(true);
+                showToast("Image Uploaded");
+            });
         }
-        function clearWidgetPhoto() { const w = getCurrentWidgets().find(w => w.id === currentEditId); w.data.bgImage = null; saveState(); renderDashboard(); }
+        function clearWidgetPhoto() { 
+            const w = getCurrentWidgets().find(w => w.id === currentEditId); 
+            w.data.bgImage = null; 
+            saveState(); renderDashboard(); 
+            refreshUploadUI(false);
+        }
 
         function saveSmartWidget() {
             const w = getCurrentWidgets().find(w => w.id === currentEditId);
             w.data.action = document.getElementById('ew-type').value; w.data.title = document.getElementById('ew-title').value; w.data.content = document.getElementById('ew-content').value;
             w.data.icon = tempIconData.icon; w.data.isEmoji = tempIconData.isEmoji; w.data.password = document.getElementById('ew-req-pass').checked ? document.getElementById('ew-password').value : null; w.data.overlay = document.getElementById('ew-img-overlay').checked;
+            
+            w.data.transparent = document.getElementById('ew-trans').checked;
+            w.data.textColor = document.getElementById('ew-use-text-color').checked ? document.getElementById('ew-text-color').value : null;
+
             if(w.data.action === 'space' && !appState.spaces[w.id]) appState.spaces[w.id] = { title: w.data.title, widgets: [] };
             if(w.data.action === 'space' && appState.spaces[w.id]) appState.spaces[w.id].title = w.data.title;
             saveState(); closeModals(); renderDashboard();
         }
         function saveBasicWidget() {
             const w = getCurrentWidgets().find(w => w.id === currentEditId);
+            
+            w.data.transparent = document.getElementById('eb-trans').checked;
+            w.data.textColor = document.getElementById('eb-use-text-color').checked ? document.getElementById('eb-text-color').value : null;
+
             if(w.type === 'weather') { w.data.city = document.getElementById('eb-city').value; }
-            if(w.type === 'timer') { w.data.timerMinutes = parseInt(document.getElementById('eb-timer-min').value)||25; w.data.direction = document.getElementById('eb-timer-dir').value; w.data.transparent = document.getElementById('eb-trans').checked; w.data.playSound = document.getElementById('eb-timer-sound')?.checked || false; resetTimer(w.id); }
-            if(w.type === 'clock') { w.data.transparent = document.getElementById('eb-trans').checked; w.data.overlay = document.getElementById('eb-img-overlay') ? document.getElementById('eb-img-overlay').checked : true; }
-            if(w.type === 'calendar') { w.data.transparent = document.getElementById('eb-trans').checked; }
+            if(w.type === 'timer') { w.data.timerMinutes = parseInt(document.getElementById('eb-timer-min').value)||25; w.data.direction = document.getElementById('eb-timer-dir').value; w.data.playSound = document.getElementById('eb-timer-sound')?.checked || false; resetTimer(w.id); }
+            if(w.type === 'clock') { w.data.overlay = document.getElementById('eb-img-overlay') ? document.getElementById('eb-img-overlay').checked : true; }
+            
             saveState(); closeModals(); renderDashboard();
         }
         function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => { m.classList.add('opacity-0'); setTimeout(()=>m.classList.add('hidden'), 300); }); currentEditId = null; }
 
+        function duplicateWidget() {
+            const w = getCurrentWidgets().find(w => w.id === currentEditId);
+            if(!w) return;
+            const newId = 'w_' + Date.now();
+            const clone = JSON.parse(JSON.stringify(w));
+            clone.id = newId;
+            getCurrentWidgets().push(clone);
+            if (clone.type === 'smart' && clone.data.action === 'space' && appState.spaces[w.id]) {
+                appState.spaces[newId] = JSON.parse(JSON.stringify(appState.spaces[w.id]));
+            }
+            saveState();
+            closeModals();
+            renderDashboard();
+            showToast("Widget Duplicated");
+        }
+
         function initSortable() {
             const grid = document.getElementById('bento-grid'); if(sortableInstance) sortableInstance.destroy();
             sortableInstance = new Sortable(grid, {
-                animation: 250, disabled: !isEditMode, ghostClass: 'opacity-0', filter: '.resize-handle', preventOnFilter: false,
+                animation: 250, disabled: !isEditMode, ghostClass: 'opacity-0', filter: '.resize-handle, .no-jiggle', preventOnFilter: false,
                 onEnd: function () {
                     const newOrderIds = Array.from(grid.children).map(el => el.dataset.id);
                     appState.spaces[spaceStack[spaceStack.length - 1]].widgets = newOrderIds.map(id => getCurrentWidgets().find(w => w.id === id)).filter(Boolean);
@@ -893,6 +1110,7 @@
         
         function addWidget(type, w, h) {
             const newId = 'w_' + Date.now(); let data = {};
+            if(type === 'spacer') data = { transparent: true };
             if(type === 'smart') data = { action: 'none', title: 'New', content: '', icon: 'star', isEmoji: false, bgImage: null, overlay: true };
             if(type === 'weather') data = { city: 'London', transparent: false };
             if(type === 'clock' || type === 'calendar') data = { transparent: false };
@@ -1029,7 +1247,13 @@
                 const c1 = document.getElementById('color1').value, c2 = document.getElementById('color2').value;
                 tempSettings.angle = document.getElementById('angle').value;
                 const colorWidget = document.getElementById('colorWidget');
-                if(colorWidget) tempSettings.widgetBgColor = colorWidget.value;
+                if(colorWidget) {
+                    if (typeof tempSettings.widgetBgColor === 'string') {
+                        tempSettings.widgetBgColor = { light: '#ffffff', dark: '#1a1a1a' };
+                    }
+                    if (isD) tempSettings.widgetBgColor.dark = colorWidget.value;
+                    else tempSettings.widgetBgColor.light = colorWidget.value;
+                }
                 if(isD) { tempSettings.darkColors.c1 = c1; tempSettings.darkColors.c2 = c2; } else { tempSettings.lightColors.c1 = c1; tempSettings.lightColors.c2 = c2; }
                 applyThemeAndBg(tempSettings); updateSettingsUI(tempSettings);
             } catch(e) {}
@@ -1068,13 +1292,20 @@
                 const hex1 = document.getElementById('hex1'); if(hex1) hex1.value = c.c1; 
                 const hex2 = document.getElementById('hex2'); if(hex2) hex2.value = c.c2;
                 const angleVal = document.getElementById('angle-val'); if(angleVal) angleVal.innerText = s.angle + '°';
-                const btnTrashBg = document.getElementById('btn-trash-bg'); if(btnTrashBg) btnTrashBg.style.display = s.bgImage ? 'block' : 'none';
+                
+                const btnTrashBg = document.getElementById('btn-trash-bg'); 
+                const mainBgLabel = document.getElementById('main-bg-upload-label');
+                if(btnTrashBg) btnTrashBg.style.display = s.bgImage ? 'block' : 'none';
+                if(mainBgLabel) mainBgLabel.innerHTML = `${s.bgImage ? 'Replace Image' : 'Upload Image'} <input type="file" id="bg-upload" class="hidden" accept="image/*" onchange="handleTempBgImageUpload(event)">`;
 
                 const tCol = s.customTextColor || (isD ? '#ffffff' : '#000000');
                 const cpWrapText = document.getElementById('cp-wrap-text'); if(cpWrapText) cpWrapText.style.backgroundColor = tCol; 
                 const hexText = document.getElementById('hexText'); if(hexText) hexText.value = tCol;
                 
-                const wCol = s.widgetBgColor || '#000000';
+                let wCol = isD ? '#1a1a1a' : '#ffffff';
+                if (s.widgetBgColor && typeof s.widgetBgColor === 'object') { wCol = isD ? s.widgetBgColor.dark : s.widgetBgColor.light; } 
+                else if (typeof s.widgetBgColor === 'string') { wCol = s.widgetBgColor; }
+
                 const cpWrapWidget = document.getElementById('cp-wrap-widget'); if(cpWrapWidget) cpWrapWidget.style.backgroundColor = wCol; 
                 const colorWidget = document.getElementById('colorWidget'); if(colorWidget) colorWidget.value = wCol;
             } catch(e) {}
@@ -1094,20 +1325,36 @@
                 bg.style.background = s.bgType === 'gradient' ? `linear-gradient(${s.angle}deg, ${c.c1}, ${c.c2})` : c.c1;
             }
             
-            if(s.customTextColor) { document.documentElement.style.setProperty('--custom-text', s.customTextColor); document.body.classList.add('custom-text-active'); } 
-            else { document.body.classList.remove('custom-text-active'); }
-
             if(s.widgetBgMode === 'solid') {
-                document.documentElement.style.setProperty('--widget-bg', s.widgetBgColor || '#000000'); document.documentElement.style.setProperty('--widget-blur', '0px'); document.documentElement.style.setProperty('--widget-border', 'transparent'); document.documentElement.style.setProperty('--widget-shadow', 'none');
+                let wCol = isD ? '#1a1a1a' : '#ffffff';
+                if (s.widgetBgColor && typeof s.widgetBgColor === 'object') { wCol = isD ? s.widgetBgColor.dark : s.widgetBgColor.light; } 
+                else if (typeof s.widgetBgColor === 'string') { wCol = s.widgetBgColor; }
+                
+                document.documentElement.style.setProperty('--widget-bg', wCol); 
+                document.documentElement.style.setProperty('--widget-blur', '0px'); 
+                document.documentElement.style.setProperty('--widget-border', 'transparent'); 
+                document.documentElement.style.setProperty('--widget-shadow', 'none');
+                
+                if(!s.customTextColor) {
+                    document.documentElement.style.setProperty('--custom-text', isD ? '#ffffff' : '#000000');
+                    document.body.classList.add('custom-text-active');
+                } else {
+                    document.documentElement.style.setProperty('--custom-text', s.customTextColor);
+                    document.body.classList.add('custom-text-active');
+                }
             } else if(s.widgetBgMode === 'transparent') {
                 document.documentElement.style.setProperty('--widget-bg', 'transparent'); document.documentElement.style.setProperty('--widget-blur', '0px'); document.documentElement.style.setProperty('--widget-border', 'transparent'); document.documentElement.style.setProperty('--widget-shadow', 'none');
+                if(s.customTextColor) { document.documentElement.style.setProperty('--custom-text', s.customTextColor); document.body.classList.add('custom-text-active'); } 
+                else { document.body.classList.remove('custom-text-active'); }
             } else {
                 document.documentElement.style.setProperty('--widget-bg', isD ? 'rgba(30, 30, 30, 0.4)' : 'rgba(255, 255, 255, 0.3)'); document.documentElement.style.setProperty('--widget-blur', '32px'); document.documentElement.style.setProperty('--widget-border', isD ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.4)'); document.documentElement.style.setProperty('--widget-shadow', isD ? '0 8px 32px 0 rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05)' : '0 8px 32px 0 rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.5)');
+                if(s.customTextColor) { document.documentElement.style.setProperty('--custom-text', s.customTextColor); document.body.classList.add('custom-text-active'); } 
+                else { document.body.classList.remove('custom-text-active'); }
             }
         }
 
         function compressImage(file, callback) { const r = new FileReader(); r.onload = e => { const img = new Image(); img.onload = () => { const cvs = document.createElement('canvas'); const MAX = 1600; let w = img.width, h = img.height; if(w > h && w > MAX) { h *= MAX/w; w = MAX; } else if(h > MAX) { w *= MAX/h; h = MAX; } cvs.width = w; cvs.height = h; cvs.getContext('2d').drawImage(img, 0, 0, w, h); callback(cvs.toDataURL('image/jpeg', 0.8)); }; img.src = e.target.result; }; r.readAsDataURL(file); }
-        function handleTempBgImageUpload(e) { const f = e.target.files[0]; if(!f) return; document.getElementById('btn-trash-bg').innerText = "Uploading..."; compressImage(f, base64 => { tempSettings.bgImage = base64; applyThemeAndBg(tempSettings); updateSettingsUI(tempSettings); }); }
+        function handleTempBgImageUpload(e) { const f = e.target.files[0]; if(!f) return; showToast("Uploading..."); compressImage(f, base64 => { tempSettings.bgImage = base64; applyThemeAndBg(tempSettings); updateSettingsUI(tempSettings); showToast("Background Set!"); }); }
         function clearTempBgImage() { tempSettings.bgImage = null; applyThemeAndBg(tempSettings); updateSettingsUI(tempSettings); }
         
         function exportData() { const d = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState, null, 2)); const a = document.createElement('a'); a.href = d; a.download = "startpage.json"; document.body.appendChild(a); a.click(); a.remove(); }
