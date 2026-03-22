@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bento Dashboard</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- SortableJS -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Roboto+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: { gridTemplateColumns: { 'bento': 'repeat(4, minmax(0, 1fr))' } }
+            }
+        }
+    </script>
+
+    <style>
+        :root { 
+            --custom-text: auto; 
+            --widget-bg: rgba(255, 255, 255, 0.3);
+            --widget-blur: 32px;
+            --widget-border: rgba(255, 255, 255, 0.4);
+            --widget-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.5);
+        }
+        
+        .dark {
+            --widget-bg: rgba(30, 30, 30, 0.4);
+            --widget-border: rgba(255, 255, 255, 0.1);
+            --widget-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+        }
+
+        body { margin: 0; overflow-x: hidden; transition: background 0.5s ease; color: var(--custom-text); }
+        body:not(.custom-text-active) { color: #000; }
+        .dark body:not(.custom-text-active) { color: #fff; }
+        
+        /* FONTS */
+        .font-inter { font-family: 'Inter', sans-serif; }
+        .font-serif { font-family: 'Playfair Display', serif; }
+        .font-mono { font-family: 'Roboto Mono', monospace; }
+        .font-caveat { font-family: 'Caveat', cursive; font-size: 1.15em; letter-spacing: 0.5px; }
+
+        /* GRAIN TEXTURE */
+        .bg-grain {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; opacity: 0.25;
+            background-image: url('data:image/svg+xml;utf8,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="4.5" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)"/%3E%3C/svg%3E');
+            mix-blend-mode: overlay;
+        }
+
+        /* LIQUID GLASS WIDGETS */
+        .glass-panel {
+            background: var(--widget-bg); backdrop-filter: blur(var(--widget-blur)); -webkit-backdrop-filter: blur(var(--widget-blur));
+            border: 1px solid var(--widget-border); box-shadow: var(--widget-shadow);
+            border-radius: 32px; overflow: hidden; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            isolation: isolate; -webkit-mask-image: -webkit-radial-gradient(white, black);
+        }
+        .transparent-box {
+            background: transparent !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+            border-color: transparent !important; box-shadow: none !important;
+        }
+
+        /* EDIT MODE JIGGLE & ARC RESIZE HANDLE */
+        .edit-mode #bento-grid > div { animation: jiggle 0.3s infinite; cursor: grab; }
+        .edit-mode #bento-grid > div:active { cursor: grabbing; }
+        @keyframes jiggle { 0% { transform: rotate(-0.5deg); } 50% { transform: rotate(0.5deg); } 100% { transform: rotate(-0.5deg); } }
+
+        .resize-handle {
+            position: absolute; bottom: 8px; right: 8px; width: 28px; height: 28px; cursor: nwse-resize; display: none; z-index: 40;
+        }
+        .resize-handle::after {
+            content: ''; position: absolute; bottom: 4px; right: 4px; width: 16px; height: 16px;
+            border-right: 3px solid currentColor; border-bottom: 3px solid currentColor; border-bottom-right-radius: 100%; opacity: 0.4;
+        }
+        .edit-mode .resize-handle { display: block; }
+        .transparent-box .resize-handle::after { opacity: 0.8; }
+
+        /* MODALS & OVERLAYS */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .modal-overlay { background: rgba(0,0,0,0.4); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); transition: all 0.3s; }
+        .peek-mode .modal-overlay { background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; pointer-events: none; }
+        .peek-mode .settings-content-wrapper { opacity: 0; pointer-events: none; }
+        .peek-active { opacity: 1 !important; pointer-events: auto !important; position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); z-index: 60; background: rgba(0,0,0,0.85); padding: 16px 24px; border-radius: 24px; backdrop-filter: blur(12px); width: 320px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); color: #ffffff !important; }
+        .peek-active span, .peek-active input[type="text"] { color: #ffffff !important; }
+        .peek-active input[type="text"] { background-color: rgba(255,255,255,0.1) !important; border: none; }
+
+        input[type="color"] { opacity: 0; width: 100%; height: 100%; cursor: pointer; position: absolute; top:0; left:0; }
+        .color-dot { width: 32px; height: 32px; flex-shrink: 0; border-radius: 50%; border: 2px solid rgba(255,255,255,0.8); box-shadow: 0 2px 8px rgba(0,0,0,0.2); position: relative; overflow: hidden; }
+
+        /* SEARCH BAR */
+        #search-container.active { width: 320px; }
+        #search-container:not(.active) { width: 48px; }
+        #search-container:not(.active) #search-input, #search-container:not(.active) #search-close { opacity: 0; pointer-events: none; display: none; }
+        #search-container.active #search-input, #search-container.active #search-close { opacity: 1; pointer-events: auto; display: block; }
+        
+        .copy-overlay { opacity: 0; transition: opacity 0.2s; background: rgba(0,0,0,0.5); backdrop-filter: blur(8px); }
+        .group\/action:hover .copy-overlay.is-copy { opacity: 1; }
+
+        .minute-animate { display: inline-block; animation: slideDownFade 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        @keyframes slideDownFade { 0% { transform: translateY(-20px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+    </style>
+</head>
+<body id="body-bg" class="antialiased min-h-screen font-inter">
+    
+    <div class="bg-grain"></div>
+
+    <!-- TOP RIGHT: SEARCH BAR -->
+    <div class="fixed top-6 right-6 z-40 flex justify-end">
+        <div id="search-container" class="glass-panel !rounded-full h-12 flex items-center overflow-hidden transition-all duration-300 ease-in-out relative bg-white/40 dark:bg-black/40 shadow-lg">
+            <button onclick="toggleSearch()" class="w-12 h-12 flex-shrink-0 flex items-center justify-center opacity-70 hover:opacity-100 z-10 cursor-pointer">
+                <i data-lucide="search" class="w-5 h-5"></i>
+            </button>
+            <input type="text" id="search-input" oninput="performSearch()" placeholder="Search widgets..." class="bg-transparent h-full outline-none text-sm font-semibold absolute left-12 right-12 transition-opacity duration-300 text-current">
+            <button onclick="toggleSearch()" id="search-close" class="absolute right-0 w-12 h-12 flex items-center justify-center hover:opacity-100 transition-opacity z-10 opacity-70 cursor-pointer pointer-events-auto">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- SEARCH SCOPE TOGGLE -->
+    <div id="search-scope" class="fixed top-20 right-6 z-40 hidden items-center gap-2 bg-black/10 dark:bg-white/10 backdrop-blur-xl border border-white/20 p-1 rounded-lg shadow-lg text-[10px] font-bold uppercase tracking-wider">
+        <button onclick="setSearchScope('all')" id="btn-scope-all" class="px-3 py-1.5 rounded bg-white dark:bg-black shadow-sm transition cursor-pointer">All Folders</button>
+        <button onclick="setSearchScope('current')" id="btn-scope-current" class="px-3 py-1.5 rounded opacity-50 hover:opacity-100 transition cursor-pointer">This Folder</button>
+    </div>
+
+    <!-- SPACE BREADCRUMB -->
+    <div id="space-nav" class="fixed top-6 left-1/2 -translate-x-1/2 z-40 hidden items-center gap-2 bg-black/10 dark:bg-white/10 backdrop-blur-xl border border-white/20 px-4 py-2 rounded-full shadow-lg transition-all pointer-events-auto">
+        <button onclick="goHome()" class="p-1.5 opacity-60 hover:opacity-100 transition cursor-pointer"><i data-lucide="home" class="w-4 h-4"></i></button>
+        <span class="opacity-40">/</span>
+        <button onclick="goBack()" class="p-1.5 opacity-60 hover:opacity-100 transition flex items-center gap-1 text-sm font-bold uppercase tracking-wider cursor-pointer"><i data-lucide="arrow-left" class="w-4 h-4"></i> Back</button>
+        <span class="opacity-40">/</span>
+        <span id="current-space-title" class="text-sm font-bold opacity-90">Folder</span>
+    </div>
+
+    <!-- MAIN GRID -->
+    <div class="relative z-10 w-full max-w-6xl mx-auto p-4 md:p-8 min-h-screen pt-24 pb-32 flex flex-col justify-center">
+        <div id="empty-state" class="absolute inset-0 z-20 flex-col items-center justify-center hidden pointer-events-none">
+            <p class="opacity-50 text-lg font-medium tracking-wide">Area is empty.</p>
+        </div>
+        <div id="bento-grid" class="grid grid-cols-4 md:grid-cols-6 gap-4 md:gap-6 w-full hidden relative"></div>
+    </div>
+
+    <!-- NORMAL MODE: EDIT BUTTON -->
+    <div id="btn-edit-mode" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 transition-opacity duration-300">
+        <button onclick="toggleEditMode()" class="w-12 h-12 bg-white/40 dark:bg-black/50 backdrop-blur-xl border border-white/30 text-gray-800 dark:text-white rounded-full flex items-center justify-center shadow-2xl hover:scale-105 transition cursor-pointer">
+            <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+        </button>
+    </div>
+
+    <!-- EDIT MODE: DOCK -->
+    <div id="edit-footer" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center justify-center opacity-0 pointer-events-none transition-all duration-300 translate-y-10 px-4">
+        <div class="bg-white/20 dark:bg-black/40 backdrop-blur-xl border border-white/30 rounded-full flex flex-wrap md:flex-nowrap justify-center items-center p-1.5 gap-1.5 shadow-2xl h-14 w-fit">
+            
+            <button onclick="toggleProfileModal()" class="w-11 h-11 rounded-full hover:bg-white/40 dark:hover:bg-white/20 transition flex items-center justify-center text-gray-800 dark:text-white shadow-sm shrink-0 cursor-pointer" title="Profile/Backup">
+                <i data-lucide="user" class="w-5 h-5"></i>
+            </button>
+
+            <div class="w-px h-6 bg-black/20 dark:bg-white/20 mx-1 hidden md:block"></div>
+
+            <button onclick="addWidget('smart', 1, 1)" class="w-11 h-11 rounded-full hover:bg-white/40 dark:hover:bg-white/20 transition flex items-center justify-center text-gray-800 dark:text-white shadow-sm shrink-0 cursor-pointer" title="Smart Box"><i data-lucide="box" class="w-5 h-5"></i></button>
+            <button onclick="addWidget('clock', 4, 2)" class="w-11 h-11 rounded-full hover:bg-white/40 dark:hover:bg-white/20 transition flex items-center justify-center text-gray-800 dark:text-white shadow-sm shrink-0 cursor-pointer" title="Clock"><i data-lucide="clock" class="w-5 h-5"></i></button>
+            <button onclick="addWidget('timer', 1, 1)" class="w-11 h-11 rounded-full hover:bg-white/40 dark:hover:bg-white/20 transition flex items-center justify-center text-gray-800 dark:text-white shadow-sm shrink-0 cursor-pointer" title="Timer"><i data-lucide="timer" class="w-5 h-5"></i></button>
+            <button onclick="addWidget('weather', 2, 1)" class="w-11 h-11 rounded-full hover:bg-white/40 dark:hover:bg-white/20 transition flex items-center justify-center text-gray-800 dark:text-white shadow-sm shrink-0 cursor-pointer" title="Weather"><i data-lucide="cloud-sun" class="w-5 h-5"></i></button>
+            <button onclick="addWidget('notes', 2, 2)" class="w-11 h-11 rounded-full hover:bg-white/40 dark:hover:bg-white/20 transition flex items-center justify-center text-gray-800 dark:text-white shadow-sm shrink-0 cursor-pointer" title="Sticky Note"><i data-lucide="sticky-note" class="w-5 h-5"></i></button>
+            <button onclick="addWidget('calendar', 2, 2)" class="w-11 h-11 rounded-full hover:bg-white/40 dark:hover:bg-white/20 transition flex items-center justify-center text-gray-800 dark:text-white shadow-sm shrink-0 cursor-pointer" title="Calendar"><i data-lucide="calendar" class="w-5 h-5"></i></button>
+            
+            <div class="w-px h-6 bg-black/20 dark:bg-white/20 mx-1 hidden md:block"></div>
+            
+            <button onclick="toggleSettings()" class="w-11 h-11 rounded-full hover:bg-white/40 dark:hover:bg-white/20 transition flex items-center justify-center text-gray-800 dark:text-white shadow-sm shrink-0 cursor-pointer" title="Appearance"><i data-lucide="palette" class="w-5 h-5"></i></button>
+            <button onclick="toggleEditMode()" class="px-5 h-11 font-bold bg-white/50 dark:bg-white/20 hover:bg-white/70 dark:hover:bg-white/30 text-gray-900 dark:text-white transition rounded-full text-sm shadow-sm ml-1 shrink-0 cursor-pointer">
+                Done
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL: PROFILE (EXPORT/IMPORT) -->
+    <div id="profile-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center modal-overlay opacity-0 transition-opacity duration-300">
+        <div class="glass-panel max-w-xs w-full p-8 relative flex flex-col items-center shadow-2xl mx-4">
+            <button onclick="hideModal('profile-modal')" class="absolute top-4 right-4 opacity-50 hover:opacity-100 transition cursor-pointer"><i data-lucide="x" class="w-5 h-5"></i></button>
+            <div class="w-16 h-16 bg-black/10 dark:bg-white/10 rounded-full flex items-center justify-center mb-4"><i data-lucide="user" class="w-8 h-8 opacity-70"></i></div>
+            <h2 class="text-xl font-bold mb-6 opacity-90 text-center">Backup & Restore</h2>
+            <div class="flex flex-col gap-3 w-full">
+                <button onclick="exportData()" class="w-full py-3 rounded-xl bg-blue-500 text-white font-bold shadow-md hover:bg-blue-600 transition flex items-center justify-center gap-2 cursor-pointer">
+                    <i data-lucide="download" class="w-5 h-5"></i> Export Data
+                </button>
+                <label class="w-full py-3 rounded-xl bg-black/5 dark:bg-white/10 font-bold hover:bg-black/10 dark:hover:bg-white/20 transition flex items-center justify-center gap-2 cursor-pointer border border-black/5 dark:border-white/10">
+                    <i data-lucide="upload" class="w-5 h-5"></i> Import File
+                    <input type="file" class="hidden" accept=".json" onchange="importData(event)">
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: SETTINGS (APPEARANCE) -->
+    <div id="settings-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center modal-overlay opacity-0 transition-opacity duration-300">
+        <div class="glass-panel max-w-sm w-full p-8 relative max-h-[90vh] overflow-y-auto no-scrollbar settings-content-wrapper transition-opacity duration-300 shadow-2xl mx-4">
+            <button onclick="cancelSettings()" class="absolute top-5 right-5 opacity-50 hover:opacity-100 transition cursor-pointer"><i data-lucide="x" class="w-6 h-6"></i></button>
+            <h2 class="text-2xl font-bold mb-6 opacity-90">Appearance</h2>
+            
+            <div class="space-y-6">
+                <div>
+                    <label class="block font-semibold mb-2 text-[10px] uppercase tracking-widest opacity-60">System Theme</label>
+                    <div class="flex gap-2 p-1 bg-black/5 dark:bg-white/5 rounded-xl border border-black/5 dark:border-white/10">
+                        <button onclick="setTempTheme('system')" id="btn-theme-system" class="flex-1 py-1.5 rounded-lg text-sm font-bold transition cursor-pointer">System</button>
+                        <button onclick="setTempTheme('light')" id="btn-theme-light" class="flex-1 py-1.5 rounded-lg text-sm font-bold transition cursor-pointer">Light</button>
+                        <button onclick="setTempTheme('dark')" id="btn-theme-dark" class="flex-1 py-1.5 rounded-lg text-sm font-bold transition cursor-pointer">Dark</button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-semibold mb-2 text-[10px] uppercase tracking-widest opacity-60">Typography</label>
+                    <div class="grid grid-cols-2 gap-2 p-1 bg-black/5 dark:bg-white/5 rounded-xl border border-black/5 dark:border-white/10">
+                        <button onclick="setTempFont('inter')" id="btn-font-inter" class="py-1.5 rounded-lg text-sm font-bold transition font-inter cursor-pointer">Inter</button>
+                        <button onclick="setTempFont('serif')" id="btn-font-serif" class="py-1.5 rounded-lg text-sm font-bold transition font-serif cursor-pointer">Serif</button>
+                        <button onclick="setTempFont('mono')" id="btn-font-mono" class="py-1.5 rounded-lg text-sm font-bold transition font-mono cursor-pointer">Mono</button>
+                        <button onclick="setTempFont('caveat')" id="btn-font-caveat" class="py-1.5 rounded-lg text-[16px] font-bold transition font-caveat tracking-wide cursor-pointer">Script</button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-semibold mb-2 text-[10px] uppercase tracking-widest opacity-60">Widget Box Style</label>
+                    <div class="flex gap-2 p-1 bg-black/5 dark:bg-white/5 rounded-xl border border-black/5 dark:border-white/10">
+                        <button onclick="setTempWidgetStyle('glass')" id="btn-ws-glass" class="flex-1 py-1.5 rounded-lg text-sm font-bold transition cursor-pointer">Glass</button>
+                        <button onclick="setTempWidgetStyle('solid')" id="btn-ws-solid" class="flex-1 py-1.5 rounded-lg text-sm font-bold transition cursor-pointer">Solid</button>
+                        <button onclick="setTempWidgetStyle('transparent')" id="btn-ws-transparent" class="flex-1 py-1.5 rounded-lg text-sm font-bold transition cursor-pointer">Hidden</button>
+                    </div>
+                    <div id="widget-color-wrap" class="mt-2 flex items-center gap-3 bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/10 hidden">
+                        <span class="text-xs font-semibold opacity-70">Box Color:</span>
+                        <div class="color-dot w-6 h-6" id="cp-wrap-widget"><input type="color" id="colorWidget" oninput="updateTempSettings()"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-semibold mb-2 text-[10px] uppercase tracking-widest opacity-60">Dashboard Background</label>
+                    <div class="flex gap-2 mb-3 p-1 bg-black/5 dark:bg-white/5 rounded-xl border border-black/5 dark:border-white/10">
+                        <button onclick="setTempBgType('gradient')" id="btn-bg-gradient" class="flex-1 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer">Gradient</button>
+                        <button onclick="setTempBgType('solid')" id="btn-bg-solid" class="flex-1 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer">Solid</button>
+                        <button onclick="setTempBgType('image')" id="btn-bg-image" class="flex-1 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer">Image</button>
+                    </div>
+
+                    <div id="bg-colors-block" class="flex flex-col gap-3 bg-black/5 dark:bg-white/5 p-4 rounded-xl border border-black/5 dark:border-white/10 relative">
+                        <div class="flex items-center gap-3" id="wrap-c1">
+                            <div class="color-dot"><input type="color" id="color1" oninput="updateTempSettings()"></div>
+                            <input type="text" id="hex1" oninput="updateTempHex(1)" class="w-full bg-black/5 dark:bg-white/10 rounded-lg px-3 py-1.5 text-sm outline-none font-mono uppercase border border-transparent focus:border-blue-500">
+                        </div>
+                        <div class="flex items-center gap-3" id="wrap-c2">
+                            <div class="color-dot"><input type="color" id="color2" oninput="updateTempSettings()"></div>
+                            <input type="text" id="hex2" oninput="updateTempHex(2)" class="w-full bg-black/5 dark:bg-white/10 rounded-lg px-3 py-1.5 text-sm outline-none font-mono uppercase border border-transparent focus:border-blue-500">
+                        </div>
+                        <div class="mt-2" id="wrap-angle" onmousedown="startPeek('wrap-angle')" ontouchstart="startPeek('wrap-angle')">
+                            <div class="flex justify-between text-xs opacity-60 mb-1 font-bold tracking-widest uppercase"><span>Angle</span><span id="angle-val">90°</span></div>
+                            <input type="range" id="angle" min="0" max="360" class="w-full accent-blue-500" oninput="updateTempSettings()" onmouseup="endPeek()" ontouchend="endPeek()">
+                        </div>
+                    </div>
+
+                    <div id="bg-image-block" class="hidden flex-col items-center gap-3 bg-black/5 dark:bg-white/5 p-4 rounded-xl border border-black/5 dark:border-white/10">
+                        <label class="w-full py-2.5 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 transition flex items-center justify-center gap-2 cursor-pointer text-sm font-bold shadow-sm">
+                            <i data-lucide="image-plus" class="w-4 h-4"></i> Upload Wallpaper
+                            <input type="file" id="bg-upload" class="hidden" accept="image/*" onchange="handleTempBgImageUpload(event)">
+                        </label>
+                        <button onclick="clearTempBgImage()" id="btn-trash-bg" class="text-xs font-bold text-red-500 opacity-80 hover:opacity-100 hidden cursor-pointer"><i data-lucide="trash-2" class="w-3 h-3 inline"></i> Remove Image</button>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-semibold mb-2 text-[10px] uppercase tracking-widest opacity-60">Global Text Color</label>
+                    <div class="flex items-center gap-3 bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/10">
+                        <div class="color-dot shrink-0" id="cp-wrap-text"><input type="color" id="colorText" oninput="updateTempHex('Text')"></div>
+                        <input type="text" id="hexText" oninput="updateTempHex('Text')" class="w-full bg-black/5 dark:bg-white/10 rounded-lg px-3 py-1.5 text-sm outline-none font-mono uppercase border border-transparent focus:border-blue-500">
+                        <button onclick="resetTempTextColor()" class="p-2 opacity-50 hover:opacity-100 text-red-500 cursor-pointer" title="Reset"><i data-lucide="rotate-ccw" class="w-4 h-4"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Apply & Cancel Actions -->
+            <div class="mt-8 flex gap-3">
+                <button onclick="cancelSettings()" class="flex-1 py-2.5 rounded-xl bg-black/5 dark:bg-white/10 font-bold opacity-80 hover:opacity-100 cursor-pointer transition">Cancel</button>
+                <button onclick="applySettings()" class="flex-1 py-2.5 rounded-xl bg-blue-500 text-white font-bold hover:bg-blue-600 shadow-md cursor-pointer transition">Apply</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: EDIT SMART BOX -->
+    <div id="edit-smart-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center modal-overlay opacity-0 transition-opacity duration-300">
+        <div class="glass-panel max-w-sm w-full p-6 relative max-h-[90vh] overflow-y-auto no-scrollbar shadow-2xl mx-4">
+            <h2 class="text-xl font-bold mb-4 opacity-90">Edit Smart Box</h2>
+            
+            <div class="space-y-5">
+                <div>
+                    <label class="block text-[10px] font-bold opacity-60 mb-2 uppercase tracking-widest">Action</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button id="btn-act-none" onclick="setSmartAction('none')" class="p-2 rounded-xl border border-black/10 dark:border-white/10 text-xs font-bold flex flex-col items-center gap-1 transition cursor-pointer"><i data-lucide="image" class="w-5 h-5"></i> Visual</button>
+                        <button id="btn-act-link" onclick="setSmartAction('link')" class="p-2 rounded-xl border border-black/10 dark:border-white/10 text-xs font-bold flex flex-col items-center gap-1 transition cursor-pointer"><i data-lucide="link" class="w-5 h-5"></i> Open Link</button>
+                        <button id="btn-act-copy" onclick="setSmartAction('copy')" class="p-2 rounded-xl border border-black/10 dark:border-white/10 text-xs font-bold flex flex-col items-center gap-1 transition cursor-pointer"><i data-lucide="copy" class="w-5 h-5"></i> Copy Data</button>
+                        <button id="btn-act-space" onclick="setSmartAction('space')" class="p-2 rounded-xl border border-black/10 dark:border-white/10 text-xs font-bold flex flex-col items-center gap-1 transition cursor-pointer"><i data-lucide="folder" class="w-5 h-5"></i> Folder</button>
+                    </div>
+                    <input type="hidden" id="ew-type" value="none">
+                </div>
+                
+                <div>
+                    <label class="block text-[10px] font-bold opacity-60 mb-1 uppercase tracking-widest">Display Text</label>
+                    <input type="text" id="ew-title" class="w-full p-2.5 rounded-xl bg-black/5 dark:bg-white/10 outline-none font-medium text-sm mb-3" placeholder="Leave empty for no text">
+                    
+                    <label class="block text-[10px] font-bold opacity-60 mb-2 uppercase tracking-widest">Select Icon</label>
+                    <div class="flex gap-2 mb-2 p-1 rounded-lg bg-black/5 dark:bg-white/5">
+                        <button onclick="toggleIconTab('icons')" id="tab-icons" class="flex-1 py-1.5 text-xs font-bold bg-white dark:bg-white/20 rounded shadow-sm cursor-pointer">Icons</button>
+                        <button onclick="toggleIconTab('emojis')" id="tab-emojis" class="flex-1 py-1.5 text-xs font-medium rounded opacity-60 cursor-pointer">Emojis</button>
+                    </div>
+                    <div id="grid-icons" class="grid grid-cols-6 gap-1 bg-black/5 dark:bg-white/5 p-2 rounded-xl h-40 overflow-y-auto no-scrollbar"></div>
+                    <div id="grid-emojis" class="grid grid-cols-6 gap-1 bg-black/5 dark:bg-white/5 p-2 rounded-xl h-40 overflow-y-auto no-scrollbar hidden"></div>
+                    
+                    <div class="mt-2 flex items-center justify-between">
+                        <div class="text-[10px] font-bold uppercase tracking-widest opacity-60 flex items-center gap-2">Selected: <span id="ew-selected-display" class="text-xl normal-case"></span></div>
+                        <button onclick="setTempIcon('', false)" class="text-[10px] font-bold uppercase bg-red-500/20 text-red-500 px-3 py-1.5 rounded cursor-pointer">Clear</button>
+                    </div>
+                </div>
+
+                <div id="ew-content-wrap" class="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/5">
+                    <label class="block text-[10px] font-bold opacity-60 mb-1 uppercase tracking-widest" id="ew-content-label">Content</label>
+                    <input type="text" id="ew-content" class="w-full p-2.5 rounded-lg bg-black/5 dark:bg-white/10 outline-none font-medium text-sm mb-3">
+                    
+                    <label class="flex items-center gap-2 cursor-pointer mb-2">
+                        <input type="checkbox" id="ew-req-pass" class="w-4 h-4 accent-blue-500" onchange="togglePasswordField()">
+                        <span class="text-xs font-bold opacity-80 uppercase tracking-widest">Require Password</span>
+                    </label>
+                    <input type="password" id="ew-password" placeholder="Enter secret..." class="w-full p-2.5 rounded-lg bg-black/5 dark:bg-white/10 outline-none font-medium text-sm hidden">
+                </div>
+
+                <div class="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/5">
+                    <label class="block text-[10px] font-bold opacity-60 mb-2 uppercase tracking-widest">Image Background</label>
+                    <div class="flex items-center gap-2 mb-3">
+                        <label class="flex-1 py-2 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-black/10 transition flex justify-center cursor-pointer text-xs font-bold uppercase">
+                            Upload <input type="file" id="ew-photo" class="hidden" accept="image/*" onchange="handleWidgetPhoto(event)">
+                        </label>
+                        <button onclick="clearWidgetPhoto()" class="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition cursor-pointer"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    </div>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" id="ew-img-overlay" class="w-4 h-4 accent-blue-500">
+                        <span class="text-[10px] font-bold opacity-80 uppercase tracking-widest">Darken Image</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="mt-6 flex gap-3">
+                <button onclick="hideModal('edit-smart-modal')" class="flex-1 py-2.5 rounded-xl bg-black/5 dark:bg-white/10 font-bold opacity-80 hover:opacity-100 cursor-pointer">Cancel</button>
+                <button onclick="saveSmartWidget()" class="flex-1 py-2.5 rounded-xl bg-blue-500 text-white font-bold hover:bg-blue-600 shadow-md cursor-pointer">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: EDIT BASIC WIDGET -->
+    <div id="edit-basic-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center modal-overlay opacity-0 transition-opacity duration-300">
+        <div class="glass-panel max-w-sm w-full p-6 relative shadow-2xl mx-4">
+            <h2 class="text-xl font-bold mb-4 opacity-90" id="eb-title">Edit</h2>
+            <div id="eb-body" class="space-y-4"></div>
+            <div class="mt-6 flex gap-3">
+                <button onclick="hideModal('edit-basic-modal')" class="flex-1 py-2.5 rounded-xl bg-black/5 dark:bg-white/10 font-bold opacity-80 hover:opacity-100 cursor-pointer">Cancel</button>
+                <button onclick="saveBasicWidget()" class="flex-1 py-2.5 rounded-xl bg-blue-500 text-white font-bold hover:bg-blue-600 shadow-md cursor-pointer">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: PASSWORD PROMPT -->
+    <div id="password-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center modal-overlay opacity-0 transition-opacity duration-300">
+        <div class="glass-panel max-w-xs w-full p-6 relative shadow-2xl mx-4">
+            <button onclick="hideModal('password-modal')" class="absolute top-4 right-4 opacity-50 hover:opacity-100 transition cursor-pointer"><i data-lucide="x" class="w-5 h-5"></i></button>
+            <div class="flex justify-center mb-4">
+                <div class="w-12 h-12 bg-blue-500/20 text-blue-500 rounded-full flex items-center justify-center"><i data-lucide="lock" class="w-6 h-6"></i></div>
+            </div>
+            <h2 class="text-xl font-bold mb-2 opacity-90 text-center" id="pw-modal-title">Enter Password</h2>
+            <p class="text-xs opacity-60 text-center mb-4">This widget is locked.</p>
+            <input type="password" id="pw-modal-input" class="w-full p-3 rounded-xl bg-black/5 dark:bg-white/10 outline-none font-medium mb-4 border border-transparent focus:border-blue-500" placeholder="Secret Key...">
+            <button onclick="submitPassword()" class="w-full py-2.5 rounded-xl bg-blue-500 text-white font-bold hover:bg-blue-600 shadow-md cursor-pointer">Unlock</button>
+        </div>
+    </div>
+
+    <!-- NOTIFICATION TOAST -->
+    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] bg-black/90 dark:bg-white/90 text-white dark:text-black px-6 py-3 rounded-full font-bold shadow-2xl opacity-0 pointer-events-none transition-opacity duration-300 text-sm tracking-wide">Copied!</div>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        const LIGHT_DEFAULTS = { c1: '#e6e6e6', c2: '#e6e6e6' };
+        const DARK_DEFAULTS = { c1: '#262626', c2: '#262626' };
+        
+        const ICONS = ['mail','hard-drive','link','youtube','twitter','github','music','map','video','message-circle','camera','shopping-cart','coffee','monitor','smartphone','pen-tool','folder','image','star','heart','settings','book','briefcase','calendar','clock','cloud','globe','key','lock','mic','moon','sun','umbrella','zap','battery','bell','activity','airplay','alarm-check','align-center','anchor','aperture','archive','award','bar-chart','bluetooth','bookmark','box','cast','check','chrome','clipboard','code','compass','copy','cpu','crosshair','database','download','droplet','eye','feather','film','flag','gift','headphones','home','info','instagram','layout','life-buoy','linkedin','list','map-pin','maximize','menu','navigation','package','paperclip','pie-chart','play','power','printer','radio','refresh-cw','save','search','send','server','share','shield','slack','sliders','speaker','square','target','terminal','thermometer','thumbs-up','toggle-left','tool','trash','trello','trending-up','tv','twitch','type','unlock','upload','user','users','wifi','wind','x','zoom-in','sticky-note', 'accessibility', 'alarm-clock', 'alert-circle', 'alert-octagon', 'alert-triangle', 'align-justify', 'align-left', 'align-right', 'battery-charging', 'bell-off', 'bold', 'book-open', 'camera-off', 'check-circle', 'check-square', 'chevron-down', 'chevron-left', 'chevron-right', 'chevron-up', 'chevrons-down', 'chevrons-left', 'chevrons-right', 'chevrons-up', 'cloud-drizzle', 'cloud-lightning', 'cloud-off', 'cloud-rain', 'cloud-snow', 'codesandbox', 'command', 'corner-down-left', 'corner-down-right', 'corner-left-down', 'corner-left-up', 'corner-right-down', 'corner-right-up', 'corner-up-left', 'corner-up-right', 'credit-card', 'crop', 'delete', 'disc', 'divide', 'divide-circle', 'divide-square', 'download-cloud', 'edit', 'edit-2', 'edit-3', 'external-link', 'fast-forward', 'file', 'file-minus', 'file-plus', 'file-text', 'filter', 'folder-minus', 'folder-plus', 'frown', 'grid', 'hash', 'help-circle', 'hexagon', 'inbox', 'italic', 'layers', 'link-2', 'loader', 'log-in', 'log-out', 'maximize-2', 'meh', 'mic-off', 'minimize', 'minimize-2', 'minus', 'minus-circle', 'minus-square', 'more-horizontal', 'more-vertical', 'mouse-pointer', 'move', 'navigation-2', 'octagon', 'pause', 'pause-circle', 'percent', 'phone', 'phone-call', 'phone-forwarded', 'phone-incoming', 'phone-missed', 'phone-off', 'phone-outgoing', 'play-circle', 'plus', 'plus-circle', 'plus-square', 'pocket', 'refresh-ccw', 'repeat', 'rewind', 'rotate-ccw', 'rotate-cw', 'rss', 'scissors', 'shield-off', 'shopping-bag', 'shuffle', 'sidebar', 'skip-back', 'skip-forward', 'slash', 'smile', 'stop-circle', 'sunrise', 'sunset', 'tablet', 'tag', 'thumbs-down', 'toggle-right', 'trash-2', 'trending-down', 'triangle', 'truck', 'underline', 'upload-cloud', 'user-check', 'user-minus', 'user-plus', 'user-x', 'video-off', 'voicemail', 'volume', 'volume-1', 'volume-2', 'volume-x', 'watch', 'wifi-off', 'x-circle', 'x-octagon', 'x-square', 'zap-off', 'zoom-out', 'gamepad', 'bus', 'car', 'bike', 'train', 'plane'];
+        const EMOJIS = ['🍎','🚀','💻','🧠','🔥','✨','🎵','🎮','📚','☕','💡','🎉','🌍','❤️','✅','🍕','🍔','🥑','🚗','✈️','⚽','🏀','🏆','🎨','🎭','🎬','🎧','📱','⌚','💰','💎','🔑','🎈','🎁','👑','🐶','🐱','🐼','🦊','🦋','🍀','🌻','☀️','🌙','⭐','🌈','🍉','🍓','🍩','🍣','🍷','🍹','⛺','🏖️','🗽','🗼','🚁','⛵','⏰','⌛','⏳','⚖️','⚙️','🛡️','💊','💉','🩸','🧬','🦠','🔭','🔮','🪄','🧿','🧸','🧹','🧺','🧻','🧼','🧽','🪣','🧴','🛎️','🧳','伞','✂️','📌','✏️','✒️','📝','📁','📊','📈','📉','📅','🗓️','📇','🗑️','🔒','🔓','🔗','💬','💭','📣','🔔','🎶','🏁','🚩','🏳️‍🌈', '😀','😂','😅','😉','😊','😇','🥰','😍','🤩','😘','😗','😚','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🤐','🤨','😐','😑','😶','😏','😒','🙄','😬','🤥','😌','😔','😪','🤤','😴','😷','🤒','🤕','🤢','🤮','🤧','🥵','🥶','🥴','😵','🤯','🤠','🥳','😎','🤓','🧐','😕','😟','🙁','☹️','😮','😯','😲','😳','🥺','😦','😧','😨','😰','😥','😢','😭','😱','😖','😣','😞','😓','😩','😫','🥱','😤','😡','😠','🤬','😈','👿','💀','☠️','💩','🤡','👹','👺','👻','👽','👾','🤖','😺','😸','😹','😻','😼','😽','🙀','😿','😾','🙈','🙉','🙊','💋','💌','💘','💝','💖','💗','💓','💞','💕','💟','❣️','💔','❤️‍🔥','❤️‍🩹','💯','💢','💥','💫','💦','💨','🕳️','💣','👁️‍🗨️','🗨️','🗯️','💤', '👋','🤚','🖐️','✋','🖖','👌','🤌','🤏','✌️','🤞','🫰','🤟','🤘','🤙','👈','👉','👆','🖕','👇','☝️','👍','👎','✊','👊','🤛','🤜','👏','🙌','👐','🤲','🤝','🙏','✍️','💅','🤳','💪','🦾','🦿','🦵','🦶','👂','🦻','👃','🫀','🫁','🦷','🦴','👀','👁️','👅','👄', '🍇','🍈','🍊','🍋','🍌','🍍','🥭','🍏','🍐','🍑','🍒','🫐','🥝','🍅','🫒','🥥','🍆','🥔','🥕','🌽','🌶️','🫑','🥒','🥬','🥦','🧄','🧅','🍄','🥜','🌰','🍞','🥐','🥖','🫓','🥨','🥯','🥞','🧇','🧀','🍖','🍗','🥩','🥓','🌭','🥪','🌮','🌯','🫔','🥙','🧆','🥚','🍳','🥘','🍲','🫕','🥣','🥗','🍿','🧈','🧂','🥫','🍱','🍘','🍙','🍚','🍛','🍜','🍝','🍠','🍢','🍤','🍥','🥮','🍡','🥟','🥠','🥡','🦀','🦞','🦐','🦑','🦪','🍦','🍧','🍨','🍪','🎂','🍰','🧁','🥧','🍫','🍬','🍭','🍮','🍯','🍼','🥛','🫖','🍵','🍶','🍾','🍸','🍺','🍻','🥂','🥃','🫗','🥤','🧋','🧃','🧉','🧊','🥢','🍽️','🍴','🥄','🔪','🏺', '🏈','⚾','🥎','🎾','🏐','🏉','🥏','🎱','🪀','🏓','🏸','🏒','🏑','🥍','🏏','🪃','🥅','⛳','🪁','🏹','🎣','🤿','🥊','🥋','🎽','🛹','🛼','🛷','⛸️','🥌','🎿','⛷️','🏂','🪂','🏋️','🤼','🤸','⛹️','🤺','🤾','🏌️','🏇','🧘','🏄','🏊','🤽','🚣','🧗','🚵','🚴'];
+
+        const DEFAULT_STATE = {
+            settings: { theme: 'system', bgType: 'solid', angle: 90, weekStart: 1, customTextColor: null, bgImage: null, lightColors: { ...LIGHT_DEFAULTS }, darkColors: { ...DARK_DEFAULTS }, fontFamily: 'serif', widgetBgMode: 'glass', widgetBgColor: '#000000' },
+            spaces: {
+                'root': {
+                    title: 'Home',
+                    widgets: [
+                        { id: 'w_clock', type: 'clock', w: 4, h: 2, data: {} },
+                        { id: 'w_weather', type: 'weather', w: 2, h: 1, data: { city: 'London' } },
+                        { id: 'w_timer', type: 'timer', w: 2, h: 1, data: { timerMinutes: 25, direction: 'down', playSound: false } },
+                        { id: 'w_link1', type: 'smart', w: 1, h: 1, data: { action: 'link', content: 'https://gmail.com', title: 'Mail', icon: 'mail', isEmoji: false, bgImage: null, overlay: true } },
+                        { id: 'w_link2', type: 'smart', w: 1, h: 1, data: { action: 'link', content: 'https://drive.google.com', title: 'Drive', icon: 'hard-drive', isEmoji: false, bgImage: null, overlay: true } },
+                        { id: 'w_notes', type: 'notes', w: 2, h: 2, data: { text: "" } },
+                        { id: 'w_calendar', type: 'calendar', w: 2, h: 2, data: {} }
+                    ]
+                }
+            }
+        };
+
+        let appState = JSON.parse(localStorage.getItem('dashboard_v21')) || DEFAULT_STATE;
+        let tempSettings = null; 
+        
+        let spaceStack = ['root']; let calendarOffsets = {}; 
+        let isEditMode = false; let isSearching = false; let searchResults = []; let searchScope = 'all';
+        let timerInterval; let activeTimerId = null; let timerRemaining = 0; let timerElapsed = 0; 
+        let sortableInstance = null; let currentEditId = null; let lastMinute = -1;
+        
+        let pendingPasswordCallback = null; let expectedPassword = null;
+
+        // Sweet Bell Sound Generator
+        function playBellSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(1046.5, ctx.currentTime); 
+                
+                gain.gain.setValueAtTime(0, ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.05);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.5);
+                
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.start(ctx.currentTime);
+                osc.stop(ctx.currentTime + 1.5);
+            } catch(e) { console.log("Audio Context not supported"); }
+        }
+
+        function getCurrentWidgets() { return isSearching ? searchResults : appState.spaces[spaceStack[spaceStack.length - 1]].widgets; }
+        function saveState() { if(!isSearching) localStorage.setItem('dashboard_v21', JSON.stringify(appState)); }
+        function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.classList.remove('opacity-0'); setTimeout(()=>t.classList.add('opacity-0'), 2000); }
+
+        function populateIconGrids() {
+            try {
+                const iconsGrid = document.getElementById('grid-icons');
+                const emojisGrid = document.getElementById('grid-emojis');
+                if(iconsGrid) iconsGrid.innerHTML = ICONS.map(i => `<button onclick="setTempIcon('${i}', false)" class="p-2 hover:bg-black/10 dark:hover:bg-white/10 rounded flex items-center justify-center cursor-pointer"><i data-lucide="${i}" class="w-5 h-5"></i></button>`).join('');
+                if(emojisGrid) emojisGrid.innerHTML = EMOJIS.map(e => `<button onclick="setTempIcon('${e}', true)" class="p-2 hover:bg-black/10 dark:hover:bg-white/10 rounded flex items-center justify-center text-xl cursor-pointer">${e}</button>`).join('');
+            } catch(e) {}
+        }
+
+        window.onload = () => {
+            if(appState.settings.fontFamily === 'system') appState.settings.fontFamily = 'serif'; 
+            applyThemeAndBg();
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if(appState.settings.theme === 'system') applyThemeAndBg(); });
+            
+            const grid = document.getElementById('bento-grid');
+            if (grid) new ResizeObserver(() => adjustGridAspect()).observe(grid);
+            window.addEventListener('resize', adjustGridAspect);
+            
+            populateIconGrids(); 
+            renderDashboard();
+            setInterval(updateClockElements, 1000); 
+            adjustGridAspect(); 
+            
+            const pwInput = document.getElementById('pw-modal-input');
+            if(pwInput) pwInput.addEventListener('keypress', e => { if(e.key === 'Enter') submitPassword(); });
+        };
+
+        function adjustGridAspect() {
+            const grid = document.getElementById('bento-grid'); if(!grid || grid.classList.contains('hidden')) return;
+            const w = window.innerWidth; let cols = w < 768 ? 4 : 6; 
+            const gap = w < 768 ? 12 : 20; 
+            const cellW = (grid.clientWidth - ((cols - 1) * gap)) / cols; 
+            grid.style.gridAutoRows = `${cellW}px`;
+        }
+
+        let isResizing = false, resizeWidget = null, startX, startY, startW, startH, cellW, cellH;
+        function initResizeHandlers() {
+            document.querySelectorAll('.resize-handle').forEach(handle => {
+                handle.onmousedown = (e) => {
+                    if(!isEditMode) return; e.stopPropagation(); isResizing = true;
+                    resizeWidget = getCurrentWidgets().find(w => w.id === handle.dataset.id);
+                    startX = e.clientX; startY = e.clientY; startW = resizeWidget.w; startH = resizeWidget.h;
+                    const grid = document.getElementById('bento-grid'); let cols = window.innerWidth < 768 ? 4 : 6;
+                    const gap = window.innerWidth < 768 ? 12 : 20;
+                    cellW = (grid.clientWidth - ((cols - 1) * gap)) / cols; 
+                    cellH = parseFloat(grid.style.gridAutoRows) || cellW;
+                    document.addEventListener('mousemove', handleMouseMove); document.addEventListener('mouseup', handleMouseUp);
+                };
+            });
+        }
+
+        function handleMouseMove(e) {
+            if(!isResizing) return;
+            const gap = window.innerWidth < 768 ? 12 : 20;
+            let newW = startW + Math.round((e.clientX - startX) / (cellW + gap)); let newH = startH + Math.round((e.clientY - startY) / (cellH + gap));
+            const activeCols = window.innerWidth < 768 ? 4 : 6;
+
+            if(resizeWidget.type === 'smart') { newW = Math.max(1, Math.min(4, newW)); newH = Math.max(1, Math.min(4, newH)); }
+            if(resizeWidget.type === 'weather') { newW = Math.max(1, Math.min(2, newW)); newH = 1; }
+            if(resizeWidget.type === 'clock') { newW = Math.max(2, Math.min(6, newW)); newH = Math.max(1, Math.min(2, newH)); }
+            if(resizeWidget.type === 'timer') { newW = Math.max(1, Math.min(2, newW)); newH = 1; }
+            if(resizeWidget.type === 'notes') { newW = Math.max(2, Math.min(4, newW)); newH = Math.max(1, Math.min(4, newH)); }
+            if(resizeWidget.type === 'calendar') { newW = Math.max(1, Math.min(6, newW)); newH = Math.max(1, Math.min(4, newH)); }
+
+            newW = Math.min(newW, activeCols); 
+            if(newW !== resizeWidget.w || newH !== resizeWidget.h) { resizeWidget.w = newW; resizeWidget.h = newH; renderDashboard(); }
+        }
+        function handleMouseUp() { isResizing = false; resizeWidget = null; document.removeEventListener('mousemove', handleMouseMove); document.removeEventListener('mouseup', handleMouseUp); saveState(); renderDashboard(); }
+
+        function renderDashboard() {
+            const grid = document.getElementById('bento-grid'), emptyState = document.getElementById('empty-state'), spaceNav = document.getElementById('space-nav');
+            grid.innerHTML = ''; const widgets = getCurrentWidgets();
+            const activeCols = window.innerWidth < 768 ? 4 : 6;
+
+            if (isSearching) {
+                spaceNav.classList.remove('hidden'); spaceNav.classList.add('flex'); document.getElementById('current-space-title').innerText = `Search Results (${widgets.length})`; document.querySelector('[data-lucide="home"]').parentElement.style.display = 'block';
+            } else if (spaceStack.length > 1) {
+                spaceNav.classList.remove('hidden'); spaceNav.classList.add('flex'); document.getElementById('current-space-title').innerText = appState.spaces[spaceStack[spaceStack.length - 1]].title; document.querySelector('[data-lucide="home"]').parentElement.style.display = spaceStack.length > 2 ? 'block' : 'none';
+            } else { spaceNav.classList.add('hidden'); spaceNav.classList.remove('flex'); }
+
+            if (widgets.length === 0) { grid.classList.add('hidden'); emptyState.style.display = 'flex'; return; }
+            grid.classList.remove('hidden'); emptyState.style.display = 'none';
+
+            widgets.forEach(widget => {
+                const el = document.createElement('div'); const isTrans = widget.data?.transparent;
+                const renderW = Math.min(widget.w, activeCols);
+                
+                el.className = `glass-panel group relative col-span-${renderW} row-span-${widget.h} ${isTrans ? 'transparent-box' : ''}`; el.dataset.id = widget.id;
+
+                const controls = document.createElement('div'); controls.className = `absolute top-3 right-3 z-30 gap-2 ${isEditMode && !isSearching ? 'flex' : 'hidden'}`;
+                if (['smart', 'weather', 'clock', 'calendar', 'timer'].includes(widget.type)) { controls.innerHTML += `<button onclick="openEditWidget('${widget.id}')" class="p-2.5 bg-black/20 dark:bg-white/20 rounded-full hover:scale-110 text-white backdrop-blur shadow-xl transition cursor-pointer"><i data-lucide="edit-2" class="w-4 h-4"></i></button>`; }
+                controls.innerHTML += `<button onclick="deleteWidget('${widget.id}')" class="p-2.5 bg-red-500/90 rounded-full hover:scale-110 text-white backdrop-blur shadow-xl transition cursor-pointer"><i data-lucide="trash-2" class="w-4 h-4"></i></button>`;
+                el.appendChild(controls);
+
+                if(!isSearching) { const handle = document.createElement('div'); handle.className = 'resize-handle'; handle.dataset.id = widget.id; el.appendChild(handle); }
+
+                const contentWrapper = document.createElement('div'); contentWrapper.className = 'w-full h-full widget-content-wrapper'; contentWrapper.innerHTML = getWidgetContent(widget); el.appendChild(contentWrapper);
+                grid.appendChild(el);
+            });
+
+            try { lucide.createIcons(); } catch(e) {}
+            lastMinute = -1; updateClockElements(); widgets.forEach(w => { if(w.type === 'weather') fetchWeather(w); });
+            if(!isSearching) { initSortable(); initResizeHandlers(); } adjustGridAspect();
+        }
+
+        function getWidgetContent(w) {
+            switch(w.type) {
+                case 'smart': 
+                    let bgImg = '';
+                    if(w.data.bgImage) { const overlay = w.data.overlay !== false ? 'opacity-50 dark:opacity-40' : 'opacity-100'; bgImg = `<img src="${w.data.bgImage}" class="absolute inset-0 w-full h-full object-cover z-0 ${overlay} transition-opacity duration-300" />`; }
+                    let iconEl = ''; if(w.data.icon) { iconEl = w.data.isEmoji ? `<span class="text-3xl lg:text-4xl drop-shadow-sm z-10">${w.data.icon}</span>` : `<i data-lucide="${w.data.icon}" class="w-8 h-8 lg:w-10 lg:h-10 opacity-80 z-10"></i>`; }
+                    
+                    let contentHtml = '';
+                    if(w.w >= 2 && w.h === 1) { contentHtml = `${bgImg} <div class="flex items-center justify-start px-6 gap-4 w-full h-full z-10">${iconEl} <span class="text-xs font-bold tracking-widest uppercase opacity-90 truncate">${w.data.title||''}</span></div>`; } 
+                    else { contentHtml = `${bgImg} <div class="flex flex-col items-center justify-center w-full h-full z-10 gap-2">${iconEl} <span class="text-[10px] font-bold tracking-widest uppercase opacity-90 text-center px-2 truncate w-full">${w.data.title||''}</span></div>`; }
+
+                    const actionHtml = `onclick="executeSmartAction('${w.id}')"`;
+                    const lockIcon = w.data.password && isEditMode ? `<div class="absolute top-3 left-3 z-20 p-1.5 bg-black/40 rounded-full text-white backdrop-blur"><i data-lucide="lock" class="w-3 h-3"></i></div>` : '';
+                    
+                    if(w.data.action === 'none') { return `<div class="w-full h-full relative rounded-[32px] overflow-hidden">${lockIcon}${w.data.bgImage && !w.data.icon && !w.data.title ? `<img src="${w.data.bgImage}" class="absolute inset-0 w-full h-full object-cover" />` : contentHtml}</div>`; } 
+                    else if(w.data.action === 'copy') { return `<div ${actionHtml} class="cursor-pointer w-full h-full relative flex group/action rounded-[32px] overflow-hidden">${lockIcon}${contentHtml}<div class="copy-overlay absolute inset-0 z-20 is-copy flex flex-col items-center justify-center text-white"><i data-lucide="copy" class="w-8 h-8 mb-2"></i><span class="text-xs font-bold uppercase tracking-widest">Copy</span></div></div>`; } 
+                    else { return `<div ${actionHtml} class="cursor-pointer w-full h-full relative flex hover:bg-black/5 dark:hover:bg-white/5 transition-colors rounded-[32px] overflow-hidden">${lockIcon}${contentHtml}</div>`; }
+
+                case 'clock': 
+                    let clockBgImg = '';
+                    if(w.data.bgImage) { const overlay = w.data.overlay !== false ? 'opacity-50 dark:opacity-40' : 'opacity-100'; clockBgImg = `<img src="${w.data.bgImage}" class="absolute inset-0 w-full h-full object-cover z-0 ${overlay} transition-opacity duration-300" />`; }
+                    
+                    return `
+                    <div class="w-full h-full flex flex-col items-center justify-center relative overflow-hidden rounded-[32px]">
+                        ${clockBgImg}
+                        <div class="flex items-center gap-1 z-10">
+                            <h1 class="clock-time-h text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tighter drop-shadow-sm leading-none">00</h1>
+                            <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tighter drop-shadow-sm opacity-100 flex items-center mb-1">:</h1>
+                            <h1 class="clock-time-m text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tighter drop-shadow-sm overflow-y-hidden overflow-x-visible pr-2 h-[1em] relative leading-none"><span class="minute-animate block">00</span></h1>
+                        </div>
+                        <p class="clock-date text-[10px] md:text-sm font-semibold opacity-60 mt-1 tracking-widest uppercase z-10">Date</p>
+                    </div>`;
+
+                case 'timer':
+                    const isPlaying = timerInterval && activeTimerId === w.id;
+                    const isDown = w.data.direction !== 'up';
+                    
+                    let displayTime = isDown ? (w.data.timerMinutes || 25) + ":00" : "00:00";
+                    if (isPlaying || timerRemaining > 0 || (!isDown && timerElapsed > 0)) {
+                        const totalSec = isDown ? timerRemaining : timerElapsed;
+                        displayTime = `${String(Math.floor(totalSec/60)).padStart(2,'0')}:${String(totalSec%60).padStart(2,'0')}`;
+                    }
+
+                    if(w.w === 1) {
+                        return `
+                        <div class="w-full h-full flex flex-col items-center justify-center relative group/pomo p-2 pt-2">
+                            <div class="relative flex items-center justify-center mb-3 w-full">
+                                <button onclick="adjTimer('${w.id}', -1)" class="absolute left-2 opacity-0 group-hover/pomo:opacity-100 hover:text-blue-500 transition cursor-pointer p-1"><i data-lucide="minus" class="w-4 h-4"></i></button>
+                                <h2 class="text-4xl md:text-5xl font-extrabold tracking-tighter font-mono drop-shadow-sm" id="timer-disp-${w.id}">${displayTime}</h2>
+                                <button onclick="adjTimer('${w.id}', 1)" class="absolute right-2 opacity-0 group-hover/pomo:opacity-100 hover:text-blue-500 transition cursor-pointer p-1"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="toggleTimer('${w.id}')" class="w-10 h-10 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 transition cursor-pointer" id="timer-play-${w.id}"><i data-lucide="${isPlaying?'pause':'play'}" class="w-5 h-5 fill-current"></i></button>
+                                <button onclick="resetTimer('${w.id}')" class="w-8 h-8 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 transition cursor-pointer"><i data-lucide="square" class="w-4 h-4 fill-current"></i></button>
+                            </div>
+                        </div>`;
+                    }
+                    return `
+                    <div class="w-full h-full flex items-center justify-between px-6 md:px-8 relative group/pomo">
+                        <div class="flex flex-col items-center relative">
+                            <button onclick="adjTimer('${w.id}', 1)" class="absolute -top-7 opacity-0 group-hover/pomo:opacity-100 hover:text-blue-500 transition cursor-pointer p-1 ${isPlaying?'hidden':''}"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                            <h2 class="text-5xl md:text-6xl font-extrabold tracking-tighter font-mono drop-shadow-sm" id="timer-disp-${w.id}">${displayTime}</h2>
+                            <button onclick="adjTimer('${w.id}', -1)" class="absolute -bottom-7 opacity-0 group-hover/pomo:opacity-100 hover:text-blue-500 transition cursor-pointer p-1 ${isPlaying?'hidden':''}"><i data-lucide="minus" class="w-4 h-4"></i></button>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <button onclick="toggleTimer('${w.id}')" class="w-14 h-14 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 transition cursor-pointer" id="timer-play-${w.id}"><i data-lucide="${isPlaying?'pause':'play'}" class="w-6 h-6 fill-current"></i></button>
+                            <button onclick="resetTimer('${w.id}')" class="w-10 h-10 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 transition cursor-pointer"><i data-lucide="square" class="w-4 h-4 fill-current"></i></button>
+                        </div>
+                    </div>`;
+
+                case 'weather': 
+                    if(w.w === 1) { return `<div id="weather-${w.id}" class="w-full h-full flex flex-col items-center justify-center p-4"><div class="opacity-80 mb-3"><i data-lucide="cloud" class="w-10 h-10"></i></div><h3 class="text-3xl font-extrabold tracking-tighter drop-shadow-sm leading-none">--°</h3></div>`; }
+                    return `<div id="weather-${w.id}" class="w-full h-full flex items-center justify-between px-6 py-4 md:px-8 relative"><div class="animate-pulse h-8 bg-black/10 rounded w-1/2"></div></div>`;
+
+                case 'notes': 
+                    return `<div class="w-full h-full flex p-6"><textarea id="note-${w.id}" onblur="saveNoteData('${w.id}')" class="${isEditMode ? 'pointer-events-none' : ''} flex-1 w-full h-full bg-transparent resize-none border-none outline-none font-medium text-sm leading-relaxed no-scrollbar placeholder-current opacity-50 focus:opacity-100 transition-opacity" placeholder="Write something...">${w.data.text || ''}</textarea></div>`;
+
+                case 'calendar': 
+                    return generateCalendarHTML(w.id, Math.min(w.w, window.innerWidth < 768 ? 4 : 6), w.h);
+            }
+        }
+
+        /** CALENDAR VIEW GENERATOR **/
+        function generateCalendarHTML(id, w, h) {
+            const offset = calendarOffsets[id] || 0;
+            const now = new Date(); const viewingDate = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+            const isCurrentMonth = offset === 0; const today = now.getDate();
+            const monthStr = viewingDate.toLocaleString('en-US', {month:'long'}).toUpperCase();
+            const dayStr = now.toLocaleString('en-US', {weekday:'short'}).toUpperCase();
+            const daysArr = appState.settings.weekStart === 1 ? ['M','T','W','T','F','S','S'] : ['S','M','T','W','T','F','S'];
+
+            if(w === 1 && h === 1) { return `<div class="w-full h-full flex flex-col items-center justify-center p-4"><span class="text-[10px] font-bold text-red-500 uppercase tracking-widest mb-1">${dayStr}</span><span class="text-4xl font-black tracking-tighter">${today}</span></div>`; }
+            
+            if(w === 1 && h > 1) { 
+                let html = `<div class="w-full h-full flex flex-col items-center justify-between py-4 px-2 gap-2">`;
+                for(let i=0; i<7; i++) {
+                    let d = new Date(); d.setDate(today+i); let isT = i === 0;
+                    html += `<div class="flex flex-col items-center justify-center flex-1 w-full rounded-2xl ${isT ? 'bg-red-500 text-white shadow-md' : 'opacity-70'}"><span class="text-[9px] font-bold uppercase mb-1">${daysArr[(d.getDay()-1+7)%7]}</span><span class="text-sm font-bold">${d.getDate()}</span></div>`;
+                }
+                html += `</div>`; return html;
+            }
+
+            if(h === 1 && w > 1) { 
+                let weekDates = []; let curr = new Date();
+                let first = curr.getDate() - curr.getDay() + (appState.settings.weekStart===1?1:0);
+                if(curr.getDay()===0 && appState.settings.weekStart===1) first -= 7; 
+                for(let i=0; i<7; i++) { let d = new Date(curr.getFullYear(), curr.getMonth(), first + i); weekDates.push({ date: d.getDate(), isToday: d.getDate() === today && d.getMonth() === now.getMonth() }); }
+                
+                let html = `<div class="w-full h-full flex flex-col justify-center px-4 md:px-6 w-full"><div class="flex justify-between w-full h-full items-center gap-2">`;
+                for(let i=0; i<7; i++) {
+                    let isT = weekDates[i].isToday;
+                    html += `<div class="flex flex-col items-center justify-center flex-1 h-[80%] max-h-[80px] rounded-2xl ${isT ? 'bg-red-500 text-white shadow-md' : 'opacity-70'}"><span class="text-[10px] font-bold uppercase mb-1 ${isT?'opacity-100':'opacity-50'}">${daysArr[i]}</span><span class="text-base font-bold">${weekDates[i].date}</span></div>`;
+                }
+                html += `</div></div>`; return html;
+            }
+
+            const headClass = w >= 4 ? 'text-lg' : 'text-xs';
+            let html = `<div class="flex flex-col h-full p-6 w-full max-w-2xl mx-auto relative group/cal">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="${headClass} font-bold text-red-500 uppercase tracking-widest text-left pl-2">${monthStr} ${viewingDate.getFullYear()}</div>
+                    <div class="flex items-center gap-1 opacity-0 group-hover/cal:opacity-100 transition-opacity ${isEditMode ? 'hidden' : ''}">
+                        ${!isCurrentMonth ? `<button onclick="changeCalOffset('${id}', 0)" class="text-[10px] font-bold px-2 py-1 bg-black/10 dark:bg-white/10 rounded mr-2 uppercase transition cursor-pointer">Today</button>` : ''}
+                        <button onclick="changeCalOffset('${id}', -1)" class="p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded transition cursor-pointer"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                        <button onclick="changeCalOffset('${id}', 1)" class="p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded transition cursor-pointer"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold opacity-50 uppercase mb-2">`;
+            daysArr.forEach(d => html += `<div>${d}</div>`);
+            html += `</div><div class="grid grid-cols-7 gap-y-2 text-center flex-1 content-start ${w >= 4 ? 'text-lg gap-y-4' : 'text-sm'}">`;
+
+            let startOffset = new Date(viewingDate.getFullYear(), viewingDate.getMonth(), 1).getDay() - appState.settings.weekStart;
+            if(startOffset < 0) startOffset += 7;
+            for(let i=0; i<startOffset; i++) html += `<div></div>`;
+            for(let i=1; i<=new Date(viewingDate.getFullYear(), viewingDate.getMonth() + 1, 0).getDate(); i++) {
+                if(isCurrentMonth && i === today) html += `<div class="mx-auto w-7 h-7 md:w-8 md:h-8 flex items-center justify-center bg-red-500 text-white rounded-full font-bold shadow-md m-0">${i}</div>`;
+                else html += `<div class="flex items-center justify-center h-8 font-medium opacity-80">${i}</div>`;
+            }
+            html += `</div></div>`; return html;
+        }
+        function changeCalOffset(id, diff) { 
+            calendarOffsets[id] = diff === 0 ? 0 : (calendarOffsets[id] || 0) + diff; 
+            const w = getCurrentWidgets().find(w => w.id === id); const el = document.querySelector(`[data-id="${id}"] .widget-content-wrapper`);
+            if(el) { el.innerHTML = getWidgetContent(w); try { lucide.createIcons({root: el}); } catch(e){} }
+        }
+
+        function requirePassword(password, callback, title="Enter Password") {
+            if(!password) { callback(); return; }
+            expectedPassword = password; pendingPasswordCallback = callback;
+            const modalTitle = document.getElementById('pw-modal-title'); if(modalTitle) modalTitle.innerText = title;
+            const input = document.getElementById('pw-modal-input'); if(input) input.value = '';
+            showModal('password-modal'); setTimeout(() => { if(input) input.focus(); }, 100);
+        }
+
+        function submitPassword() {
+            const val = document.getElementById('pw-modal-input').value;
+            if(val === expectedPassword) { hideModal('password-modal'); if(pendingPasswordCallback) pendingPasswordCallback(); } 
+            else { showToast('Incorrect Password'); const input = document.getElementById('pw-modal-input'); input.value = ''; input.focus(); }
+        }
+
+        function executeSmartAction(id) {
+            if(isEditMode) return; const w = getCurrentWidgets().find(w => w.id === id);
+            requirePassword(w.data.password, () => {
+                if(w.data.action === 'link') {
+                    window.open(w.data.content.startsWith('http') ? w.data.content : 'https://'+w.data.content, '_blank');
+                }
+                else if(w.data.action === 'space') { 
+                    if(isSearching){ toggleSearch(); } navigateSpace(w.id); 
+                }
+                else if(w.data.action === 'copy') {
+                    const el = document.createElement('textarea');
+                    el.value = w.data.content || '';
+                    el.setAttribute('readonly', '');
+                    el.style.position = 'absolute';
+                    el.style.left = '-9999px';
+                    document.body.appendChild(el);
+                    el.select();
+                    try { 
+                        document.execCommand('copy'); 
+                        showToast('Copied to clipboard!'); 
+                    } catch(e) { 
+                        showToast('Failed to copy!'); 
+                    }
+                    document.body.removeChild(el);
+                }
+            }, 'Unlock Widget');
+        }
+
+        function toggleSearch() {
+            isSearching = !isSearching;
+            const container = document.getElementById('search-container'), input = document.getElementById('search-input'), close = document.getElementById('search-close'), scope = document.getElementById('search-scope');
+            if(isSearching) { container.classList.add('active'); input.focus(); performSearch(); } 
+            else { container.classList.remove('active'); input.value = ''; searchResults = []; renderDashboard(); }
+        }
+        function clearSearch() { document.getElementById('search-input').value = ''; performSearch(); }
+        function setSearchScope(s) { searchScope = s; document.getElementById('btn-scope-all').className = s === 'all' ? 'px-3 py-1.5 rounded bg-white dark:bg-black shadow-sm transition cursor-pointer' : 'px-3 py-1.5 rounded opacity-50 hover:opacity-100 transition cursor-pointer'; document.getElementById('btn-scope-current').className = s === 'current' ? 'px-3 py-1.5 rounded bg-white dark:bg-black shadow-sm transition cursor-pointer' : 'px-3 py-1.5 rounded opacity-50 hover:opacity-100 transition cursor-pointer'; performSearch(); }
+        function performSearch() {
+            const q = document.getElementById('search-input').value.toLowerCase(); searchResults = [];
+            if(!q) { renderDashboard(); return; }
+            const spacesToSearch = searchScope === 'all' ? Object.keys(appState.spaces) : [spaceStack[spaceStack.length - 1]];
+            spacesToSearch.forEach(sId => { 
+                appState.spaces[sId].widgets.forEach(w => { 
+                    let match = false;
+                    if(w.data?.title?.toLowerCase().includes(q)) match = true;
+                    if(w.data?.text?.toLowerCase().includes(q)) match = true;
+                    if(w.data?.city?.toLowerCase().includes(q)) match = true;
+                    
+                    if(!w.data?.password && w.data?.content?.toLowerCase().includes(q)) match = true;
+                    
+                    if(match) searchResults.push({...w}); 
+                }); 
+            });
+            renderDashboard();
+        }
+
+        function openEditWidget(id) {
+            currentEditId = id; const w = getCurrentWidgets().find(w => w.id === id);
+            requirePassword(w.data.password, () => {
+                if(w.type === 'smart') {
+                    setSmartAction(w.data.action);
+                    document.getElementById('ew-title').value = w.data.title || '';
+                    document.getElementById('ew-content').value = w.data.content || '';
+                    document.getElementById('ew-req-pass').checked = !!w.data.password;
+                    document.getElementById('ew-password').value = w.data.password || '';
+                    document.getElementById('ew-img-overlay').checked = w.data.overlay !== false;
+                    togglePasswordField(); setTempIcon(w.data.icon || '', w.data.isEmoji || false);
+                    showModal('edit-smart-modal');
+                } else {
+                    const body = document.getElementById('eb-body');
+                    if(w.type === 'weather') {
+                        document.getElementById('eb-title').innerText = "Edit Weather";
+                        body.innerHTML = `<label class="block text-[10px] font-bold opacity-60 mb-2 uppercase tracking-widest">City Name</label><input type="text" id="eb-city" value="${w.data.city}" class="w-full p-3 rounded-xl bg-black/5 dark:bg-white/10 outline-none font-medium mb-3 border border-transparent focus:border-blue-500">`;
+                    } else if(w.type === 'timer') {
+                        document.getElementById('eb-title').innerText = "Edit Timer";
+                        body.innerHTML = `
+                            <label class="block text-[10px] font-bold opacity-60 mb-2 uppercase tracking-widest">Default Minutes</label>
+                            <input type="number" id="eb-timer-min" value="${w.data.timerMinutes || 25}" class="w-full p-3 rounded-xl bg-black/5 dark:bg-white/10 outline-none font-medium mb-3 border border-transparent focus:border-blue-500" min="1" max="90">
+                            <label class="block text-[10px] font-bold opacity-60 mb-2 uppercase tracking-widest">Mode</label>
+                            <select id="eb-timer-dir" class="w-full p-3 rounded-xl bg-black/5 dark:bg-white/10 outline-none font-medium mb-3 border border-transparent focus:border-blue-500" onchange="document.getElementById('sound-wrap').style.display = this.value === 'down' ? 'flex' : 'none'">
+                                <option value="down" ${w.data.direction !== 'up' ? 'selected' : ''}>Count Down</option>
+                                <option value="up" ${w.data.direction === 'up' ? 'selected' : ''}>Count Up (Stopwatch)</option>
+                            </select>
+                            <div id="sound-wrap" class="flex items-center gap-3 p-3 bg-black/5 dark:bg-white/5 rounded-xl cursor-pointer mb-3" style="display: ${w.data.direction !== 'up' ? 'flex' : 'none'}">
+                                <input type="checkbox" id="eb-timer-sound" ${w.data.playSound ? 'checked' : ''} class="w-5 h-5 accent-blue-500">
+                                <span class="font-medium opacity-90 text-sm">Play Sound on Finish</span>
+                            </div>
+                            <label class="flex items-center gap-3 p-4 bg-black/5 dark:bg-white/5 rounded-xl cursor-pointer"><input type="checkbox" id="eb-trans" ${w.data.transparent ? 'checked' : ''} class="w-5 h-5 accent-blue-500"><span class="font-medium opacity-90">Transparent Box</span></label>
+                        `;
+                    } else if(w.type === 'clock') {
+                        document.getElementById('eb-title').innerText = `Edit Clock`;
+                        body.innerHTML = `
+                            <label class="flex items-center gap-3 p-4 bg-black/5 dark:bg-white/5 rounded-xl cursor-pointer mb-3"><input type="checkbox" id="eb-trans" ${w.data.transparent ? 'checked' : ''} class="w-5 h-5 accent-blue-500"><span class="font-medium opacity-90">Transparent Box</span></label>
+                            <div class="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/5">
+                                <label class="block text-[10px] font-bold opacity-60 mb-2 uppercase tracking-widest">Image Background</label>
+                                <div class="flex items-center gap-2 mb-3">
+                                    <label class="flex-1 py-2 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-black/10 transition flex justify-center cursor-pointer text-xs font-bold uppercase">
+                                        Upload <input type="file" id="eb-photo" class="hidden" accept="image/*" onchange="handleWidgetPhoto(event)">
+                                    </label>
+                                    <button onclick="clearWidgetPhoto()" class="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition cursor-pointer"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                </div>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" id="eb-img-overlay" ${w.data.overlay !== false ? 'checked' : ''} class="w-4 h-4 accent-blue-500">
+                                    <span class="text-[10px] font-bold opacity-80 uppercase tracking-widest">Darken Image</span>
+                                </label>
+                            </div>
+                        `;
+                    } else if(w.type === 'calendar') {
+                        document.getElementById('eb-title').innerText = `Edit Calendar`;
+                        body.innerHTML = `<label class="flex items-center gap-3 p-4 bg-black/5 dark:bg-white/5 rounded-xl cursor-pointer"><input type="checkbox" id="eb-trans" ${w.data.transparent ? 'checked' : ''} class="w-5 h-5 accent-blue-500"><span class="font-medium opacity-90">Transparent Box</span></label>`;
+                    }
+                    showModal('edit-basic-modal');
+                }
+            }, "Unlock to Edit");
+        }
+
+        function setSmartAction(act) {
+            document.getElementById('ew-type').value = act;
+            ['none', 'link', 'copy', 'space'].forEach(a => { document.getElementById(`btn-act-${a}`).className = a === act ? 'p-2 rounded-xl text-xs font-bold flex flex-col items-center gap-1 transition bg-blue-500 text-white shadow-md border-transparent cursor-pointer' : 'p-2 rounded-xl border border-black/10 dark:border-white/10 text-xs font-bold flex flex-col items-center gap-1 transition opacity-70 hover:opacity-100 cursor-pointer'; });
+            const wrap = document.getElementById('ew-content-wrap'), lbl = document.getElementById('ew-content-label');
+            if(act === 'none' || act === 'space') { wrap.style.display = 'none'; } else { wrap.style.display = 'block'; lbl.innerText = act === 'link' ? 'URL Link' : 'Text to Copy'; }
+        }
+        function togglePasswordField() { document.getElementById('ew-password').style.display = document.getElementById('ew-req-pass').checked ? 'block' : 'none'; }
+        function toggleIconTab(tab) {
+            document.getElementById('grid-icons').classList.toggle('hidden', tab !== 'icons'); document.getElementById('grid-emojis').classList.toggle('hidden', tab !== 'emojis');
+            document.getElementById('tab-icons').className = tab === 'icons' ? 'flex-1 py-1.5 text-xs font-bold bg-white dark:bg-white/20 rounded shadow-sm cursor-pointer' : 'flex-1 py-1.5 text-xs font-medium rounded opacity-60 cursor-pointer';
+            document.getElementById('tab-emojis').className = tab === 'emojis' ? 'flex-1 py-1.5 text-xs font-bold bg-white dark:bg-white/20 rounded shadow-sm cursor-pointer' : 'flex-1 py-1.5 text-xs font-medium rounded opacity-60 cursor-pointer';
+        }
+        function setTempIcon(val, isEmoji) {
+            tempIconData = { icon: val, isEmoji }; document.getElementById('ew-selected-display').innerHTML = isEmoji ? val : (val ? `<i data-lucide="${val}" class="w-6 h-6 inline-block"></i>` : 'None'); 
+            try { lucide.createIcons(); } catch(e) {}
+        }
+        function handleWidgetPhoto(e) {
+            const file = e.target.files[0]; if(!file) return; compressImage(file, base64 => { const w = getCurrentWidgets().find(w => w.id === currentEditId); w.data.bgImage = base64; saveState(); renderDashboard(); });
+        }
+        function clearWidgetPhoto() { const w = getCurrentWidgets().find(w => w.id === currentEditId); w.data.bgImage = null; saveState(); renderDashboard(); }
+
+        function saveSmartWidget() {
+            const w = getCurrentWidgets().find(w => w.id === currentEditId);
+            w.data.action = document.getElementById('ew-type').value; w.data.title = document.getElementById('ew-title').value; w.data.content = document.getElementById('ew-content').value;
+            w.data.icon = tempIconData.icon; w.data.isEmoji = tempIconData.isEmoji; w.data.password = document.getElementById('ew-req-pass').checked ? document.getElementById('ew-password').value : null; w.data.overlay = document.getElementById('ew-img-overlay').checked;
+            if(w.data.action === 'space' && !appState.spaces[w.id]) appState.spaces[w.id] = { title: w.data.title, widgets: [] };
+            if(w.data.action === 'space' && appState.spaces[w.id]) appState.spaces[w.id].title = w.data.title;
+            saveState(); closeModals(); renderDashboard();
+        }
+        function saveBasicWidget() {
+            const w = getCurrentWidgets().find(w => w.id === currentEditId);
+            if(w.type === 'weather') { w.data.city = document.getElementById('eb-city').value; }
+            if(w.type === 'timer') { w.data.timerMinutes = parseInt(document.getElementById('eb-timer-min').value)||25; w.data.direction = document.getElementById('eb-timer-dir').value; w.data.transparent = document.getElementById('eb-trans').checked; w.data.playSound = document.getElementById('eb-timer-sound')?.checked || false; resetTimer(w.id); }
+            if(w.type === 'clock') { w.data.transparent = document.getElementById('eb-trans').checked; w.data.overlay = document.getElementById('eb-img-overlay') ? document.getElementById('eb-img-overlay').checked : true; }
+            if(w.type === 'calendar') { w.data.transparent = document.getElementById('eb-trans').checked; }
+            saveState(); closeModals(); renderDashboard();
+        }
+        function closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => { m.classList.add('opacity-0'); setTimeout(()=>m.classList.add('hidden'), 300); }); currentEditId = null; }
+
+        function initSortable() {
+            const grid = document.getElementById('bento-grid'); if(sortableInstance) sortableInstance.destroy();
+            sortableInstance = new Sortable(grid, {
+                animation: 250, disabled: !isEditMode, ghostClass: 'opacity-0', filter: '.resize-handle', preventOnFilter: false,
+                onEnd: function () {
+                    const newOrderIds = Array.from(grid.children).map(el => el.dataset.id);
+                    appState.spaces[spaceStack[spaceStack.length - 1]].widgets = newOrderIds.map(id => getCurrentWidgets().find(w => w.id === id)).filter(Boolean);
+                    saveState();
+                }
+            });
+        }
+        function toggleEditMode() {
+            isEditMode = !isEditMode; document.body.classList.toggle('edit-mode');
+            const btnEdit = document.getElementById('btn-edit-mode'), footer = document.getElementById('edit-footer');
+            if(isEditMode) {
+                if(isSearching) toggleSearch(); btnEdit.classList.add('opacity-0', 'pointer-events-none'); footer.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-10');
+            } else { btnEdit.classList.remove('opacity-0', 'pointer-events-none'); footer.classList.add('opacity-0', 'pointer-events-none', 'translate-y-10'); }
+            renderDashboard();
+        }
+        function toggleProfileModal() { showModal('profile-modal'); }
+        
+        function addWidget(type, w, h) {
+            const newId = 'w_' + Date.now(); let data = {};
+            if(type === 'smart') data = { action: 'none', title: 'New', content: '', icon: 'star', isEmoji: false, bgImage: null, overlay: true };
+            if(type === 'weather') data = { city: 'London', transparent: false };
+            if(type === 'clock' || type === 'calendar') data = { transparent: false };
+            if(type === 'timer') data = { timerMinutes: 25, direction: 'down', transparent: false, playSound: false };
+
+            getCurrentWidgets().push({ id: newId, type, w, h, data });
+            if(type === 'smart' && data.action === 'space') appState.spaces[newId] = { title: 'Folder', widgets: [] };
+            saveState(); closeModals(); renderDashboard(); setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }), 200);
+        }
+        function deleteWidget(id) {
+            const spaceId = spaceStack[spaceStack.length - 1]; appState.spaces[spaceId].widgets = appState.spaces[spaceId].widgets.filter(w => w.id !== id);
+            if(appState.spaces[id]) delete appState.spaces[id]; saveState(); renderDashboard();
+        }
+        function navigateSpace(spaceId) { if(!appState.spaces[spaceId]) return; spaceStack.push(spaceId); renderDashboard(); }
+        function goBack() { 
+            if(isSearching) { toggleSearch(); return; }
+            if(spaceStack.length > 1) { spaceStack.pop(); renderDashboard(); } 
+        }
+        function goHome() { if(isSearching) toggleSearch(); spaceStack = ['root']; renderDashboard(); }
+
+        /** WEATHER & TIMER LOGIC **/
+        function fetchWeather(w) {
+            const container = document.getElementById(`weather-${w.id}`); if(!container) return;
+            fetch(`https://wttr.in/${encodeURIComponent(w.data.city)}?format=j1`).then(r => r.json()).then(data => {
+                const t = data.current_condition[0].temp_C; const desc = data.current_condition[0].weatherDesc[0].value;
+                let icon = 'cloud'; const c = parseInt(data.current_condition[0].weatherCode);
+                if([113].includes(c)) icon = 'sun'; else if([116, 119].includes(c)) icon = 'cloud-sun'; else if([176,263,293,296,302,353,356].includes(c)) icon = 'cloud-rain';
+                
+                if (w.w === 1) {
+                    container.innerHTML = `<div class="opacity-80 mb-2"><i data-lucide="${icon}" class="w-10 h-10"></i></div><h3 class="text-3xl font-extrabold tracking-tighter drop-shadow-sm leading-none">${t}°</h3>`;
+                    container.className = "flex flex-col items-center justify-center w-full z-10 h-full p-4";
+                } else {
+                    container.innerHTML = `<div class="flex flex-col justify-center"><span class="text-[10px] font-bold opacity-60 uppercase tracking-widest">${w.data.city}</span><h3 class="text-4xl font-extrabold tracking-tighter drop-shadow-sm leading-none mt-1">${t}°</h3><p class="text-xs font-medium opacity-80 capitalize truncate mt-1">${desc}</p></div><div class="flex items-center justify-center opacity-90"><i data-lucide="${icon}" class="w-14 h-14"></i></div>`;
+                    container.className = "flex items-center justify-between w-full z-10 h-full px-6 md:px-8 py-4";
+                }
+                try { lucide.createIcons({root: container}); } catch(e) {}
+            }).catch(() => { container.innerHTML = `<span class="text-[10px] font-bold opacity-60 uppercase">${w.data.city}</span><h3 class="text-sm font-bold opacity-70 mt-1">Unavailable</h3>`; });
+        }
+
+        function adjTimer(id, delta) {
+            const w = getCurrentWidgets().find(w => w.id === id); if(!w || (timerInterval && activeTimerId === id)) return;
+            w.data.timerMinutes = Math.max(1, Math.min(90, (w.data.timerMinutes||25) + delta)); saveState();
+            timerRemaining = w.data.timerMinutes * 60; updateTimerDisplay(id);
+        }
+        function updateTimerDisplay(id) { 
+            const el = document.getElementById(`timer-disp-${id}`); 
+            const w = getCurrentWidgets().find(w => w.id === id); if(!w || !el) return;
+            const isDown = w.data.direction !== 'up';
+            const val = isDown ? timerRemaining : timerElapsed;
+            el.textContent = `${String(Math.floor(val/60)).padStart(2,'0')}:${String(val%60).padStart(2,'0')}`; 
+        }
+        
+        function toggleTimer(id) {
+            if(timerInterval && activeTimerId === id) { pauseTimer(); return; }
+            if(timerInterval) pauseTimer();
+            const w = getCurrentWidgets().find(w => w.id === id); if(!w) return;
+            
+            const isDown = w.data.direction !== 'up';
+            if(isDown && timerRemaining <= 0) timerRemaining = (w.data.timerMinutes || 25) * 60;
+            activeTimerId = id; 
+            
+            const btn = document.getElementById(`timer-play-${id}`);
+            if(btn) { btn.innerHTML = `<i data-lucide="pause" class="${w.w === 1 ? 'w-5 h-5' : 'w-6 h-6'} fill-current"></i>`; try{lucide.createIcons({root:btn.parentElement});}catch(e){} }
+            
+            timerInterval = setInterval(() => { 
+                if(isDown) {
+                    if(timerRemaining > 0) { 
+                        timerRemaining--; updateTimerDisplay(id); 
+                    } else { 
+                        pauseTimer(); 
+                        if(w.data.playSound) playBellSound();
+                        alert("Timer finished!"); 
+                    }
+                } else {
+                    timerElapsed++; updateTimerDisplay(id);
+                }
+            }, 1000);
+        }
+        function pauseTimer() { 
+            clearInterval(timerInterval); timerInterval = null; 
+            if(activeTimerId) { 
+                const btn = document.getElementById(`timer-play-${activeTimerId}`); 
+                const w = getCurrentWidgets().find(w => w.id === activeTimerId);
+                if(btn && w) { btn.innerHTML = `<i data-lucide="play" class="${w.w === 1 ? 'w-5 h-5' : 'w-6 h-6'} fill-current"></i>`; try{lucide.createIcons({root:btn.parentElement});}catch(e){} } 
+            }
+            activeTimerId = null; 
+        }
+        function resetTimer(id) { 
+            pauseTimer(); const w = getCurrentWidgets().find(w => w.id === id); 
+            if(w) { timerRemaining = (w.data.timerMinutes || 25) * 60; timerElapsed = 0; updateTimerDisplay(id); } 
+        }
+
+        function updateClockElements() {
+            const now = new Date(); const min = now.getMinutes();
+            document.querySelectorAll('.clock-time-h').forEach(el => el.textContent = now.getHours().toString().padStart(2, '0'));
+            document.querySelectorAll('.clock-date').forEach(el => el.textContent = now.toLocaleDateString('en-US', { day: 'numeric', month: 'short', weekday: 'long' }));
+            if(min !== lastMinute) { lastMinute = min; document.querySelectorAll('.clock-time-m').forEach(el => { el.innerHTML = `<span class="minute-animate block">${min.toString().padStart(2, '0')}</span>`; }); }
+        }
+        function saveNoteData(id) { const el = document.getElementById(`note-${id}`); if(el) { const w = getCurrentWidgets().find(w => w.id === id); if(w) { w.data.text = el.value; saveState(); } } }
+
+        /** SETTINGS & THEMES **/
+        function toggleSettings() {
+            const m = document.getElementById('settings-modal');
+            if(m && m.classList.contains('hidden')) {
+                try {
+                    tempSettings = JSON.parse(JSON.stringify(appState.settings));
+                    updateSettingsUI(tempSettings); showModal('settings-modal');
+                } catch(e) { console.error(e); }
+            } else { cancelSettings(); }
+        }
+
+        function cancelSettings() {
+            applyThemeAndBg(appState.settings); 
+            hideModal('settings-modal');
+        }
+
+        function applySettings() {
+            appState.settings = JSON.parse(JSON.stringify(tempSettings));
+            saveState(); hideModal('settings-modal');
+        }
+
+        let peekTimeout;
+        function startPeek(id) { clearTimeout(peekTimeout); document.body.classList.add('peek-mode'); document.querySelectorAll('.peek-active').forEach(el=>el.classList.remove('peek-active')); document.getElementById(id).classList.add('peek-active'); document.addEventListener('mouseup', endPeek, {once: true}); document.addEventListener('touchend', endPeek, {once: true}); }
+        function endPeek() { peekTimeout = setTimeout(()=>{ document.body.classList.remove('peek-mode'); document.querySelectorAll('.peek-active').forEach(el=>el.classList.remove('peek-active')); }, 200); }
+
+        function setTempTheme(t) { tempSettings.theme = t; applyThemeAndBg(tempSettings); updateSettingsUI(tempSettings); }
+        function setTempFont(f) { tempSettings.fontFamily = f; applyThemeAndBg(tempSettings); updateSettingsUI(tempSettings); }
+        function setTempWidgetStyle(s) { tempSettings.widgetBgMode = s; applyThemeAndBg(tempSettings); updateSettingsUI(tempSettings); }
+        function setTempBgType(t) { tempSettings.bgType = t; applyThemeAndBg(tempSettings); updateSettingsUI(tempSettings); }
+
+        function updateTempSettings() {
+            try {
+                const isD = tempSettings.theme === 'dark' || (tempSettings.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                const c1 = document.getElementById('color1').value, c2 = document.getElementById('color2').value;
+                tempSettings.angle = document.getElementById('angle').value;
+                const colorWidget = document.getElementById('colorWidget');
+                if(colorWidget) tempSettings.widgetBgColor = colorWidget.value;
+                if(isD) { tempSettings.darkColors.c1 = c1; tempSettings.darkColors.c2 = c2; } else { tempSettings.lightColors.c1 = c1; tempSettings.lightColors.c2 = c2; }
+                applyThemeAndBg(tempSettings); updateSettingsUI(tempSettings);
+            } catch(e) {}
+        }
+
+        function updateTempHex(id) {
+            try {
+                const isD = tempSettings.theme === 'dark' || (tempSettings.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                const val = document.getElementById(`hex${id}`).value;
+                if(id === 'Text') { tempSettings.customTextColor = val; }
+                else { document.getElementById(`color${id}`).value = val; if(isD) tempSettings.darkColors[`c${id}`] = val; else tempSettings.lightColors[`c${id}`] = val; }
+                applyThemeAndBg(tempSettings); updateSettingsUI(tempSettings);
+            } catch(e) {}
+        }
+
+        function resetTempTextColor() { tempSettings.customTextColor = null; applyThemeAndBg(tempSettings); updateSettingsUI(tempSettings); }
+
+        function updateSettingsUI(s = tempSettings) {
+            try {
+                ['system','light','dark'].forEach(t => { const el = document.getElementById('btn-theme-'+t); if(el) el.className = t === s.theme ? 'flex-1 py-1.5 rounded-md font-bold bg-white dark:bg-black shadow-sm transition cursor-pointer' : 'flex-1 py-1.5 rounded-md font-semibold opacity-60 hover:opacity-100 transition cursor-pointer'; });
+                ['inter','serif','mono','caveat'].forEach(f => { const el = document.getElementById('btn-font-'+f); if(el) el.className = f === s.fontFamily ? `flex-1 py-1.5 rounded-md font-bold bg-white dark:bg-black shadow-sm transition cursor-pointer font-${f}` : `flex-1 py-1.5 rounded-md font-semibold opacity-60 hover:opacity-100 transition cursor-pointer font-${f}`; });
+                ['glass','solid','transparent'].forEach(style => { const el = document.getElementById('btn-ws-'+style); if(el) el.className = style === s.widgetBgMode ? 'flex-1 py-1.5 rounded-md font-bold bg-white dark:bg-black shadow-sm transition cursor-pointer' : 'flex-1 py-1.5 rounded-md font-semibold opacity-60 hover:opacity-100 transition cursor-pointer'; });
+                ['gradient','solid','image'].forEach(b => { const el = document.getElementById('btn-bg-'+b); if(el) el.className = b === s.bgType ? 'flex-1 py-1.5 rounded-md font-bold bg-white dark:bg-black shadow-sm transition text-xs cursor-pointer' : 'flex-1 py-1.5 rounded-md font-semibold opacity-60 hover:opacity-100 transition text-xs cursor-pointer'; });
+                
+                const wWrap = document.getElementById('widget-color-wrap'); if(wWrap) wWrap.style.display = s.widgetBgMode === 'solid' ? 'flex' : 'none';
+                const bgColBlock = document.getElementById('bg-colors-block'); if(bgColBlock) bgColBlock.style.display = s.bgType !== 'image' ? 'flex' : 'none';
+                const wrapC2 = document.getElementById('wrap-c2'); if(wrapC2) wrapC2.style.display = s.bgType === 'gradient' ? 'flex' : 'none';
+                const wrapAngle = document.getElementById('wrap-angle'); if(wrapAngle) wrapAngle.style.display = s.bgType === 'gradient' ? 'block' : 'none';
+                const bgImgBlock = document.getElementById('bg-image-block'); if(bgImgBlock) bgImgBlock.style.display = s.bgType === 'image' ? 'flex' : 'none';
+
+                const isD = s.theme === 'dark' || (s.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                const c = isD ? (s.darkColors || DARK_DEFAULTS) : (s.lightColors || LIGHT_DEFAULTS);
+                
+                const wrapC1 = document.getElementById('wrap-c1'); if(wrapC1) wrapC1.querySelector('.color-dot').style.backgroundColor = c.c1;
+                const wrapC2el = document.getElementById('wrap-c2'); if(wrapC2el) wrapC2el.querySelector('.color-dot').style.backgroundColor = c.c2;
+                const hex1 = document.getElementById('hex1'); if(hex1) hex1.value = c.c1; 
+                const hex2 = document.getElementById('hex2'); if(hex2) hex2.value = c.c2;
+                const angleVal = document.getElementById('angle-val'); if(angleVal) angleVal.innerText = s.angle + '°';
+                const btnTrashBg = document.getElementById('btn-trash-bg'); if(btnTrashBg) btnTrashBg.style.display = s.bgImage ? 'block' : 'none';
+
+                const tCol = s.customTextColor || (isD ? '#ffffff' : '#000000');
+                const cpWrapText = document.getElementById('cp-wrap-text'); if(cpWrapText) cpWrapText.style.backgroundColor = tCol; 
+                const hexText = document.getElementById('hexText'); if(hexText) hexText.value = tCol;
+                
+                const wCol = s.widgetBgColor || '#000000';
+                const cpWrapWidget = document.getElementById('cp-wrap-widget'); if(cpWrapWidget) cpWrapWidget.style.backgroundColor = wCol; 
+                const colorWidget = document.getElementById('colorWidget'); if(colorWidget) colorWidget.value = wCol;
+            } catch(e) {}
+        }
+
+        function applyThemeAndBg(s = appState.settings) {
+            const body = document.documentElement;
+            const isD = s.theme === 'dark' || (s.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            isD ? body.classList.add('dark') : body.classList.remove('dark');
+            
+            body.className = body.className.replace(/font-\w+/g, '').trim(); body.classList.add(`font-${s.fontFamily}`);
+
+            const bg = document.getElementById('body-bg');
+            if(s.bgType === 'image' && s.bgImage) { bg.style.background = `url(${s.bgImage}) center/cover no-repeat fixed`; }
+            else { 
+                const c = isD ? (s.darkColors || DARK_DEFAULTS) : (s.lightColors || LIGHT_DEFAULTS); 
+                bg.style.background = s.bgType === 'gradient' ? `linear-gradient(${s.angle}deg, ${c.c1}, ${c.c2})` : c.c1;
+            }
+            
+            if(s.customTextColor) { document.documentElement.style.setProperty('--custom-text', s.customTextColor); document.body.classList.add('custom-text-active'); } 
+            else { document.body.classList.remove('custom-text-active'); }
+
+            if(s.widgetBgMode === 'solid') {
+                document.documentElement.style.setProperty('--widget-bg', s.widgetBgColor || '#000000'); document.documentElement.style.setProperty('--widget-blur', '0px'); document.documentElement.style.setProperty('--widget-border', 'transparent'); document.documentElement.style.setProperty('--widget-shadow', 'none');
+            } else if(s.widgetBgMode === 'transparent') {
+                document.documentElement.style.setProperty('--widget-bg', 'transparent'); document.documentElement.style.setProperty('--widget-blur', '0px'); document.documentElement.style.setProperty('--widget-border', 'transparent'); document.documentElement.style.setProperty('--widget-shadow', 'none');
+            } else {
+                document.documentElement.style.setProperty('--widget-bg', isD ? 'rgba(30, 30, 30, 0.4)' : 'rgba(255, 255, 255, 0.3)'); document.documentElement.style.setProperty('--widget-blur', '32px'); document.documentElement.style.setProperty('--widget-border', isD ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.4)'); document.documentElement.style.setProperty('--widget-shadow', isD ? '0 8px 32px 0 rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05)' : '0 8px 32px 0 rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.5)');
+            }
+        }
+
+        function compressImage(file, callback) { const r = new FileReader(); r.onload = e => { const img = new Image(); img.onload = () => { const cvs = document.createElement('canvas'); const MAX = 1600; let w = img.width, h = img.height; if(w > h && w > MAX) { h *= MAX/w; w = MAX; } else if(h > MAX) { w *= MAX/h; h = MAX; } cvs.width = w; cvs.height = h; cvs.getContext('2d').drawImage(img, 0, 0, w, h); callback(cvs.toDataURL('image/jpeg', 0.8)); }; img.src = e.target.result; }; r.readAsDataURL(file); }
+        function handleTempBgImageUpload(e) { const f = e.target.files[0]; if(!f) return; document.getElementById('btn-trash-bg').innerText = "Uploading..."; compressImage(f, base64 => { tempSettings.bgImage = base64; applyThemeAndBg(tempSettings); updateSettingsUI(tempSettings); }); }
+        function clearTempBgImage() { tempSettings.bgImage = null; applyThemeAndBg(tempSettings); updateSettingsUI(tempSettings); }
+        
+        function exportData() { const d = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appState, null, 2)); const a = document.createElement('a'); a.href = d; a.download = "startpage.json"; document.body.appendChild(a); a.click(); a.remove(); }
+        function importData(e) { const f = e.target.files[0]; if(!f) return; const r = new FileReader(); r.onload = ev => { try { const d = JSON.parse(ev.target.result); if(d.spaces) { appState = d; saveState(); location.reload(); } } catch(err) { alert("Invalid file."); } }; r.readAsText(f); }
+
+        function showModal(id) { 
+            const m = document.getElementById(id); 
+            if(m) { m.classList.remove('hidden'); setTimeout(() => m.classList.remove('opacity-0'), 10); }
+        }
+
+        function hideModal(id) { 
+            const m = document.getElementById(id); 
+            if(m) { m.classList.add('opacity-0'); setTimeout(() => m.classList.add('hidden'), 300); }
+        }
+    </script>
+</body>
+</html>
