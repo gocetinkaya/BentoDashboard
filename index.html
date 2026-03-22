@@ -60,13 +60,19 @@
             mix-blend-mode: overlay;
         }
 
-        /* LIQUID GLASS WIDGETS */
+        /* LIQUID GLASS WIDGETS & ANTI-GLITCH FIX */
         .glass-panel {
             background: var(--widget-bg); backdrop-filter: blur(var(--widget-blur)); -webkit-backdrop-filter: blur(var(--widget-blur));
             border: 1px solid var(--widget-border); box-shadow: var(--widget-shadow);
-            border-radius: 32px; overflow: hidden; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            isolation: isolate; -webkit-mask-image: -webkit-radial-gradient(white, black);
+            border-radius: 32px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateZ(0); -webkit-transform: translateZ(0); /* Anti-glitch hardware acceleration */
         }
+        .widget-content-wrapper {
+            border-radius: inherit; overflow: hidden; height: 100%; width: 100%; position: relative;
+            isolation: isolate; -webkit-mask-image: -webkit-radial-gradient(white, black); /* Mask overflow bleed */
+        }
+        .widget-content-wrapper img.absolute { border-radius: inherit; } /* Stop subpixel corners */
+
         .transparent-box {
             background: transparent !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
             border-color: transparent !important; box-shadow: none !important;
@@ -97,6 +103,13 @@
         .peek-active span, .peek-active input[type="text"] { color: #ffffff !important; }
         .peek-active input[type="text"] { background-color: rgba(255,255,255,0.1) !important; border: none; }
 
+        /* iOS STYLE TOGGLES */
+        .ios-toggle { position: relative; display: inline-block; width: 40px; height: 24px; background-color: rgba(0,0,0,0.15); border-radius: 9999px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; flex-shrink: 0; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); }
+        .dark .ios-toggle { background-color: rgba(255,255,255,0.15); box-shadow: inset 0 1px 3px rgba(0,0,0,0.3); }
+        .ios-toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; background-color: white; border-radius: 50%; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        input[type="checkbox"]:checked + .ios-toggle { background-color: #3b82f6; }
+        input[type="checkbox"]:checked + .ios-toggle::after { transform: translateX(16px); }
+
         input[type="color"] { opacity: 0; width: 100%; height: 100%; cursor: pointer; position: absolute; top:0; left:0; }
         .color-dot { width: 32px; height: 32px; flex-shrink: 0; border-radius: 50%; border: 2px solid rgba(255,255,255,0.8); box-shadow: 0 2px 8px rgba(0,0,0,0.2); position: relative; overflow: hidden; background-color: currentColor; }
 
@@ -119,7 +132,7 @@
 
     <!-- TOP RIGHT: SEARCH BAR -->
     <div class="fixed top-6 right-6 z-40 flex justify-end">
-        <div id="search-container" class="glass-panel !rounded-full h-12 flex items-center overflow-hidden transition-all duration-300 ease-in-out relative bg-white/40 dark:bg-black/40 shadow-lg">
+        <div class="glass-panel !rounded-full h-12 flex items-center overflow-hidden transition-all duration-300 ease-in-out relative bg-white/40 dark:bg-black/40 shadow-lg" id="search-container">
             <button onclick="toggleSearch()" class="w-12 h-12 flex-shrink-0 flex items-center justify-center opacity-70 hover:opacity-100 z-10 cursor-pointer">
                 <i data-lucide="search" class="w-5 h-5"></i>
             </button>
@@ -281,8 +294,8 @@
                 <div>
                     <label class="block font-semibold mb-2 text-[10px] uppercase tracking-widest opacity-80">Global Text Color</label>
                     <div class="flex items-center gap-3 bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/10">
-                        <div class="color-dot shrink-0" id="cp-wrap-text"><input type="color" id="colorText" oninput="this.parentElement.style.backgroundColor = this.value; updateTempHex('Text')"></div>
-                        <input type="text" id="hexText" oninput="updateTempHex('Text')" class="w-full bg-black/5 dark:bg-white/10 rounded-lg px-3 py-1.5 text-sm outline-none font-mono uppercase border border-transparent focus:border-blue-500">
+                        <div class="color-dot shrink-0" id="cp-wrap-text"><input type="color" id="colorText" oninput="updateTempTextColor(this.value)"></div>
+                        <input type="text" id="hexText" oninput="updateTempTextColor(this.value)" class="w-full bg-black/5 dark:bg-white/10 rounded-lg px-3 py-1.5 text-sm outline-none font-mono uppercase border border-transparent focus:border-blue-500">
                         <button onclick="resetTempTextColor()" class="p-2 opacity-50 hover:opacity-100 text-red-500 cursor-pointer" title="Reset"><i data-lucide="rotate-ccw" class="w-4 h-4"></i></button>
                     </div>
                 </div>
@@ -336,62 +349,59 @@
                     <input type="text" id="ew-content" class="w-full p-2.5 rounded-lg bg-black/5 dark:bg-white/10 outline-none font-medium text-sm">
                 </div>
 
-                <!-- Shared Row Style: Require Password -->
-                <div class="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/5">
-                    <div class="flex items-center justify-between">
-                        <span class="text-[10px] font-bold opacity-80 uppercase tracking-widest">Require Password</span>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="ew-req-pass" class="sr-only peer" onchange="togglePasswordField()">
-                            <div class="w-9 h-5 bg-black/20 dark:bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-500"></div>
-                        </label>
-                    </div>
-                    <div id="ew-password-wrap" class="mt-3 hidden">
-                        <input type="password" id="ew-password" placeholder="Enter secret..." class="w-full p-2.5 rounded-lg bg-black/5 dark:bg-white/10 outline-none font-medium text-sm">
-                    </div>
-                </div>
-
-                <!-- Shared Row Style: Transparent Box -->
-                <div class="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/5">
-                    <div class="flex items-center justify-between">
-                        <span class="text-[10px] font-bold opacity-80 uppercase tracking-widest">Transparent Box</span>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="ew-trans" class="sr-only peer">
-                            <div class="w-9 h-5 bg-black/20 dark:bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-500"></div>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Shared Row Style: Custom Text Color -->
-                <div class="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/5">
-                    <div class="flex items-center justify-between">
-                        <span class="text-[10px] font-bold opacity-80 uppercase tracking-widest">Custom Text Color</span>
-                        <div class="flex items-center gap-3">
-                            <div id="ew-text-color-wrap" class="color-dot w-6 h-6 shrink-0 hidden">
-                                <input type="color" id="ew-text-color" value="#ffffff" oninput="this.parentElement.style.backgroundColor = this.value">
-                            </div>
-                            <label class="relative inline-flex items-center cursor-pointer">
-                                <input type="checkbox" id="ew-use-text-color" class="sr-only peer" onchange="document.getElementById('ew-text-color-wrap').style.display = this.checked ? 'block' : 'none'">
-                                <div class="w-9 h-5 bg-black/20 dark:bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-500"></div>
+                <!-- Unified Settings Rows -->
+                <div class="space-y-3">
+                    <div class="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/10 flex flex-col gap-3">
+                        <div class="flex items-center justify-between w-full">
+                            <span class="text-[10px] font-bold opacity-80 uppercase tracking-widest">Require Password</span>
+                            <label class="cursor-pointer">
+                                <input type="checkbox" id="ew-req-pass" class="sr-only" onchange="togglePasswordField()">
+                                <div class="ios-toggle"></div>
                             </label>
                         </div>
+                        <div id="ew-password-wrap" class="hidden pt-3 border-t border-black/10 dark:border-white/10">
+                            <input type="password" id="ew-password" placeholder="Enter secret..." class="w-full p-2.5 rounded-lg bg-black/5 dark:bg-white/10 outline-none font-medium text-sm">
+                        </div>
                     </div>
-                </div>
 
-                <!-- Shared Row Style: Image Background -->
-                <div class="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/5">
-                    <label class="block text-[10px] font-bold opacity-80 mb-3 uppercase tracking-widest">Image Background</label>
-                    <div class="flex items-center gap-2 mb-4">
-                        <label id="ew-upload-label" class="flex-1 py-2 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-black/10 transition flex justify-center cursor-pointer text-[10px] font-bold uppercase tracking-widest">
-                            Upload Image <input type="file" id="ew-photo" class="hidden" accept="image/*" onchange="handleWidgetPhoto(event)">
-                        </label>
-                        <button id="ew-trash-btn" onclick="clearWidgetPhoto()" class="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition cursor-pointer" style="display: none;"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                    <div class="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/10 flex flex-col gap-3">
+                        <div class="flex items-center justify-between w-full">
+                            <span class="text-[10px] font-bold opacity-80 uppercase tracking-widest">Transparent Box</span>
+                            <label class="cursor-pointer">
+                                <input type="checkbox" id="ew-trans" class="sr-only">
+                                <div class="ios-toggle"></div>
+                            </label>
+                        </div>
+                        <div class="w-full h-px bg-black/10 dark:bg-white/10"></div>
+                        <div class="flex items-center justify-between w-full">
+                            <span class="text-[10px] font-bold opacity-80 uppercase tracking-widest">Custom Text Color</span>
+                            <label class="cursor-pointer">
+                                <input type="checkbox" id="ew-use-text-color" class="sr-only" onchange="document.getElementById('ew-text-color-wrap').style.display = this.checked ? 'flex' : 'none'">
+                                <div class="ios-toggle"></div>
+                            </label>
+                        </div>
+                        <div id="ew-text-color-wrap" class="hidden pt-2 flex items-center gap-3">
+                            <div class="color-dot w-8 h-8 shrink-0"><input type="color" id="ew-text-color" value="#ffffff" oninput="this.parentElement.style.backgroundColor = this.value"></div>
+                            <span class="text-[10px] font-bold opacity-60 uppercase tracking-widest">Pick Color</span>
+                        </div>
                     </div>
-                    <div class="flex items-center justify-between pt-3 border-t border-black/10 dark:border-white/10">
-                        <span class="text-[10px] font-bold opacity-80 uppercase tracking-widest">Tint Image</span>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="ew-img-overlay" class="sr-only peer">
-                            <div class="w-9 h-5 bg-black/20 dark:bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-500"></div>
-                        </label>
+
+                    <div class="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/10 flex flex-col gap-3">
+                        <span class="text-[10px] font-bold opacity-80 uppercase tracking-widest block">Image Background</span>
+                        <div class="flex items-center gap-2">
+                            <label id="ew-upload-label" class="flex-1 py-2.5 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-black/10 transition flex justify-center cursor-pointer text-[10px] font-bold uppercase tracking-widest">
+                                Upload Image <input type="file" id="ew-photo" class="hidden" accept="image/*" onchange="handleWidgetPhoto(event)">
+                            </label>
+                            <button id="ew-trash-btn" onclick="clearWidgetPhoto()" class="p-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition cursor-pointer" style="display: none;"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </div>
+                        <div class="w-full h-px bg-black/10 dark:bg-white/10"></div>
+                        <div class="flex items-center justify-between w-full">
+                            <span class="text-[10px] font-bold opacity-80 uppercase tracking-widest">Tint Image</span>
+                            <label class="cursor-pointer">
+                                <input type="checkbox" id="ew-img-overlay" class="sr-only">
+                                <div class="ios-toggle"></div>
+                            </label>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -412,7 +422,7 @@
     <div id="edit-basic-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center modal-overlay opacity-0 transition-opacity duration-300">
         <div class="glass-panel max-w-sm w-full p-6 relative shadow-2xl mx-4 max-h-[90vh] overflow-y-auto no-scrollbar">
             <h2 class="text-xl font-bold mb-4 opacity-90" id="eb-title">Edit</h2>
-            <div id="eb-body" class="space-y-4"></div>
+            <div id="eb-body" class="space-y-3"></div>
             <div class="mt-6 flex flex-col gap-3">
                 <div class="flex gap-3">
                     <button onclick="hideModal('edit-basic-modal')" class="flex-1 py-2.5 rounded-xl bg-black/5 dark:bg-white/10 font-bold opacity-80 hover:opacity-100 cursor-pointer">Cancel</button>
@@ -468,12 +478,30 @@
             }
         };
 
-        let appState = JSON.parse(localStorage.getItem('dashboard_v28')) || DEFAULT_STATE;
-        
-        if (typeof appState.settings.widgetBgColor === 'string') {
-            appState.settings.widgetBgColor = { light: '#ffffff', dark: '#1a1a1a' };
+        const STORAGE_KEY = 'bento_dashboard_data';
+
+        function loadState() {
+            let saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                let parsed = JSON.parse(saved);
+                if (typeof parsed.settings.widgetBgColor === 'string') parsed.settings.widgetBgColor = { light: '#ffffff', dark: '#1a1a1a' };
+                return parsed;
+            }
+            
+            // Github veya Key güncellemesi sonrası verilerin kaybolmaması için eski versiyonları tarayan akıllı göç (migration) sistemi
+            for (let i = 50; i >= 15; i--) {
+                let old = localStorage.getItem('dashboard_v' + i);
+                if (old) {
+                    localStorage.setItem(STORAGE_KEY, old);
+                    let parsed = JSON.parse(old);
+                    if (typeof parsed.settings.widgetBgColor === 'string') parsed.settings.widgetBgColor = { light: '#ffffff', dark: '#1a1a1a' };
+                    return parsed;
+                }
+            }
+            return DEFAULT_STATE;
         }
-        
+
+        let appState = loadState();
         let tempSettings = null; 
         
         let spaceStack = ['root']; let calendarOffsets = {}; 
@@ -483,7 +511,6 @@
         
         let pendingPasswordCallback = null; let expectedPassword = null;
 
-        // Sweet Bell Sound Generator
         function playBellSound() {
             try {
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -506,7 +533,7 @@
         }
 
         function getCurrentWidgets() { return isSearching ? searchResults : appState.spaces[spaceStack[spaceStack.length - 1]].widgets; }
-        function saveState() { if(!isSearching) localStorage.setItem('dashboard_v28', JSON.stringify(appState)); }
+        function saveState() { if(!isSearching) localStorage.setItem(STORAGE_KEY, JSON.stringify(appState)); }
         function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.classList.remove('opacity-0'); setTimeout(()=>t.classList.add('opacity-0'), 2000); }
 
         function populateIconGrids() {
@@ -720,36 +747,43 @@
 
             if(w === 1 && h === 1) { return `<div class="w-full h-full flex flex-col items-center justify-center p-4"><span class="text-[10px] font-bold text-red-500 uppercase tracking-widest mb-1">${dayStr}</span><span class="text-4xl font-black tracking-tighter">${today}</span></div>`; }
             
+            // Dikey Takvim
             if(w === 1 && h > 1) { 
-                let html = `<div class="w-full h-full flex flex-col items-center justify-between p-4 md:p-5 gap-2">`;
+                let html = `<div class="w-full h-full flex flex-col items-center justify-between py-4 md:py-5 px-2 gap-1.5">`;
                 for(let i=0; i<7; i++) {
                     let d = new Date(); d.setDate(today+i); let isT = i === 0;
-                    html += `<div class="flex flex-col items-center justify-center flex-1 w-full rounded-2xl ${isT ? 'bg-red-500 text-white shadow-md' : 'opacity-70'}"><span class="text-[10px] font-bold uppercase mb-0.5">${daysArr[(d.getDay()-1+7)%7]}</span><span class="text-base font-bold">${d.getDate()}</span></div>`;
+                    html += `<div class="flex flex-col items-center justify-center flex-1 w-14 md:w-16 mx-auto rounded-2xl ${isT ? 'bg-red-500 text-white shadow-md' : 'opacity-70'}"><span class="text-[9px] font-bold uppercase mb-0.5">${daysArr[(d.getDay()-1+7)%7]}</span><span class="text-xs md:text-sm font-bold">${d.getDate()}</span></div>`;
                 }
                 html += `</div>`; return html;
             }
 
+            // Yatay Takvim
             if(h === 1 && w > 1) { 
                 let weekDates = []; let curr = new Date();
                 let first = curr.getDate() - curr.getDay() + (appState.settings.weekStart===1?1:0);
                 if(curr.getDay()===0 && appState.settings.weekStart===1) first -= 7; 
                 for(let i=0; i<7; i++) { let d = new Date(curr.getFullYear(), curr.getMonth(), first + i); weekDates.push({ date: d.getDate(), isToday: d.getDate() === today && d.getMonth() === now.getMonth() }); }
                 
-                let html = `<div class="w-full h-full flex flex-col justify-center p-4 md:p-5"><div class="flex justify-between w-full h-full items-center gap-2 md:gap-4">`;
+                let html = `<div class="w-full h-full flex flex-col justify-center py-4 md:py-5 px-4 md:px-6 w-full"><div class="flex justify-between w-full h-full items-center gap-2 md:gap-4">`;
                 for(let i=0; i<7; i++) {
                     let isT = weekDates[i].isToday;
-                    html += `<div class="flex flex-col items-center justify-center flex-1 h-full rounded-2xl ${isT ? 'bg-red-500 text-white shadow-md' : 'opacity-70'}"><span class="text-[10px] font-bold uppercase mb-0.5 ${isT?'opacity-100':'opacity-50'}">${daysArr[i]}</span><span class="text-base md:text-xl font-bold">${weekDates[i].date}</span></div>`;
+                    html += `<div class="flex flex-col items-center justify-center flex-1 h-[80%] max-h-[72px] max-w-[72px] aspect-square mx-auto rounded-[1rem] md:rounded-[1.25rem] ${isT ? 'bg-red-500 text-white shadow-md' : 'opacity-70'}"><span class="text-[10px] font-bold uppercase mb-0.5 ${isT?'opacity-100':'opacity-50'}">${daysArr[i]}</span><span class="text-base md:text-xl font-bold">${weekDates[i].date}</span></div>`;
                 }
                 html += `</div></div>`; return html;
             }
 
+            // Normal Izgara Takvimleri (2x2, 3x3, 4x2, 4x4 vs.)
             const headClass = w >= 4 ? 'text-lg md:text-xl' : 'text-sm md:text-base';
             const numClass = w >= 3 ? 'text-sm md:text-lg' : 'text-xs md:text-sm';
             const circleSize = w >= 4 ? 'w-8 h-8 md:w-10 md:h-10' : 'w-6 h-6 md:w-8 md:h-8';
             
+            const isGiant = h >= 4; 
+            const gridLayoutClass = isGiant ? 'grid-rows-6 flex-1 items-center' : 'gap-y-1.5 md:gap-y-2 content-start flex-1';
+            const cellLayoutClass = isGiant ? 'flex items-center justify-center h-full' : 'flex items-center justify-center h-7 md:h-8';
+
             let html = `<div class="flex flex-col h-full p-4 md:p-5 w-full mx-auto relative group/cal">
-                <div class="flex items-center justify-between mb-2 md:mb-4">
-                    <div class="${headClass} font-bold text-red-500 uppercase tracking-widest text-left">${monthStr} ${viewingDate.getFullYear()}</div>
+                <div class="flex items-center justify-between mb-2 md:mb-4 px-1 md:px-2">
+                    <div class="${headClass} font-bold text-red-500 uppercase tracking-widest text-left leading-none pl-1 md:pl-2.5">${monthStr} ${viewingDate.getFullYear()}</div>
                     <div class="flex items-center gap-1 opacity-0 group-hover/cal:opacity-100 transition-opacity ${isEditMode ? 'hidden' : ''}">
                         ${!isCurrentMonth ? `<button onclick="changeCalOffset('${id}', 0)" class="text-[10px] font-bold px-2 py-1 bg-black/10 dark:bg-white/10 rounded mr-2 uppercase transition cursor-pointer">Today</button>` : ''}
                         <button onclick="changeCalOffset('${id}', -1)" class="p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded transition cursor-pointer"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
@@ -758,16 +792,16 @@
                 </div>
                 <div class="grid grid-cols-7 gap-1 text-center text-[9px] md:text-xs font-bold opacity-50 uppercase mb-1 md:mb-2">`;
             daysArr.forEach(d => html += `<div>${d}</div>`);
-            html += `</div><div class="grid grid-cols-7 grid-rows-6 flex-1 text-center items-center ${numClass}">`;
+            html += `</div><div class="grid grid-cols-7 ${gridLayoutClass} text-center ${numClass}">`;
 
             let startOffset = new Date(viewingDate.getFullYear(), viewingDate.getMonth(), 1).getDay() - appState.settings.weekStart;
             if(startOffset < 0) startOffset += 7;
             for(let i=0; i<startOffset; i++) html += `<div></div>`;
             for(let i=1; i<=new Date(viewingDate.getFullYear(), viewingDate.getMonth() + 1, 0).getDate(); i++) {
                 if(isCurrentMonth && i === today) {
-                    html += `<div class="flex items-center justify-center"><div class="flex items-center justify-center ${circleSize} bg-red-500 text-white rounded-full font-bold shadow-md m-0">${i}</div></div>`;
+                    html += `<div class="${cellLayoutClass}"><div class="flex items-center justify-center ${circleSize} bg-red-500 text-white rounded-full font-bold shadow-md m-0">${i}</div></div>`;
                 } else {
-                    html += `<div class="flex items-center justify-center h-full font-medium opacity-80">${i}</div>`;
+                    html += `<div class="${cellLayoutClass} font-medium opacity-80">${i}</div>`;
                 }
             }
             html += `</div></div>`; return html;
@@ -870,12 +904,24 @@
             if (mode === 'down') {
                 if (btnDown) btnDown.className = 'flex-1 py-1.5 text-xs font-bold bg-white dark:bg-white/20 shadow-sm rounded cursor-pointer transition';
                 if (btnUp) btnUp.className = 'flex-1 py-1.5 text-xs font-medium opacity-60 rounded cursor-pointer transition hover:opacity-100';
-                if (soundWrap) soundWrap.style.display = 'flex';
+                if (soundWrap) soundWrap.style.display = 'block';
             } else {
                 if (btnUp) btnUp.className = 'flex-1 py-1.5 text-xs font-bold bg-white dark:bg-white/20 shadow-sm rounded cursor-pointer transition';
                 if (btnDown) btnDown.className = 'flex-1 py-1.5 text-xs font-medium opacity-60 rounded cursor-pointer transition hover:opacity-100';
                 if (soundWrap) soundWrap.style.display = 'none';
             }
+        }
+
+        function createSettingRow(id, label, isChecked, onChangeStr = '') {
+            return `
+            <div class="flex items-center justify-between w-full">
+                <span class="text-[10px] font-bold opacity-80 uppercase tracking-widest">${label}</span>
+                <label class="cursor-pointer">
+                    <input type="checkbox" id="${id}" class="sr-only" ${isChecked ? 'checked' : ''} ${onChangeStr ? `onchange="${onChangeStr}"` : ''}>
+                    <div class="ios-toggle"></div>
+                </label>
+            </div>
+            `;
         }
 
         function openEditWidget(id) {
@@ -895,7 +941,7 @@
                     
                     const useTextColor = !!w.data.textColor;
                     document.getElementById('ew-use-text-color').checked = useTextColor;
-                    document.getElementById('ew-text-color-wrap').style.display = useTextColor ? 'block' : 'none';
+                    document.getElementById('ew-text-color-wrap').style.display = useTextColor ? 'flex' : 'none';
                     
                     const ewTextColor = document.getElementById('ew-text-color');
                     ewTextColor.value = w.data.textColor || '#ffffff';
@@ -912,7 +958,7 @@
                     if(w.type === 'weather') {
                         document.getElementById('eb-title').innerText = "Edit Weather";
                         specificHtml = `
-                            <div class="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/5 mb-3">
+                            <div class="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/10 mb-3">
                                 <label class="block text-[10px] font-bold opacity-80 mb-2 uppercase tracking-widest">City Name</label>
                                 <input type="text" id="eb-city" value="${w.data.city}" class="w-full p-2.5 rounded-lg bg-black/5 dark:bg-white/10 outline-none font-medium text-sm border border-transparent focus:border-blue-500">
                             </div>`;
@@ -920,9 +966,9 @@
                         document.getElementById('eb-title').innerText = "Edit Timer";
                         const isDown = w.data.direction !== 'up';
                         specificHtml = `
-                            <div class="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/5 mb-3">
+                            <div class="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/10 mb-3">
                                 <label class="block text-[10px] font-bold opacity-80 mb-2 uppercase tracking-widest">Default Minutes</label>
-                                <input type="number" id="eb-timer-min" value="${w.data.timerMinutes || 25}" class="w-full p-2.5 rounded-lg bg-black/5 dark:bg-white/10 outline-none font-medium text-sm mb-3 border border-transparent focus:border-blue-500" min="1" max="90">
+                                <input type="number" id="eb-timer-min" value="${w.data.timerMinutes || 25}" class="w-full p-2.5 rounded-lg bg-black/5 dark:bg-white/10 outline-none font-medium text-sm mb-4 border border-transparent focus:border-blue-500" min="1" max="90">
                                 
                                 <label class="block text-[10px] font-bold opacity-80 mb-2 uppercase tracking-widest">Mode</label>
                                 <div class="flex gap-2 p-1 bg-black/5 dark:bg-white/10 rounded-lg mb-3">
@@ -931,33 +977,24 @@
                                 </div>
                                 <input type="hidden" id="eb-timer-dir" value="${w.data.direction || 'down'}">
 
-                                <div id="sound-wrap" class="flex items-center justify-between pt-3 border-t border-black/10 dark:border-white/10" style="display: ${isDown ? 'flex' : 'none'}">
-                                    <span class="text-[10px] font-bold opacity-80 uppercase tracking-widest">Play Sound on Finish</span>
-                                    <label class="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" id="eb-timer-sound" ${w.data.playSound ? 'checked' : ''} class="sr-only peer">
-                                        <div class="w-9 h-5 bg-black/20 dark:bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-500"></div>
-                                    </label>
+                                <div id="sound-wrap" class="pt-3 border-t border-black/10 dark:border-white/10" style="display: ${isDown ? 'block' : 'none'}">
+                                    ${createSettingRow('eb-timer-sound', 'Play Sound on Finish', w.data.playSound)}
                                 </div>
                             </div>
                         `;
                     } else if(w.type === 'clock') {
                         document.getElementById('eb-title').innerText = `Edit Clock`;
                         specificHtml = `
-                            <div class="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/5 mb-3">
-                                <label class="block text-[10px] font-bold opacity-80 mb-3 uppercase tracking-widest">Image Background</label>
-                                <div class="flex items-center gap-2 mb-4">
-                                    <label id="eb-upload-label" class="flex-1 py-2 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-black/10 transition flex justify-center cursor-pointer text-[10px] font-bold uppercase tracking-widest">
+                            <div class="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/10 flex flex-col gap-3 mb-3">
+                                <span class="text-[10px] font-bold opacity-80 uppercase tracking-widest block mb-1">Image Background</span>
+                                <div class="flex items-center gap-2">
+                                    <label id="eb-upload-label" class="flex-1 py-2.5 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-black/10 transition flex justify-center cursor-pointer text-[10px] font-bold uppercase tracking-widest">
                                         Upload Image <input type="file" id="eb-photo" class="hidden" accept="image/*" onchange="handleWidgetPhoto(event)">
                                     </label>
-                                    <button id="eb-trash-btn" onclick="clearWidgetPhoto()" class="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition cursor-pointer" style="display: none;"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                    <button id="eb-trash-btn" onclick="clearWidgetPhoto()" class="p-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition cursor-pointer" style="display: none;"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                                 </div>
-                                <div class="flex items-center justify-between pt-3 border-t border-black/10 dark:border-white/10">
-                                    <span class="text-[10px] font-bold opacity-80 uppercase tracking-widest">Tint Image</span>
-                                    <label class="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" id="eb-img-overlay" ${w.data.overlay !== false ? 'checked' : ''} class="sr-only peer">
-                                        <div class="w-9 h-5 bg-black/20 dark:bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-500"></div>
-                                    </label>
-                                </div>
+                                <div class="w-full h-px bg-black/10 dark:bg-white/10"></div>
+                                ${createSettingRow('eb-img-overlay', 'Tint Image', w.data.overlay !== false)}
                             </div>
                         `;
                         const hasImg = !!w.data.bgImage;
@@ -968,28 +1005,15 @@
 
                     const useTextColor = !!w.data.textColor;
                     const styleHtml = `
-                        <div class="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/5 mb-3">
-                            <div class="flex items-center justify-between mb-3">
-                                <span class="text-[10px] font-bold opacity-80 uppercase tracking-widest">Transparent Box</span>
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" id="eb-trans" ${w.data.transparent ? 'checked' : ''} class="sr-only peer">
-                                    <div class="w-9 h-5 bg-black/20 dark:bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-500"></div>
-                                </label>
-                            </div>
-                        </div>
-                        
-                        <div class="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/5 mb-3">
-                            <div class="flex items-center justify-between">
-                                <span class="text-[10px] font-bold opacity-80 uppercase tracking-widest">Custom Text Color</span>
-                                <div class="flex items-center gap-3">
-                                    <div id="eb-text-color-wrap" class="color-dot w-6 h-6 shrink-0" style="display: ${useTextColor ? 'block' : 'none'}; background-color: ${w.data.textColor || '#ffffff'}">
-                                        <input type="color" id="eb-text-color" value="${w.data.textColor || '#ffffff'}" oninput="this.parentElement.style.backgroundColor = this.value">
-                                    </div>
-                                    <label class="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" id="eb-use-text-color" ${useTextColor ? 'checked' : ''} class="sr-only peer" onchange="document.getElementById('eb-text-color-wrap').style.display = this.checked ? 'block' : 'none'">
-                                        <div class="w-9 h-5 bg-black/20 dark:bg-white/20 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-500"></div>
-                                    </label>
+                        <div class="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/10 flex flex-col gap-3 mb-3">
+                            ${createSettingRow('eb-trans', 'Transparent Box', w.data.transparent)}
+                            <div class="w-full h-px bg-black/10 dark:bg-white/10"></div>
+                            ${createSettingRow('eb-use-text-color', 'Custom Text Color', useTextColor, "document.getElementById('eb-text-color-wrap').style.display = this.checked ? 'flex' : 'none'")}
+                            <div id="eb-text-color-wrap" class="pt-1 flex items-center gap-3" style="display: ${useTextColor ? 'flex' : 'none'};">
+                                <div class="color-dot w-8 h-8 shrink-0" style="background-color: ${w.data.textColor || '#ffffff'}">
+                                    <input type="color" id="eb-text-color" value="${w.data.textColor || '#ffffff'}" oninput="this.parentElement.style.backgroundColor = this.value">
                                 </div>
+                                <span class="text-[10px] font-bold opacity-60 uppercase tracking-widest">Pick Color</span>
                             </div>
                         </div>
                     `;
@@ -1259,12 +1283,19 @@
             } catch(e) {}
         }
 
+        function updateTempTextColor(val) {
+            try {
+                tempSettings.customTextColor = val;
+                applyThemeAndBg(tempSettings); updateSettingsUI(tempSettings);
+            } catch(e) {}
+        }
+
         function updateTempHex(id) {
             try {
                 const isD = tempSettings.theme === 'dark' || (tempSettings.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
                 const val = document.getElementById(`hex${id}`).value;
-                if(id === 'Text') { tempSettings.customTextColor = val; }
-                else { document.getElementById(`color${id}`).value = val; if(isD) tempSettings.darkColors[`c${id}`] = val; else tempSettings.lightColors[`c${id}`] = val; }
+                document.getElementById(`color${id}`).value = val; 
+                if(isD) tempSettings.darkColors[`c${id}`] = val; else tempSettings.lightColors[`c${id}`] = val;
                 applyThemeAndBg(tempSettings); updateSettingsUI(tempSettings);
             } catch(e) {}
         }
