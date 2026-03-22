@@ -65,13 +65,21 @@
             background: var(--widget-bg); backdrop-filter: blur(var(--widget-blur)); -webkit-backdrop-filter: blur(var(--widget-blur));
             border: 1px solid var(--widget-border); box-shadow: var(--widget-shadow);
             border-radius: 32px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            transform: translateZ(0); -webkit-transform: translateZ(0); /* Anti-glitch hardware acceleration */
+            transform: translateZ(0); -webkit-transform: translateZ(0);
         }
         .widget-content-wrapper {
             border-radius: inherit; overflow: hidden; height: 100%; width: 100%; position: relative;
-            isolation: isolate; -webkit-mask-image: -webkit-radial-gradient(white, black); /* Mask overflow bleed */
+            isolation: isolate; -webkit-mask-image: -webkit-radial-gradient(white, black);
         }
-        .widget-content-wrapper img.absolute { border-radius: inherit; } /* Stop subpixel corners */
+        /* Fixes the 1px white border glitch under images/boxes */
+        .widget-content-wrapper > img.absolute { 
+            border-radius: inherit; 
+            width: calc(100% + 2px) !important; 
+            height: calc(100% + 2px) !important; 
+            top: -1px !important; 
+            left: -1px !important; 
+            max-width: none;
+        }
 
         .transparent-box {
             background: transparent !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
@@ -747,32 +755,37 @@
 
             if(w === 1 && h === 1) { return `<div class="w-full h-full flex flex-col items-center justify-center p-4"><span class="text-[10px] font-bold text-red-500 uppercase tracking-widest mb-1">${dayStr}</span><span class="text-4xl font-black tracking-tighter">${today}</span></div>`; }
             
-            // Dikey Takvim
+            // Dikey Takvim (Vertical)
             if(w === 1 && h > 1) { 
-                let html = `<div class="w-full h-full flex flex-col items-center justify-between py-4 md:py-5 px-2 gap-1.5">`;
+                let weekDates = []; let curr = new Date();
+                let first = curr.getDate() - curr.getDay() + (appState.settings.weekStart===1?1:0);
+                if(curr.getDay()===0 && appState.settings.weekStart===1) first -= 7; 
+                for(let i=0; i<7; i++) { let d = new Date(curr.getFullYear(), curr.getMonth(), first + i); weekDates.push({ date: d.getDate(), isToday: d.getDate() === today && d.getMonth() === now.getMonth() }); }
+                
+                let html = `<div class="w-full h-full flex flex-col items-center justify-between p-4 md:p-5">`;
                 for(let i=0; i<7; i++) {
-                    let d = new Date(); d.setDate(today+i); let isT = i === 0;
-                    html += `<div class="flex flex-col items-center justify-center flex-1 w-14 md:w-16 mx-auto rounded-2xl ${isT ? 'bg-red-500 text-white shadow-md' : 'opacity-70'}"><span class="text-[9px] font-bold uppercase mb-0.5">${daysArr[(d.getDay()-1+7)%7]}</span><span class="text-xs md:text-sm font-bold">${d.getDate()}</span></div>`;
+                    let isT = weekDates[i].isToday;
+                    html += `<div class="flex flex-col items-center justify-center w-full h-[13%] rounded-xl md:rounded-2xl ${isT ? 'bg-red-500 text-white shadow-md' : 'opacity-70 text-current'}"><span class="text-[9px] font-bold uppercase mb-0.5">${daysArr[i]}</span><span class="text-sm font-bold">${weekDates[i].date}</span></div>`;
                 }
                 html += `</div>`; return html;
             }
 
-            // Yatay Takvim
+            // Yatay Takvim (Horizontal)
             if(h === 1 && w > 1) { 
                 let weekDates = []; let curr = new Date();
                 let first = curr.getDate() - curr.getDay() + (appState.settings.weekStart===1?1:0);
                 if(curr.getDay()===0 && appState.settings.weekStart===1) first -= 7; 
                 for(let i=0; i<7; i++) { let d = new Date(curr.getFullYear(), curr.getMonth(), first + i); weekDates.push({ date: d.getDate(), isToday: d.getDate() === today && d.getMonth() === now.getMonth() }); }
                 
-                let html = `<div class="w-full h-full flex flex-col justify-center py-4 md:py-5 px-4 md:px-6 w-full"><div class="flex justify-between w-full h-full items-center gap-2 md:gap-4">`;
+                let html = `<div class="w-full h-full flex justify-between items-center p-4 md:p-5">`;
                 for(let i=0; i<7; i++) {
                     let isT = weekDates[i].isToday;
-                    html += `<div class="flex flex-col items-center justify-center flex-1 h-[80%] max-h-[72px] max-w-[72px] aspect-square mx-auto rounded-[1rem] md:rounded-[1.25rem] ${isT ? 'bg-red-500 text-white shadow-md' : 'opacity-70'}"><span class="text-[10px] font-bold uppercase mb-0.5 ${isT?'opacity-100':'opacity-50'}">${daysArr[i]}</span><span class="text-base md:text-xl font-bold">${weekDates[i].date}</span></div>`;
+                    html += `<div class="flex flex-col items-center justify-center h-full w-[13%] rounded-xl md:rounded-2xl ${isT ? 'bg-red-500 text-white shadow-md' : 'opacity-70 text-current'}"><span class="text-[10px] font-bold uppercase mb-0.5 ${isT?'opacity-100':'opacity-50'}">${daysArr[i]}</span><span class="text-base md:text-xl font-bold">${weekDates[i].date}</span></div>`;
                 }
-                html += `</div></div>`; return html;
+                html += `</div>`; return html;
             }
 
-            // Normal Izgara Takvimleri (2x2, 3x3, 4x2, 4x4 vs.)
+            // Normal Izgara Takvimleri (2x2, 3x3, 4x4 vs.)
             const headClass = w >= 4 ? 'text-lg md:text-xl' : 'text-sm md:text-base';
             const numClass = w >= 3 ? 'text-sm md:text-lg' : 'text-xs md:text-sm';
             const circleSize = w >= 4 ? 'w-8 h-8 md:w-10 md:h-10' : 'w-6 h-6 md:w-8 md:h-8';
@@ -782,8 +795,8 @@
             const cellLayoutClass = isGiant ? 'flex items-center justify-center h-full' : 'flex items-center justify-center h-7 md:h-8';
 
             let html = `<div class="flex flex-col h-full p-4 md:p-5 w-full mx-auto relative group/cal">
-                <div class="flex items-center justify-between mb-2 md:mb-4 px-1 md:px-2">
-                    <div class="${headClass} font-bold text-red-500 uppercase tracking-widest text-left leading-none pl-1 md:pl-2.5">${monthStr} ${viewingDate.getFullYear()}</div>
+                <div class="flex items-center justify-between mb-2 md:mb-4 w-full" style="padding-left: calc(100% / 14 - 10px); padding-right: calc(100% / 14 - 10px);">
+                    <div class="${headClass} font-bold text-red-500 uppercase tracking-widest text-left leading-none">${monthStr} ${viewingDate.getFullYear()}</div>
                     <div class="flex items-center gap-1 opacity-0 group-hover/cal:opacity-100 transition-opacity ${isEditMode ? 'hidden' : ''}">
                         ${!isCurrentMonth ? `<button onclick="changeCalOffset('${id}', 0)" class="text-[10px] font-bold px-2 py-1 bg-black/10 dark:bg-white/10 rounded mr-2 uppercase transition cursor-pointer">Today</button>` : ''}
                         <button onclick="changeCalOffset('${id}', -1)" class="p-1 hover:bg-black/10 dark:hover:bg-white/10 rounded transition cursor-pointer"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
