@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bento Dashboard</title>
     
+    <!-- System Theme Responsive Favicon (Bento Box SVG) -->
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHN0eWxlPi5ie2ZpbGw6IzRiNTU2Mzt9QG1lZGlhIChwcmVmZXJzLWNvbG9yLXNjaGVtZTogZGFyayl7LmJ7ZmlsbDojZTVlN2ViO319PC9zdHlsZT48cmVjdCBjbGFzcz0iYiIgeD0iOCIgeT0iOCIgd2lkdGg9IjQ4IiBoZWlnaHQ9IjIwIiByeD0iNiIvPjxyZWN0IGNsYXNzPSJiIiB4PSI4IiB5PSIzMiIgd2lkdGg9IjIyIiBoZWlnaHQ9IjI0IiByeD0iNiIvPjxyZWN0IGNsYXNzPSJiIiB4PSIzNCIgeT0iMzIiIHdpZHRoPSIyMiIgaGVpZ2h0PSIyNCIgcng9IjYiLz48L3N2Zz4=" type="image/svg+xml">
+    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -34,13 +37,16 @@
             --widget-bg: rgba(255, 255, 255, 0.3);
             --widget-blur: 32px;
             --widget-border: rgba(255, 255, 255, 0.4);
-            --widget-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.5);
+            /* Splitting shadows to prevent clipping glitch */
+            --widget-shadow-outer: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
+            --widget-shadow-inner: inset 0 1px 1px rgba(255, 255, 255, 0.5);
         }
         
         .dark {
             --widget-bg: rgba(30, 30, 30, 0.4);
             --widget-border: rgba(255, 255, 255, 0.1);
-            --widget-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05);
+            --widget-shadow-outer: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            --widget-shadow-inner: inset 0 1px 1px rgba(255, 255, 255, 0.05);
         }
 
         body { margin: 0; overflow-x: hidden; transition: background 0.5s ease; color: var(--custom-text); }
@@ -60,60 +66,86 @@
             mix-blend-mode: overlay;
         }
 
-        /* LIQUID GLASS WIDGETS & ANTI-GLITCH FIX */
+        /* MODALS & SEARCH BAR GLASS */
         .glass-panel {
             background: var(--widget-bg); 
             backdrop-filter: blur(var(--widget-blur)); 
             -webkit-backdrop-filter: blur(var(--widget-blur));
-            box-shadow: inset 0 0 0 1px var(--widget-border), var(--widget-shadow);
+            box-shadow: inset 0 0 0 1px var(--widget-border), var(--widget-shadow-inner), var(--widget-shadow-outer);
             border-radius: 32px; 
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* ÖZEL ANTİ-GLITCH KATMANI (Sadece Grid Widget'ları İçin) */
-        #bento-grid > .glass-panel {
-            background: transparent !important;
-            backdrop-filter: none !important;
-            -webkit-backdrop-filter: none !important;
-            box-shadow: none !important;
-            z-index: 1; /* Kapsayıcı hiyerarşi yaratır */
+        /* =========================================================
+           WIDGET GRID "ABSOLUTE SIBLING" ANTI-GLITCH ARCHITECTURE
+           ========================================================= */
+        .widget-panel {
             position: relative;
+            border-radius: 32px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1; 
+            /* Creates an isolated rendering context so hover/transforms don't leak */
+            isolation: isolate;
+            transform: translateZ(0);
         }
 
-        #bento-grid > .glass-panel::before {
-            content: '';
+        /* Layer 1: Outer shadow container (Cannot be blurred/clipped) */
+        .widget-shadow-bg {
             position: absolute;
             inset: 0;
             border-radius: inherit;
-            background: var(--widget-bg); 
-            backdrop-filter: blur(var(--widget-blur)); 
-            -webkit-backdrop-filter: blur(var(--widget-blur));
-            box-shadow: inset 0 0 0 1px var(--widget-border), var(--widget-shadow);
-            z-index: -1;
+            box-shadow: var(--widget-shadow-outer);
+            z-index: -2;
             pointer-events: none;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            
-            /* Webkit tarayıcılardaki çizgi/sızıntı hatalarını fiziksel olarak izole eder */
-            transform: translate3d(0, 0, 0); 
-            -webkit-transform: translate3d(0, 0, 0);
-            backface-visibility: hidden; 
-            -webkit-backface-visibility: hidden;
-            will-change: transform;
-            -webkit-mask-image: -webkit-radial-gradient(white, black);
         }
 
-        #bento-grid > .transparent-box::before { display: none !important; }
-
-        .widget-content-wrapper {
-            border-radius: inherit; 
-            overflow: hidden; 
-            height: 100%; 
-            width: 100%; 
-            position: relative;
-            z-index: 2;
-            isolation: isolate; 
-            -webkit-mask-image: -webkit-radial-gradient(white, black); 
+        /* Layer 2: Glass effect container (Strictly clipped to border-radius) */
+        .widget-glass-bg {
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            background: var(--widget-bg);
+            backdrop-filter: blur(var(--widget-blur));
+            -webkit-backdrop-filter: blur(var(--widget-blur));
+            box-shadow: inset 0 0 0 1px var(--widget-border), var(--widget-shadow-inner);
+            z-index: -1;
+            pointer-events: none;
+            
+            /* Anti-glitch clipping mechanisms: force blur to respect border-radius */
+            overflow: hidden;
+            -webkit-mask-image: -webkit-radial-gradient(white, black);
             mask-image: radial-gradient(white, black);
+            
+            /* Hardware acceleration locks */
+            transform: translate3d(0, 0, 0);
+            -webkit-transform: translate3d(0, 0, 0);
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+
+        /* The content wrapper handles masking and never touches backdrop-filter */
+        .widget-content-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            border-radius: inherit;
+            overflow: hidden;
+            z-index: 2;
+            
+            transform: translate3d(0, 0, 0);
+            -webkit-transform: translate3d(0, 0, 0);
+        }
+        
+        /* Stop subpixel border leakage on background images */
+        .widget-content-wrapper > img.absolute { 
+            width: calc(100% + 2px) !important; 
+            height: calc(100% + 2px) !important; 
+            top: -1px !important; 
+            left: -1px !important; 
+            max-width: none;
+            object-fit: cover;
+            border-radius: inherit;
+            pointer-events: none;
         }
 
         .transparent-box {
@@ -666,18 +698,33 @@
             widgets.forEach(widget => {
                 const el = document.createElement('div'); 
                 const renderW = Math.min(widget.w, activeCols);
+                const isTrans = widget.data?.transparent;
                 
                 if (widget.type === 'spacer') {
                     el.className = `group relative col-span-${renderW} row-span-${widget.h} transparent-box ${isEditMode ? '' : 'no-jiggle pointer-events-none'}`;
                 } else {
-                    const isTrans = widget.data?.transparent;
-                    el.className = `glass-panel group relative col-span-${renderW} row-span-${widget.h} ${isTrans ? 'transparent-box' : ''}`; 
+                    el.className = `widget-panel group col-span-${renderW} row-span-${widget.h} ${isTrans ? 'transparent-box' : ''}`; 
                 }
                 
                 el.dataset.id = widget.id;
                 
                 if(widget.data?.textColor) {
                     el.style.color = widget.data.textColor;
+                }
+
+                // ==========================================
+                // EFSANEVİ ANTI-GLITCH ÇÖZÜMÜ BURADA DEVREDE
+                // ==========================================
+                if (widget.type !== 'spacer' && !isTrans) {
+                    // 1. Dış Gölge Katmanı (Bulanıklık ve maske yok, rahatça taşabilir)
+                    const shadowBg = document.createElement('div');
+                    shadowBg.className = 'widget-shadow-bg';
+                    el.appendChild(shadowBg);
+
+                    // 2. Cam (Glass) Katmanı (Bulanıklık içerir ve sıkıca maskelenmiştir)
+                    const glassBg = document.createElement('div');
+                    glassBg.className = 'widget-glass-bg';
+                    el.appendChild(glassBg);
                 }
 
                 const controls = document.createElement('div'); controls.className = `absolute top-3 right-3 z-30 gap-2 ${isEditMode && !isSearching ? 'flex' : 'hidden'}`;
@@ -687,7 +734,7 @@
 
                 if(!isSearching) { const handle = document.createElement('div'); handle.className = 'resize-handle'; handle.dataset.id = widget.id; el.appendChild(handle); }
 
-                const contentWrapper = document.createElement('div'); contentWrapper.className = 'w-full h-full widget-content-wrapper'; contentWrapper.innerHTML = getWidgetContent(widget); el.appendChild(contentWrapper);
+                const contentWrapper = document.createElement('div'); contentWrapper.className = 'widget-content-wrapper'; contentWrapper.innerHTML = getWidgetContent(widget); el.appendChild(contentWrapper);
                 grid.appendChild(el);
             });
 
@@ -699,7 +746,7 @@
         function getWidgetContent(w) {
             switch(w.type) {
                 case 'spacer':
-                    return isEditMode ? `<div class="w-full h-full border-2 border-dashed border-black/30 dark:border-white/30 flex items-center justify-center opacity-40"><i data-lucide="square-dashed" class="w-8 h-8"></i></div>` : `<div class="w-full h-full"></div>`;
+                    return isEditMode ? `<div class="w-full h-full border-2 border-dashed border-black/30 dark:border-white/30 rounded-[32px] flex items-center justify-center opacity-40"><i data-lucide="square-dashed" class="w-8 h-8"></i></div>` : `<div class="w-full h-full"></div>`;
 
                 case 'smart': 
                     let bgImg = '';
@@ -1361,11 +1408,11 @@
             try {
                 const isD = tempSettings.theme === 'dark' || (tempSettings.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
                 const val = document.getElementById(`hex${id}`).value;
-                document.getElementById(`color${id}`).value = val; 
                 
                 if(id === 'Text') {
                     tempSettings.customTextColor = val;
                 } else {
+                    document.getElementById(`color${id}`).value = val; 
                     if(isD) tempSettings.darkColors[`c${id}`] = val; else tempSettings.lightColors[`c${id}`] = val;
                 }
                 
@@ -1438,7 +1485,8 @@
                 document.documentElement.style.setProperty('--widget-bg', wCol); 
                 document.documentElement.style.setProperty('--widget-blur', '0px'); 
                 document.documentElement.style.setProperty('--widget-border', 'transparent'); 
-                document.documentElement.style.setProperty('--widget-shadow', 'none');
+                document.documentElement.style.setProperty('--widget-shadow-outer', 'none');
+                document.documentElement.style.setProperty('--widget-shadow-inner', 'none');
                 
                 if(!s.customTextColor) {
                     document.documentElement.style.setProperty('--custom-text', isD ? '#ffffff' : '#000000');
@@ -1448,11 +1496,20 @@
                     document.body.classList.add('custom-text-active');
                 }
             } else if(s.widgetBgMode === 'transparent') {
-                document.documentElement.style.setProperty('--widget-bg', 'transparent'); document.documentElement.style.setProperty('--widget-blur', '0px'); document.documentElement.style.setProperty('--widget-border', 'transparent'); document.documentElement.style.setProperty('--widget-shadow', 'none');
+                document.documentElement.style.setProperty('--widget-bg', 'transparent'); 
+                document.documentElement.style.setProperty('--widget-blur', '0px'); 
+                document.documentElement.style.setProperty('--widget-border', 'transparent'); 
+                document.documentElement.style.setProperty('--widget-shadow-outer', 'none');
+                document.documentElement.style.setProperty('--widget-shadow-inner', 'none');
                 if(s.customTextColor) { document.documentElement.style.setProperty('--custom-text', s.customTextColor); document.body.classList.add('custom-text-active'); } 
                 else { document.body.classList.remove('custom-text-active'); }
             } else {
-                document.documentElement.style.setProperty('--widget-bg', isD ? 'rgba(30, 30, 30, 0.4)' : 'rgba(255, 255, 255, 0.3)'); document.documentElement.style.setProperty('--widget-blur', '32px'); document.documentElement.style.setProperty('--widget-border', isD ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.4)'); document.documentElement.style.setProperty('--widget-shadow', isD ? '0 8px 32px 0 rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.05)' : '0 8px 32px 0 rgba(0, 0, 0, 0.05), inset 0 1px 1px rgba(255, 255, 255, 0.5)');
+                document.documentElement.style.setProperty('--widget-bg', isD ? 'rgba(30, 30, 30, 0.4)' : 'rgba(255, 255, 255, 0.3)'); 
+                document.documentElement.style.setProperty('--widget-blur', '32px'); 
+                document.documentElement.style.setProperty('--widget-border', isD ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.4)'); 
+                document.documentElement.style.setProperty('--widget-shadow-outer', isD ? '0 8px 32px 0 rgba(0, 0, 0, 0.3)' : '0 8px 32px 0 rgba(0, 0, 0, 0.05)');
+                document.documentElement.style.setProperty('--widget-shadow-inner', isD ? 'inset 0 1px 1px rgba(255, 255, 255, 0.05)' : 'inset 0 1px 1px rgba(255, 255, 255, 0.5)');
+                
                 if(s.customTextColor) { document.documentElement.style.setProperty('--custom-text', s.customTextColor); document.body.classList.add('custom-text-active'); } 
                 else { document.body.classList.remove('custom-text-active'); }
             }
