@@ -5,19 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bento Dashboard</title>
     
-    <!-- System Theme Responsive Favicon -->
     <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHN0eWxlPi5ie2ZpbGw6IzRiNTU2Mzt9QG1lZGlhIChwcmVmZXJzLWNvbG9yLXNjaGVtZTogZGFyayl7LmJ7ZmlsbDojZTVlN2ViO319PC9zdHlsZT48cmVjdCBjbGFzcz0iYiIgeD0iOCIgeT0iOCIgd2lkdGg9IjQ4IiBoZWlnaHQ9IjIwIiByeD0iNiIvPjxyZWN0IGNsYXNzPSJiIiB4PSI4IiB5PSIzMiIgd2lkdGg9IjIyIiBoZWlnaHQ9IjI0IiByeD0iNiIvPjxyZWN0IGNsYXNzPSJiIiB4PSIzNCIgeT0iMzIiIHdpZHRoPSIyMiIgaGVpZ2h0PSIyNCIgcng9IjYiLz48L3N2Zz4=" type="image/svg+xml">
     
-    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
-    <!-- SortableJS -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 
-    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Roboto+Mono:wght@500;700;800&display=swap" rel="stylesheet">
@@ -35,7 +30,7 @@
         :root { 
             --custom-text: auto; 
             --widget-bg: rgba(255, 255, 255, 0.3);
-            --widget-blur: 32px;
+            --widget-blur: 12.8px; /* 20% blur default */
             --widget-border: rgba(255, 255, 255, 0.4);
             --widget-shadow-outer: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
             --widget-shadow-inner: inset 0 1px 1px rgba(255, 255, 255, 0.5);
@@ -117,7 +112,6 @@
             backdrop-filter: blur(var(--widget-blur)); -webkit-backdrop-filter: blur(var(--widget-blur));
             box-shadow: inset 0 0 0 1px var(--widget-border), var(--widget-shadow-inner);
             z-index: -1; pointer-events: none; overflow: hidden;
-            -webkit-mask-image: -webkit-radial-gradient(white, black); mask-image: radial-gradient(white, black);
             transform: translate3d(0,0,0);
         }
         .widget-content-wrapper {
@@ -156,10 +150,11 @@
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .modal-overlay { background: rgba(0,0,0,0.4); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); transition: all 0.3s; }
         
-        /* PEEK MODE LOGIC FOR ANGLE SLIDER */
+        /* PEEK MODE LOGIC FOR SLIDERS */
         .peek-mode { background-color: transparent !important; }
+        .peek-mode * { user-select: none !important; -webkit-user-select: none !important; }
         .peek-mode .modal-overlay { background: transparent !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; pointer-events: none; }
-        .peek-mode .settings-hide-on-peek { visibility: hidden; opacity: 0 !important; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; }
+        .peek-mode .settings-hide-on-peek:not(.peek-active) { visibility: hidden !important; opacity: 0 !important; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; }
         .peek-mode .glass-panel { background: transparent !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; box-shadow: none !important; border-color: transparent !important; }
         
         .peek-active { 
@@ -167,13 +162,13 @@
             position: fixed !important; top: 40px !important; left: 50% !important; transform: translateX(-50%) !important; z-index: 99999 !important; 
             padding: 16px 32px !important; border-radius: 9999px !important; width: 640px !important; max-width: 90vw !important;
             background: rgba(255,255,255,0.2) !important; backdrop-filter: blur(24px) !important; -webkit-backdrop-filter: blur(24px) !important;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), inset 0 0 0 1px rgba(255,255,255,0.3) !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4) !important;
             color: var(--custom-text) !important;
             border: none !important;
         }
         .dark .peek-active {
-            background: rgba(0,0,0,0.4) !important;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255,255,255,0.15) !important;
+            background: rgba(0,0,0,0.5) !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6) !important;
         }
 
         /* iOS STYLE TOGGLES */
@@ -210,13 +205,14 @@
         /* VISUAL ONLY CHECKLIST DEFORMATTING */
         .checklist-mode-task * { font-weight: 500 !important; font-style: normal !important; text-decoration: none !important; background: transparent !important; color: inherit !important; }
         
+        /* PASSWORD INPUT FIX */
+        input[type="password"]:focus { outline: none; border-color: transparent !important; }
     </style>
 </head>
 <body id="body-bg" class="antialiased min-h-screen font-inter">
     
     <div class="bg-grain"></div>
 
-    <!-- TOP RIGHT: SEARCH BAR & TABS -->
     <div class="fixed top-6 right-6 z-40 flex flex-col items-end gap-3">
         <div id="search-container" class="flex items-center overflow-hidden relative">
             <button onclick="toggleSearch()" class="w-12 h-12 flex-shrink-0 flex items-center justify-center opacity-70 hover:opacity-100 z-10 cursor-pointer text-current absolute left-0 top-1/2 -translate-y-1/2">
@@ -228,14 +224,12 @@
             </button>
         </div>
 
-        <!-- SEARCH SCOPE TOGGLE -->
         <div id="search-scope" class="hidden items-center gap-1.5 bg-white/20 dark:bg-black/40 backdrop-blur-xl border border-white/30 p-1.5 rounded-full shadow-2xl text-[10px] font-bold uppercase tracking-wider transition-all duration-300 pointer-events-auto">
             <button onclick="setSearchScope('all')" id="btn-scope-all" class="px-5 py-2.5 rounded-full bg-white text-black dark:bg-black dark:text-white shadow-md transition cursor-pointer">All Folders</button>
             <button onclick="setSearchScope('current')" id="btn-scope-current" class="px-5 py-2.5 rounded-full opacity-60 hover:opacity-100 transition cursor-pointer text-current">This Folder</button>
         </div>
     </div>
 
-    <!-- SPACE BREADCRUMB -->
     <div id="space-nav" class="fixed top-6 left-1/2 -translate-x-1/2 z-40 hidden items-center gap-2 bg-black/10 dark:bg-white/10 backdrop-blur-xl border border-white/20 px-5 py-2.5 rounded-full shadow-lg transition-all pointer-events-auto">
         <button onclick="goHome()" class="p-1.5 opacity-60 hover:opacity-100 transition cursor-pointer text-current"><i data-lucide="home" class="w-4 h-4"></i></button>
         <span class="opacity-40 text-current">/</span>
@@ -244,7 +238,6 @@
         <span id="current-space-title" class="text-sm font-bold opacity-90 text-current">Folder</span>
     </div>
 
-    <!-- MAIN GRID -->
     <div class="relative z-10 w-full max-w-6xl mx-auto p-4 md:p-8 min-h-screen pt-24 pb-32 flex flex-col justify-center">
         <div id="empty-state" class="absolute inset-0 z-20 flex-col items-center justify-center hidden pointer-events-none text-current">
             <p class="opacity-50 text-lg font-medium tracking-wide">Area is empty.</p>
@@ -252,14 +245,12 @@
         <div id="bento-grid" class="grid grid-cols-4 md:grid-cols-6 gap-4 md:gap-6 w-full relative"></div>
     </div>
 
-    <!-- NORMAL MODE: EDIT BUTTON -->
     <div id="btn-edit-mode" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 transition-opacity duration-300">
         <button onclick="toggleEditMode()" class="w-12 h-12 bg-black/10 dark:bg-white/10 backdrop-blur-xl border border-white/20 text-current rounded-full flex items-center justify-center shadow-2xl hover:scale-105 transition cursor-pointer group">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" class="w-5 h-5 fill-current opacity-80 group-hover:opacity-100 transition-opacity"><rect x="8" y="8" width="48" height="20" rx="6"/><rect x="8" y="32" width="22" height="24" rx="6"/><rect x="34" y="32" width="22" height="24" rx="6"/></svg>
         </button>
     </div>
 
-    <!-- EDIT MODE: DOCK -->
     <div id="edit-footer" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center justify-center opacity-0 pointer-events-none transition-all duration-300 translate-y-10 px-4">
         <div class="bg-white/20 dark:bg-black/40 backdrop-blur-xl border border-white/30 rounded-full flex flex-wrap md:flex-nowrap justify-center items-center p-1.5 gap-1.5 shadow-2xl h-14 w-fit">
             <button onclick="toggleProfileModal()" class="w-11 h-11 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition flex items-center justify-center text-current shadow-sm shrink-0 cursor-pointer" title="Profile/Backup"><i data-lucide="user" class="w-5 h-5 opacity-80 text-current"></i></button>
@@ -277,7 +268,6 @@
         </div>
     </div>
 
-    <!-- MODAL: PROFILE -->
     <div id="profile-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center modal-overlay opacity-0 transition-opacity duration-300 text-current">
         <div class="glass-panel max-w-xs w-full p-8 relative flex flex-col items-center shadow-2xl mx-4">
             <button onclick="hideModal('profile-modal')" class="absolute top-4 right-4 opacity-50 hover:opacity-100 transition cursor-pointer"><i data-lucide="x" class="w-5 h-5"></i></button>
@@ -295,7 +285,6 @@
         </div>
     </div>
 
-    <!-- MODAL: SETTINGS -->
     <div id="settings-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center modal-overlay opacity-0 transition-opacity duration-300 text-current">
         <div class="glass-panel max-w-sm w-full p-8 relative max-h-[90vh] overflow-y-auto no-scrollbar settings-content-wrapper transition-opacity duration-300 shadow-2xl mx-4">
             <button onclick="cancelSettings()" class="absolute top-5 right-5 opacity-50 hover:opacity-100 transition cursor-pointer settings-hide-on-peek"><i data-lucide="x" class="w-6 h-6"></i></button>
@@ -318,20 +307,25 @@
                         <button onclick="setTempFont('caveat')" id="btn-font-caveat" class="py-1.5 rounded-lg text-[16px] font-bold transition font-caveat tracking-wide cursor-pointer">Script</button>
                     </div>
                 </div>
-                <div class="settings-hide-on-peek">
-                    <label class="block font-semibold mb-2 text-[10px] uppercase tracking-widest opacity-80">Widget Box Style</label>
-                    <div class="flex gap-2 p-1 bg-black/5 dark:bg-white/5 rounded-xl border border-black/5 dark:border-white/10">
+                <div>
+                    <label class="block font-semibold mb-2 text-[10px] uppercase tracking-widest opacity-80 settings-hide-on-peek">Widget Box Style</label>
+                    <div class="flex gap-2 p-1 bg-black/5 dark:bg-white/5 rounded-xl border border-black/5 dark:border-white/10 settings-hide-on-peek">
                         <button onclick="setTempWidgetStyle('glass')" id="btn-ws-glass" class="flex-1 py-1.5 rounded-lg text-sm font-bold transition cursor-pointer">Glass</button>
                         <button onclick="setTempWidgetStyle('solid')" id="btn-ws-solid" class="flex-1 py-1.5 rounded-lg text-sm font-bold transition cursor-pointer">Solid</button>
                         <button onclick="setTempWidgetStyle('transparent')" id="btn-ws-transparent" class="flex-1 py-1.5 rounded-lg text-sm font-bold transition cursor-pointer">Hidden</button>
                     </div>
-                    <div id="widget-color-wrap" class="mt-2 flex items-center justify-between w-full gap-3 bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/10 hidden">
+                    <div id="widget-color-wrap" class="mt-2 flex items-center justify-between w-full gap-3 bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/10 settings-hide-on-peek hidden">
                         <span class="text-[10px] font-bold opacity-60 uppercase tracking-widest flex-1 truncate">Background</span>
                         <div class="flex items-center gap-2 shrink-0">
-                            <div class="color-dot w-6 h-6 shrink-0 relative cursor-pointer"><input type="color" id="colorWidget" oninput="this.parentElement.style.backgroundColor = this.value; updateTempSettings()" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"></div>
+                            <div class="color-dot w-6 h-6 shrink-0 relative"><input type="color" id="colorWidget" oninput="this.parentElement.style.backgroundColor = this.value; updateTempSettings()" class="absolute inset-0 w-full h-full opacity-0"></div>
                             <input type="text" id="hexWidget" oninput="updateTempHex('Widget')" class="w-20 bg-black/5 dark:bg-white/10 rounded px-2 py-1 text-xs outline-none font-mono uppercase text-right border border-transparent focus:border-black/20 dark:focus:border-white/20 bg-transparent text-current opacity-80 allow-select">
                             <button onclick="resetTempWidgetColor()" class="p-1 opacity-50 hover:opacity-100 text-current cursor-pointer hover:scale-110 active:scale-95 transition-all" title="Reset"><i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i></button>
                         </div>
+                    </div>
+                    <div id="blur-wrap" class="mt-2 transition-all duration-300 flex items-center gap-4 w-full settings-hide-on-peek" onmousedown="startPeek('blur-wrap')" ontouchstart="startPeek('blur-wrap')">
+                        <span class="text-[10px] font-bold uppercase tracking-widest opacity-60 shrink-0">Blur</span>
+                        <input type="range" id="glass-blur" min="0" max="100" class="w-full accent-blue-500 cursor-pointer flex-1" oninput="updateTempSettings()" onmouseup="endPeek()" ontouchend="endPeek()">
+                        <span id="blur-val" class="text-xs font-bold opacity-80 shrink-0 w-10 text-right">20%</span>
                     </div>
                 </div>
                 <div>
@@ -345,7 +339,7 @@
                         <div class="flex items-center justify-between w-full gap-3 settings-hide-on-peek" id="wrap-c1">
                             <span class="text-[10px] font-bold opacity-60 uppercase tracking-widest flex-1 truncate" id="lbl-c1">Color 1</span>
                             <div class="flex items-center gap-2 shrink-0">
-                                <div class="color-dot w-6 h-6 shrink-0 relative cursor-pointer"><input type="color" id="color1" oninput="this.parentElement.style.backgroundColor = this.value; updateTempSettings()" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"></div>
+                                <div class="color-dot w-6 h-6 shrink-0 relative"><input type="color" id="color1" oninput="this.parentElement.style.backgroundColor = this.value; updateTempSettings()" class="absolute inset-0 w-full h-full opacity-0"></div>
                                 <input type="text" id="hex1" oninput="updateTempHex(1)" class="w-20 bg-black/5 dark:bg-white/10 rounded px-2 py-1 text-xs outline-none font-mono uppercase text-right border border-transparent focus:border-black/20 dark:focus:border-white/20 bg-transparent text-current opacity-80 allow-select">
                                 <button onclick="resetTempBgColor(1)" class="p-1 opacity-50 hover:opacity-100 text-current cursor-pointer hover:scale-110 active:scale-95 transition-all"><i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i></button>
                             </div>
@@ -353,13 +347,13 @@
                         <div class="flex items-center justify-between w-full gap-3 settings-hide-on-peek" id="wrap-c2">
                             <span class="text-[10px] font-bold opacity-60 uppercase tracking-widest flex-1 truncate" id="lbl-c2">Color 2</span>
                             <div class="flex items-center gap-2 shrink-0">
-                                <div class="color-dot w-6 h-6 shrink-0 relative cursor-pointer"><input type="color" id="color2" oninput="this.parentElement.style.backgroundColor = this.value; updateTempSettings()" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"></div>
+                                <div class="color-dot w-6 h-6 shrink-0 relative"><input type="color" id="color2" oninput="this.parentElement.style.backgroundColor = this.value; updateTempSettings()" class="absolute inset-0 w-full h-full opacity-0"></div>
                                 <input type="text" id="hex2" oninput="updateTempHex(2)" class="w-20 bg-black/5 dark:bg-white/10 rounded px-2 py-1 text-xs outline-none font-mono uppercase text-right border border-transparent focus:border-black/20 dark:focus:border-white/20 bg-transparent text-current opacity-80 allow-select">
                                 <button onclick="resetTempBgColor(2)" class="p-1 opacity-50 hover:opacity-100 text-current cursor-pointer hover:scale-110 active:scale-95 transition-all"><i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i></button>
                             </div>
                         </div>
-                        <div class="mt-2 transition-all duration-300 flex items-center gap-4 w-full" id="wrap-angle" onmousedown="startPeek()" ontouchstart="startPeek()">
-                            <span class="text-xs font-bold uppercase tracking-widest opacity-80 shrink-0">Angle</span>
+                        <div class="mt-2 transition-all duration-300 flex items-center gap-4 w-full settings-hide-on-peek" id="wrap-angle" onmousedown="startPeek('wrap-angle')" ontouchstart="startPeek('wrap-angle')">
+                            <span class="text-[10px] font-bold uppercase tracking-widest opacity-60 shrink-0">Angle</span>
                             <input type="range" id="angle" min="0" max="360" class="w-full accent-blue-500 cursor-pointer flex-1" oninput="updateTempSettings()" onmouseup="endPeek()" ontouchend="endPeek()">
                             <span id="angle-val" class="text-xs font-bold opacity-80 shrink-0 w-8 text-right">90°</span>
                         </div>
@@ -379,7 +373,7 @@
                         <div class="flex items-center justify-between w-full gap-3">
                             <span class="text-[10px] font-bold opacity-60 uppercase tracking-widest flex-1 truncate">Text</span>
                             <div class="flex items-center gap-2 shrink-0">
-                                <div class="color-dot w-6 h-6 shrink-0 relative cursor-pointer" id="cp-wrap-text"><input type="color" id="colorText" oninput="updateTempTextColor(this.value)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"></div>
+                                <div class="color-dot w-6 h-6 shrink-0 relative"><input type="color" id="colorText" oninput="updateTempTextColor(this.value)" class="absolute inset-0 w-full h-full opacity-0"></div>
                                 <input type="text" id="hexText" oninput="updateTempHex('Text')" class="w-20 bg-black/5 dark:bg-white/10 rounded px-2 py-1 text-xs outline-none font-mono uppercase text-right border border-transparent focus:border-black/20 dark:focus:border-white/20 bg-transparent text-current opacity-80 allow-select">
                                 <button onclick="resetTempTextColor()" class="p-1 opacity-50 hover:opacity-100 text-current cursor-pointer hover:scale-110 active:scale-95 transition-all" title="Reset Text"><i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i></button>
                             </div>
@@ -388,7 +382,7 @@
                         <div class="flex items-center justify-between w-full gap-3">
                             <span class="text-[10px] font-bold opacity-60 uppercase tracking-widest flex-1 truncate">Accent</span>
                             <div class="flex items-center gap-2 shrink-0">
-                                <div class="color-dot w-6 h-6 shrink-0 relative cursor-pointer" id="cp-wrap-accent"><input type="color" id="colorAccent" oninput="updateTempAccentColor(this.value)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"></div>
+                                <div class="color-dot w-6 h-6 shrink-0 relative"><input type="color" id="colorAccent" oninput="updateTempAccentColor(this.value)" class="absolute inset-0 w-full h-full opacity-0"></div>
                                 <input type="text" id="hexAccent" oninput="updateTempHex('Accent')" class="w-20 bg-black/5 dark:bg-white/10 rounded px-2 py-1 text-xs outline-none font-mono uppercase text-right border border-transparent focus:border-black/20 dark:focus:border-white/20 bg-transparent text-current opacity-80 allow-select">
                                 <button onclick="resetTempAccentColor()" class="p-1 opacity-50 hover:opacity-100 text-current cursor-pointer hover:scale-110 active:scale-95 transition-all" title="Reset Accent"><i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i></button>
                             </div>
@@ -403,7 +397,6 @@
         </div>
     </div>
 
-    <!-- MODAL: EDIT SMART BOX -->
     <div id="edit-smart-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center modal-overlay opacity-0 transition-opacity duration-300 text-current">
         <div class="glass-panel max-w-sm w-full p-6 relative max-h-[90vh] overflow-y-auto no-scrollbar shadow-2xl mx-4">
             <h2 class="text-xl font-bold mb-4 opacity-90">Edit Smart Box</h2>
@@ -493,7 +486,7 @@
                     <div id="ew-text-color-wrap" class="hidden pt-2 flex items-center justify-between w-full gap-3">
                         <span class="text-[10px] font-bold opacity-60 uppercase tracking-widest flex-1 truncate">Pick Color</span>
                         <div class="flex items-center gap-2 shrink-0">
-                            <div class="color-dot w-6 h-6 shrink-0 relative cursor-pointer"><input type="color" id="ew-text-color" value="#ffffff" oninput="this.parentElement.style.backgroundColor = this.value" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"></div>
+                            <div class="color-dot w-6 h-6 shrink-0 relative"><input type="color" id="ew-text-color" value="#ffffff" oninput="this.parentElement.style.backgroundColor = this.value" class="absolute inset-0 w-full h-full opacity-0"></div>
                         </div>
                     </div>
                 </div>
@@ -510,7 +503,6 @@
         </div>
     </div>
 
-    <!-- MODAL: EDIT BASIC WIDGET -->
     <div id="edit-basic-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center modal-overlay opacity-0 transition-opacity duration-300 text-current">
         <div class="glass-panel max-w-sm w-full p-6 relative shadow-2xl mx-4 max-h-[90vh] overflow-y-auto no-scrollbar">
             <h2 class="text-xl font-bold mb-4 opacity-90" id="eb-title">Edit</h2>
@@ -527,7 +519,6 @@
         </div>
     </div>
 
-    <!-- MODAL: PASSWORD PROMPT -->
     <div id="password-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center modal-overlay opacity-0 transition-opacity duration-300 text-current">
         <div class="glass-panel max-w-xs w-full p-6 relative shadow-2xl mx-4">
             <button onclick="hideModal('password-modal')" class="absolute top-4 right-4 opacity-50 hover:opacity-100 transition cursor-pointer text-current"><i data-lucide="x" class="w-5 h-5"></i></button>
@@ -536,43 +527,42 @@
             </div>
             <h2 class="text-xl font-bold mb-2 opacity-90 text-center text-current" id="pw-modal-title">Enter Password</h2>
             <p class="text-xs opacity-60 text-center mb-4 text-current">This widget is locked.</p>
-            <input type="password" id="pw-modal-input" class="allow-select w-full p-3 rounded-xl bg-black/5 dark:bg-white/10 outline-none font-medium mb-4 border border-transparent focus:border-black/20 dark:focus:border-white/20 bg-transparent text-current" placeholder="Secret Key...">
+            <input type="password" id="pw-modal-input" class="allow-select w-full p-3 rounded-xl bg-black/5 dark:bg-white/10 outline-none font-medium mb-4 border border-transparent focus:ring-2 focus:ring-current/20 bg-transparent text-current" placeholder="Secret Key...">
             <button onclick="submitPassword()" class="w-full py-2.5 rounded-xl bg-blue-500 text-white font-bold hover:bg-blue-600 shadow-md cursor-pointer">Unlock</button>
         </div>
     </div>
 
-    <!-- NOTIFICATION TOAST -->
     <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] bg-black/90 dark:bg-white/90 text-white dark:text-black px-6 py-3 rounded-full font-bold shadow-2xl opacity-0 pointer-events-none transition-opacity duration-300 text-sm tracking-wide">Copied!</div>
 
-    <!-- JAVASCRIPT -->
     <script>
         const LIGHT_DEFAULTS = { c1: '#e6e6e6', c2: '#e6e6e6' };
         const DARK_DEFAULTS = { c1: '#262626', c2: '#262626' };
         
         const ICONS = ['mail','hard-drive','link','youtube','twitter','github','music','map','video','message-circle','camera','shopping-cart','coffee','monitor','smartphone','pen-tool','folder','image','star','heart','settings','book','briefcase','calendar','clock','cloud','globe','key','lock','mic','moon','sun','umbrella','zap','battery','bell','activity','airplay','alarm-check','align-center','anchor','aperture','archive','award','bar-chart','bluetooth','bookmark','box','cast','check','chrome','clipboard','code','compass','copy','cpu','crosshair','database','download','droplet','eye','feather','film','flag','gift','headphones','home','info','instagram','layout','life-buoy','linkedin','list','map-pin','maximize','menu','navigation','package','paperclip','pie-chart','play','power','printer','radio','refresh-cw','save','search','send','server','share','shield','slack','sliders','speaker','square','target','terminal','thermometer','thumbs-up','toggle-left','tool','trash','trello','trending-up','tv','twitch','type','unlock','upload','user','users','wifi','wind','x','zoom-in','sticky-note', 'accessibility', 'alarm-clock', 'alert-circle', 'alert-octagon', 'alert-triangle', 'align-justify', 'align-left', 'align-right', 'battery-charging', 'bell-off', 'bold', 'book-open', 'camera-off', 'check-circle', 'check-square', 'chevron-down', 'chevron-left', 'chevron-right', 'chevron-up', 'chevrons-down', 'chevrons-left', 'chevrons-right', 'chevrons-up', 'cloud-drizzle', 'cloud-lightning', 'cloud-off', 'cloud-rain', 'cloud-snow', 'codesandbox', 'command', 'corner-down-left', 'corner-down-right', 'corner-left-down', 'corner-left-up', 'corner-right-down', 'corner-right-up', 'corner-up-left', 'corner-up-right', 'credit-card', 'crop', 'delete', 'disc', 'divide', 'divide-circle', 'divide-square', 'download-cloud', 'edit', 'edit-2', 'edit-3', 'external-link', 'fast-forward', 'file', 'file-minus', 'file-plus', 'file-text', 'filter', 'folder-minus', 'folder-plus', 'frown', 'grid', 'hash', 'help-circle', 'hexagon', 'inbox', 'italic', 'layers', 'link-2', 'loader', 'log-in', 'log-out', 'maximize-2', 'meh', 'mic-off', 'minimize', 'minimize-2', 'minus', 'minus-circle', 'minus-square', 'more-horizontal', 'more-vertical', 'mouse-pointer', 'move', 'navigation-2', 'octagon', 'pause', 'pause-circle', 'percent', 'phone', 'phone-call', 'phone-forwarded', 'phone-incoming', 'phone-missed', 'phone-off', 'phone-outgoing', 'play-circle', 'plus', 'plus-circle', 'plus-square', 'pocket', 'refresh-ccw', 'repeat', 'rewind', 'rotate-ccw', 'rotate-cw', 'rss', 'scissors', 'shield-off', 'shopping-bag', 'shuffle', 'sidebar', 'skip-back', 'skip-forward', 'slash', 'smile', 'stop-circle', 'sunrise', 'sunset', 'tablet', 'tag', 'thumbs-down', 'toggle-right', 'trash-2', 'trending-down', 'triangle', 'truck', 'underline', 'upload-cloud', 'user-check', 'user-minus', 'user-plus', 'user-x', 'video-off', 'voicemail', 'volume', 'volume-1', 'volume-2', 'volume-x', 'watch', 'wifi-off', 'x-circle', 'x-octagon', 'x-square', 'zap-off', 'zoom-out', 'gamepad', 'bus', 'car', 'bike', 'train', 'plane', 'square-dashed'];
-        const EMOJIS = ['🍎','🚀','💻','🧠','🔥','✨','🎵','🎮','📚','☕','💡','🎉','🌍','❤️','✅','🍕','🍔','🥑','🚗','✈️','⚽','🏀','🏆','🎨','🎭','🎬','🎧','📱','⌚','💰','💎','🔑','🎈','🎁','👑','🐶','🐱','🐼','🦊','🦋','🍀','🌻','☀️','🌙','⭐','🌈','🍉','🍓','🍩','🍣','🍷','🍹','⛺','🏖️','🗽','🗼','🚁','⛵','⏰','⌛','⏳','⚖️','⚙️','🛡️','💊','💉','🩸','🧬','🦠','🔭','🔮','🪄','🧿','🧸','🧹','🧺','🧻','🧼','🧽','🪣','🧴','🛎️','🧳','伞','✂️','📌','✏️','✒️','📝','📁','📊','📈','📉','📅','🗓️','📇','🗑️','🔒','🔓','🔗','💬','💭','📣','🔔','🎶','🏁','🚩','🏳️‍🌈', '😀','😂','😅','😉','😊','😇','🥰','😍','🤩','😘','😗','😚','😋','😛','😜','🤪','😝','🤑','🤗','🤭','🤫','🤔','🤐','🤨','😐','😑','😶','😏','😒','🙄','😬','🤥','😌','😔','😪','🤤','😴','😷','🤒','🤕','🤢','🤮','🤧','🥵','🥶','🥴','😵','🤯','🤠','🥳','😎','🤓','🧐','😕','😟','🙁','☹️','😮','😯','😲','😳','🥺','😦','😧','😨','😰','😥','😢','😭','😱','😖','😣','😞','😓','😩','😫','🥱','😤','😡','😠','🤬','😈','👿','💀','☠️','💩','🤡','👹','👺','👻','👽','👾','🤖','😺','😸','😹','😻','😼','😽','🙀','😿','😾','🙈','🙉','🙊','💋','💌','💘','💝','💖','💗','💓','💞','💕','💟','❣️','💔','❤️‍🔥','❤️‍🩹','💯','💢','💥','💫','💦','💨','🕳️','💣','👁️‍🗨️','🗨️','🗯️','💤', '👋','🤚','🖐️','✋','🖖','👌','🤌','🤏','✌️','🤞','🫰','🤟','🤘','🤙','👈','👉','👆','🖕','👇','☝️','👍','👎','✊','👊','🤛','🤜','👏','🙌','👐','🤲','🤝','🙏','✍️','💅','🤳','💪','🦾','🦿','🦵','🦶','👂','🦻','👃','🫀','🫁','🦷','🦴','👀','👁️','👅','👄', '🍇','🍈','🍊','🍋','🍌','🍍','🥭','🍏','🍐','🍑','🍒','🫐','🥝','🍅','🫒','🥥','🍆','🥔','🥕','🌽','🌶️','🫑','🥒','🥬','🥦','🧄','🧅','🍄','🥜','🌰','🍞','🥐','🥖','🫓','🥨','🥯','🥞','🧇','🧀','🍖','🍗','🥩','🥓','🌭','🥪','🌮','🌯','🫔','🥙','🧆','🥚','🍳','🥘','🍲','🫕','🥣','🥗','🍿','🧈','🧂','🥫','🍱','🍘','🍙','🍚','🍛','🍜','🍝','🍠','🍢','🍤','🍥','🥮','🍡','🥟','🥠','🥡','🦀','🦞','🦐','🦑','🦪','🍦','🍧','🍨','🍪','🎂','🍰','🧁','🥧','🍫','🍬','🍭','🍮','🍯','🍼','🥛','🫖','🍵','🍶','🍾','🍸','🍺','🍻','🥂','🥃','🫗','🥤','🧋','🧃','🧉','🧊','🥢','🍽️','🍴','🥄','🔪','🏺', '🏈','⚾','🥎','🎾','🏐','🏉','🥏','🎱','🪀','🏓','🏸','🏒','🏑','🥍','🏏','🪃','🥅','⛳','🪁','🏹','🎣','🤿','🥊','🥋','🎽','🛹','🛼','🛷','⛸️','🥌','🎿','⛷️','🏂','🪂','🏋️','🤼','🤸','⛹️','🤺','🤾','🏌️','🏇','🧘','🏄','🏊','🤽','🚣','🧗','🚵','🚴'];
-
+        
         function loadState() {
             let saved = localStorage.getItem(STORAGE_KEY);
             if (saved) {
                 let parsed = JSON.parse(saved);
                 if (typeof parsed.settings.widgetBgColor === 'string') parsed.settings.widgetBgColor = { light: '#ffffff', dark: '#1a1a1a' };
                 if (!parsed.settings.accentColor) parsed.settings.accentColor = '#ef4444';
+                if (parsed.settings.glassBlur === undefined) parsed.settings.glassBlur = 20;
                 return parsed;
             }
             return {
-                settings: { theme: 'system', bgType: 'solid', angle: 90, weekStart: 1, customTextColor: null, accentColor: '#ef4444', bgImage: null, lightColors: { ...LIGHT_DEFAULTS }, darkColors: { ...DARK_DEFAULTS }, fontFamily: 'inter', widgetBgMode: 'glass', widgetBgColor: { light: '#ffffff', dark: '#1a1a1a' } },
+                settings: { theme: 'system', bgType: 'solid', angle: 90, glassBlur: 20, weekStart: 1, customTextColor: null, accentColor: '#ef4444', bgImage: null, lightColors: { ...LIGHT_DEFAULTS }, darkColors: { ...DARK_DEFAULTS }, fontFamily: 'inter', widgetBgMode: 'glass', widgetBgColor: { light: '#ffffff', dark: '#1a1a1a' } },
                 spaces: {
                     'root': {
                         title: 'Home',
                         widgets: [
-                            { id: 'w_clock', type: 'clock', w: 4, h: 2, data: {} },
+                            { id: 'w_clock', type: 'clock', w: 6, h: 2, data: {} },
                             { id: 'w_weather', type: 'weather', w: 2, h: 1, data: { city: 'London' } },
                             { id: 'w_timer', type: 'timer', w: 2, h: 1, data: { timerMinutes: 25, direction: 'down', playSound: true } },
-                            { id: 'w_link1', type: 'smart', w: 1, h: 1, data: { action: 'link', content: 'https://gmail.com', title: 'Mail', icon: 'mail', isEmoji: false, bgImage: null, overlay: true } },
-                            { id: 'w_link2', type: 'smart', w: 1, h: 1, data: { action: 'link', content: 'https://drive.google.com', title: 'Drive', icon: 'hard-drive', isEmoji: false, bgImage: null, overlay: true } },
+                            { id: 'w_calendar', type: 'calendar', w: 2, h: 2, data: {} },
                             { id: 'w_notes', type: 'notes', w: 2, h: 2, data: { text: "", title: "" } },
-                            { id: 'w_calendar', type: 'calendar', w: 2, h: 2, data: {} }
+                            { id: 'w_spacer', type: 'spacer', w: 2, h: 1, data: { transparent: true } },
+                            { id: 'w_link1', type: 'smart', w: 1, h: 1, data: { action: 'link', content: 'https://gmail.com', title: 'Mail', icon: 'mail', isEmoji: false, bgImage: null, overlay: true } },
+                            { id: 'w_link2', type: 'smart', w: 1, h: 1, data: { action: 'link', content: 'https://drive.google.com', title: 'Drive', icon: 'hard-drive', isEmoji: false, bgImage: null, overlay: true } }
                         ]
                     }
                 }
@@ -597,12 +587,12 @@
         
         function getCustomSpeakerIcon(on, id) {
             return `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="transform: translateX(1px);">
-                ${!on ? `<mask id="m-${id}"><rect width="24" height="24" fill="white"/><line x1="5" y1="5" x2="19" y2="19" stroke="black" stroke-width="4" stroke-linecap="round"/></mask>` : ''}
+                ${!on ? `<mask id="m-${id}"><rect width="24" height="24" fill="white"/><line x1="7" y1="7" x2="17" y2="17" stroke="black" stroke-width="4" stroke-linecap="round"/></mask>` : ''}
                 <g ${!on ? `mask="url(#m-${id})"` : ''}>
                     <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" fill="currentColor" stroke="none"></polygon>
                     ${on ? `<path d="M15.5 8.5a5 5 0 0 1 0 7"></path>` : ''}
                 </g>
-                ${!on ? `<line x1="4" y1="4" x2="18" y2="18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>` : ''}
+                ${!on ? `<line x1="7" y1="7" x2="17" y2="17" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>` : ''}
             </svg>`;
         }
         
@@ -824,7 +814,7 @@
                 
                 tempEls.forEach(el => el.innerText = `${temp}°`);
                 iconEls.forEach(el => {
-                    el.innerHTML = `<i data-lucide="${icon}" class="${w.w === 1 ? 'w-10 h-10 md:w-12 md:h-12' : 'w-12 h-12'}"></i>`;
+                    el.innerHTML = `<i data-lucide="${icon}" class="${w.w === 1 ? 'w-7 h-7 md:w-8 md:h-8' : 'w-12 h-12'}"></i>`;
                     lucide.createIcons({root: el});
                 });
                 
@@ -956,7 +946,7 @@
         function formatTimer(totalSec) {
             const minStr = String(Math.floor(totalSec/60)).padStart(2,'0');
             const secStr = String(totalSec%60).padStart(2,'0');
-            return `<span class="timer-min">${minStr}</span><span class="relative -top-[0.05em] mx-1">:</span><span class="timer-sec">${secStr}</span>`;
+            return `<span class="timer-min">${minStr}</span><span class="relative -top-[0.05em] mx-px">:</span><span class="timer-sec">${secStr}</span>`;
         }
 
         function renderDashboard() {
@@ -1099,10 +1089,10 @@
                         return `
                         ${overlayHtml}
                         <div class="w-full h-full flex flex-col items-center justify-center relative group/pomo p-2 pt-2 z-10 text-current">
-                            <div class="flex items-center justify-center gap-2 w-full relative mb-1">
-                                <button id="t-min-${w.id}" onclick="adjTimer('${w.id}', -1)" class="w-7 h-7 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-0 group-hover/pomo:opacity-100 gpu-hover-layer ${isPlaying||isFinished?'invisible':''}"><i data-lucide="minus" class="w-3 h-3"></i></button>
-                                <h2 contenteditable="true" onblur="setCustomTime('${w.id}', this.innerText)" onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}" class="text-3xl md:text-4xl font-extrabold tracking-tighter font-mono drop-shadow-sm allow-select outline-none flex items-center justify-center" id="timer-disp-${w.id}" spellcheck="false" style="min-width: 3ch; text-align: center;">${displayHtml}</h2>
-                                <button id="t-plus-${w.id}" onclick="adjTimer('${w.id}', 1)" class="w-7 h-7 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-0 group-hover/pomo:opacity-100 gpu-hover-layer ${isPlaying||isFinished?'invisible':''}"><i data-lucide="plus" class="w-3 h-3"></i></button>
+                            <div class="flex items-center justify-center gap-1 w-full relative mb-1">
+                                <button id="t-min-${w.id}" onclick="adjTimer('${w.id}', -1)" class="min-w-[28px] min-h-[28px] shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-0 group-hover/pomo:opacity-100 gpu-hover-layer ${isPlaying||isFinished?'invisible':''}"><i data-lucide="minus" class="w-3.5 h-3.5"></i></button>
+                                <h2 contenteditable="true" onblur="setCustomTime('${w.id}', this.innerText)" onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}" class="text-3xl font-extrabold tracking-tighter font-mono drop-shadow-sm allow-select outline-none flex items-center justify-center" id="timer-disp-${w.id}" spellcheck="false" style="min-width: 3ch; text-align: center;">${displayHtml}</h2>
+                                <button id="t-plus-${w.id}" onclick="adjTimer('${w.id}', 1)" class="min-w-[28px] min-h-[28px] shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-0 group-hover/pomo:opacity-100 gpu-hover-layer ${isPlaying||isFinished?'invisible':''}"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>
                             </div>
                             <div class="flex items-center justify-center gap-2 w-full relative">
                                 <button id="timer-play-${w.id}" onclick="toggleTimer('${w.id}')" class="w-9 h-9 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer z-10">${playIconHtml}</button>
@@ -1118,20 +1108,20 @@
                     
                     return `
                     ${overlayHtml}
-                    <div class="w-full h-full flex items-center justify-between px-4 md:px-5 relative group/pomo z-10 text-current">
-                        <div class="flex flex-col items-center justify-center relative w-fit">
-                            <button id="t-plus-${w.id}" onclick="adjTimer('${w.id}', 1)" class="absolute -top-8 w-6 h-6 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-0 group-hover/pomo:opacity-100 ${isPlaying||isFinished?'invisible':''}"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                    <div class="w-full h-full flex items-center justify-between px-0 relative group/pomo z-10 text-current">
+                        <div class="flex flex-col items-center justify-center relative w-fit h-full" style="padding-left: calc(100% / 14 - 6px);">
+                            <button id="t-plus-${w.id}" onclick="adjTimer('${w.id}', 1)" class="absolute -top-7 md:-top-8 w-6 h-6 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-0 group-hover/pomo:opacity-100 ${isPlaying||isFinished?'invisible':''}"><i data-lucide="plus" class="w-4 h-4"></i></button>
                             <h2 contenteditable="true" onblur="setCustomTime('${w.id}', this.innerText)" onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}" class="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tighter font-mono drop-shadow-sm leading-none allow-select outline-none flex items-center justify-center" id="timer-disp-${w.id}" spellcheck="false" style="min-width: 3ch; text-align: center;">${displayHtml}</h2>
-                            <button id="t-min-${w.id}" onclick="adjTimer('${w.id}', -1)" class="absolute -bottom-8 w-6 h-6 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-0 group-hover/pomo:opacity-100 ${isPlaying||isFinished?'invisible':''}"><i data-lucide="minus" class="w-4 h-4"></i></button>
+                            <button id="t-min-${w.id}" onclick="adjTimer('${w.id}', -1)" class="absolute -bottom-7 md:-bottom-8 w-6 h-6 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-0 group-hover/pomo:opacity-100 ${isPlaying||isFinished?'invisible':''}"><i data-lucide="minus" class="w-4 h-4"></i></button>
                         </div>
-                        <div class="flex flex-col items-center justify-center relative h-full w-24 md:w-32">
+                        <div class="flex items-center justify-center pr-6 md:pr-8 h-full relative">
                             <div class="flex items-center justify-center gap-2 md:gap-3">
                                 <button id="timer-play-${w.id}" onclick="toggleTimer('${w.id}')" class="w-12 h-12 md:w-14 md:h-14 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer">
                                     ${playIconHtml}
                                 </button>
                                 <button id="t-stop-${w.id}" onclick="resetTimer('${w.id}')" class="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer">${getStopIcon('w-4 h-4 md:w-5 md:h-5')}</button>
                             </div>
-                            <div class="absolute bottom-4 opacity-0 group-hover/pomo:opacity-100 transition-opacity w-full flex justify-center">
+                            <div class="absolute top-[calc(50%+32px)] md:top-[calc(50%+38px)] left-1/2 -translate-x-1/2 opacity-0 group-hover/pomo:opacity-100 transition-opacity">
                                 <button id="timer-sound-${w.id}" onclick="toggleTimerSound('${w.id}', event)" class="hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer text-current bg-transparent">
                                     ${getCustomSpeakerIcon(soundOn, w.id)}
                                 </button>
@@ -1143,7 +1133,7 @@
                     if(w.w === 1) { 
                         return `
                         <div class="flex flex-col w-full h-full items-center justify-center p-2 text-current gap-2">
-                            <div class="opacity-80" id="w-icon-${w.id}"><i data-lucide="cloud" class="w-10 h-10 md:w-12 md:h-12"></i></div>
+                            <div class="opacity-80" id="w-icon-${w.id}"><i data-lucide="cloud" class="w-7 h-7 md:w-8 md:h-8"></i></div>
                             <h3 class="text-4xl md:text-5xl font-extrabold tracking-tighter drop-shadow-sm leading-none" id="w-temp-${w.id}">--°</h3>
                         </div>`; 
                     }
@@ -1256,7 +1246,7 @@
             const circleSize = w >= 4 ? 'w-8 h-8 md:w-10 md:h-10' : 'w-6 h-6 md:w-8 md:h-8';
             
             const isGiant = h >= 3; 
-            const gridLayoutClass = isGiant ? 'flex-1 grid grid-rows-[repeat(6,minmax(0,1fr))] items-center gap-1' : 'gap-y-1.5 md:gap-y-2 content-start flex-1';
+            const gridLayoutClass = isGiant ? 'flex-1 grid grid-rows-[repeat(6,minmax(0,1fr))] items-center h-full content-between pb-1' : 'gap-y-1.5 md:gap-y-2 content-start flex-1';
             const cellLayoutClass = isGiant ? 'flex items-center justify-center h-full w-full' : 'flex items-center justify-center h-7 md:h-8';
 
             let html = `<div class="flex flex-col h-full p-4 md:p-5 w-full mx-auto relative group/cal text-current">
@@ -1944,6 +1934,8 @@
                 const isD = tempSettings.theme === 'dark' || (tempSettings.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
                 const c1 = document.getElementById('color1').value, c2 = document.getElementById('color2').value;
                 tempSettings.angle = document.getElementById('angle').value;
+                tempSettings.glassBlur = document.getElementById('glass-blur').value;
+                
                 const colorWidget = document.getElementById('colorWidget');
                 if(colorWidget) {
                     if (typeof tempSettings.widgetBgColor === 'string') {
@@ -2016,6 +2008,7 @@
                 ['gradient','solid','image'].forEach(b => { const el = document.getElementById('btn-bg-'+b); if(el) el.className = b === s.bgType ? 'flex-1 py-1.5 rounded-lg text-xs font-bold bg-black/10 dark:bg-white/10 text-current shadow-sm transition cursor-pointer' : 'flex-1 py-1.5 rounded-lg text-xs font-medium opacity-50 hover:opacity-100 transition cursor-pointer text-current'; });
                 
                 const wWrap = document.getElementById('widget-color-wrap'); if(wWrap) wWrap.style.display = s.widgetBgMode === 'solid' ? 'flex' : 'none';
+                const blurWrap = document.getElementById('blur-wrap'); if(blurWrap) blurWrap.style.display = s.widgetBgMode === 'glass' ? 'flex' : 'none';
                 const bgColBlock = document.getElementById('bg-colors-block'); if(bgColBlock) bgColBlock.style.display = s.bgType !== 'image' ? 'flex' : 'none';
                 const wrapC2 = document.getElementById('wrap-c2'); if(wrapC2) wrapC2.style.display = s.bgType === 'gradient' ? 'flex' : 'none';
                 const wrapAngle = document.getElementById('wrap-angle'); if(wrapAngle) wrapAngle.style.display = s.bgType === 'gradient' ? 'flex' : 'none';
@@ -2033,7 +2026,10 @@
                 
                 const hex1 = document.getElementById('hex1'); if(hex1 && document.activeElement !== hex1) hex1.value = c.c1; 
                 const hex2 = document.getElementById('hex2'); if(hex2 && document.activeElement !== hex2) hex2.value = c.c2;
+                
                 const angleVal = document.getElementById('angle-val'); if(angleVal) angleVal.innerText = s.angle + '°';
+                const glassBlur = document.getElementById('glass-blur'); if(glassBlur) glassBlur.value = s.glassBlur !== undefined ? s.glassBlur : 20;
+                const blurVal = document.getElementById('blur-val'); if(blurVal) blurVal.innerText = (s.glassBlur !== undefined ? s.glassBlur : 20) + '%';
                 
                 const btnTrashBg = document.getElementById('btn-trash-bg'); 
                 const mainBgLabel = document.getElementById('main-bg-upload-label');
@@ -2102,7 +2098,10 @@
                 else { document.body.classList.remove('custom-text-active'); }
             } else {
                 document.documentElement.style.setProperty('--widget-bg', isD ? 'rgba(30, 30, 30, 0.4)' : 'rgba(255, 255, 255, 0.3)'); 
-                document.documentElement.style.setProperty('--widget-blur', '32px'); 
+                
+                const blurVal = s.glassBlur !== undefined ? s.glassBlur : 20;
+                document.documentElement.style.setProperty('--widget-blur', (blurVal * 0.64) + 'px'); 
+                
                 document.documentElement.style.setProperty('--widget-border', isD ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.4)'); 
                 document.documentElement.style.setProperty('--widget-shadow-outer', isD ? '0 8px 32px 0 rgba(0, 0, 0, 0.3)' : '0 8px 32px 0 rgba(0, 0, 0, 0.05)');
                 document.documentElement.style.setProperty('--widget-shadow-inner', isD ? 'inset 0 1px 1px rgba(255, 255, 255, 0.05)' : 'inset 0 1px 1px rgba(255, 255, 255, 0.5)');
