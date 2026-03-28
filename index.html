@@ -49,7 +49,8 @@
         }
 
         /* GLOBAL SELECTION DISABLED */
-        body { margin: 0; overflow-x: hidden; transition: background 0.5s ease; color: var(--custom-text); user-select: none; -webkit-user-select: none; cursor: default; }
+        body { margin: 0; overflow-x: hidden; color: var(--custom-text); user-select: none; -webkit-user-select: none; cursor: default; }
+        #body-bg { transition: background 0.5s ease; }
         body:not(.custom-text-active) { color: #000; }
         .dark body:not(.custom-text-active) { color: #fff; }
         
@@ -218,7 +219,8 @@
         input[type="password"]:focus { outline: none; border-color: transparent !important; }
     </style>
 </head>
-<body id="body-bg" class="antialiased min-h-screen font-inter">
+<body class="antialiased min-h-screen font-inter">
+    <div id="body-bg" style="position: fixed; inset: 0; z-index: -10;"></div>
     
     <div class="bg-grain"></div>
     
