@@ -8,8 +8,6 @@
     <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHN0eWxlPi5ie2ZpbGw6IzRiNTU2Mzt9QG1lZGlhIChwcmVmZXJzLWNvbG9yLXNjaGVtZTogZGFyayl7LmJ7ZmlsbDojZTVlN2ViO319PC9zdHlsZT48cmVjdCBjbGFzcz0iYiIgeD0iOCIgeT0iOCIgd2lkdGg9IjQ4IiBoZWlnaHQ9IjIwIiByeD0iNiIvPjxyZWN0IGNsYXNzPSJiIiB4PSI4IiB5PSIzMiIgd2lkdGg9IjIyIiBoZWlnaHQ9IjI0IiByeD0iNiIvPjxyZWN0IGNsYXNzPSJiIiB4PSIzNCIgeT0iMzIiIHdpZHRoPSIyMiIgaGVpZ2h0PSIyNCIgcng9IjYiLz48L3N2Zz4=" type="image/svg+xml">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="liquidGL.js"></script>
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -129,6 +127,12 @@
             width: calc(100% + 2px) !important; height: calc(100% + 2px) !important; top: -1px !important; left: -1px !important; max-width: none; object-fit: cover; border-radius: inherit; pointer-events: none;
         }
         .transparent-box { background: transparent !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; border-color: transparent !important; box-shadow: none !important; }
+
+        /* LİQUİD GLASS ÇAKIŞMA ÖNLEYİCİ */
+        body.liquid-active .widget-glass-bg {
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+        }
 
        /* GRID ANIMATIONS */
         #bento-grid { transition: transform 0.3s ease, opacity 0.3s ease; }
@@ -1014,7 +1018,13 @@
 
                 if(!isSearching) { const handle = document.createElement('div'); handle.className = 'resize-handle'; handle.dataset.id = widget.id; el.appendChild(handle); }
 
-                const contentWrapper = document.createElement('div'); contentWrapper.className = 'widget-content-wrapper'; contentWrapper.innerHTML = getWidgetContent(widget); el.appendChild(contentWrapper);
+                const contentWrapper = document.createElement('div'); 
+                contentWrapper.className = 'widget-content-wrapper'; 
+                // ÖNEMLİ DEĞİŞİKLİK BURADA: İçeriğin bükülmesini (hayalet efekti) engeller.
+                contentWrapper.setAttribute('data-html2canvas-ignore', 'true'); 
+                contentWrapper.innerHTML = getWidgetContent(widget); 
+                el.appendChild(contentWrapper);
+                
                 grid.appendChild(el);
             });
 
@@ -1876,7 +1886,11 @@
             const btnEdit = document.getElementById('btn-edit-mode'), footer = document.getElementById('edit-footer');
             if(isEditMode) {
                 if(isSearching) toggleSearch(); btnEdit.classList.add('opacity-0', 'pointer-events-none'); footer.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-10');
-            } else { btnEdit.classList.remove('opacity-0', 'pointer-events-none'); footer.classList.add('opacity-0', 'pointer-events-none', 'translate-y-10'); }
+            } else { 
+                btnEdit.classList.remove('opacity-0', 'pointer-events-none'); footer.classList.add('opacity-0', 'pointer-events-none', 'translate-y-10'); 
+                // ÖNEMLİ: Edit modundan çıkıldığında liquid effect'i tazeleyelim
+                if (typeof refreshLiquidGlass === 'function') setTimeout(refreshLiquidGlass, 300);
+            }
             renderDashboard();
         }
         function toggleProfileModal() { showModal('profile-modal'); }
@@ -2139,35 +2153,48 @@
             if(m) { m.classList.add('opacity-0'); setTimeout(() => m.classList.add('hidden'), 300); }
         }
     </script>
-<script>
-        // Sayfa tamamen yüklendikten sonra sıvı cam efektini başlat
+    <script>
+        // --- LİQUİD GLASS ÇEKİRDEK SİSTEMİ (iOS Style & Persistence) ---
+        let initLiquid = null;
+
+        if (typeof liquidGL !== 'undefined' || typeof LiquidGL !== 'undefined') {
+            initLiquid = typeof liquidGL === 'function' ? liquidGL : LiquidGL;
+        } else {
+            console.warn("LiquidGL kütüphanesi yüklenemedi. Linkleri kontrol et.");
+        }
+
+        function refreshLiquidGlass() {
+            if (!initLiquid) return;
+
+            console.log("🌊 Liquid Glass tazeleniyor...");
+
+            // ÖNCE TEMİZLİK: Eski WebGL canvas'larını temizle
+            const targets = document.querySelectorAll('.widget-glass-bg, .glass-panel, #search-container');
+            targets.forEach(target => {
+                // target'ın içindeki sadece canvas'ları sil
+                const canvas = target.querySelector('canvas');
+                if (canvas) canvas.remove();
+            });
+
+            document.body.classList.add('liquid-active');
+
+            try {
+                initLiquid({
+                    target: ".widget-glass-bg, .glass-panel, #search-container", 
+                    snapshot: "body", 
+                    resolution: 1.5, 
+                    refraction: 0.04, 
+                    frost: 35, 
+                    interactive: true 
+                });
+                console.log("Liquid Glass pürüzsüz ayarlarla aktif edildi! ✨");
+            } catch (error) {
+                console.error("Liquid Glass başlatılırken bir hata oluştu:", error);
+            }
+        }
+
         window.addEventListener('load', () => {
-            // Bento Grid'in ekrana tam oturması için kısa bir gecikme ekliyoruz
-            setTimeout(() => {
-                if (typeof liquidGL !== 'undefined' || typeof LiquidGL !== 'undefined') {
-                    const initLiquid = typeof liquidGL === 'function' ? liquidGL : LiquidGL;
-                    
-                    try {
-                        initLiquid({
-                            // SADECE arka plan katmanına uyguluyoruz, metinleri kütüphaneden kurtarıyoruz!
-                            target: ".widget-glass-bg", 
-                            snapshot: "body", 
-                            // Kaliteyi pürüzsüzlük için ideal seviyeye çekiyoruz (Grenden kurtulmak için)
-                            resolution: 1.5, 
-                            // Kırılmayı neredeyse yok denecek kadar hafifletiyoruz (Hafif bir lens hissi)
-                            refraction: 0.05, 
-                            // Buzlanmayı (greni/pikselliği) tamamen kapatıyoruz! PÜRÜZSÜZ istiyoruz.
-                            frost: 0, 
-                            interactive: true 
-                        });
-                        console.log("Liquid Glass başarıyla aktif edildi! 🌊");
-                    } catch (error) {
-                        console.error("Liquid Glass başlatılırken bir hata oluştu:", error);
-                    }
-                } else {
-                    console.warn("LiquidGL kütüphanesi yüklenemedi. Linkleri kontrol et.");
-                }
-            }, 500); // 500ms bekleme süresi
+            setTimeout(refreshLiquidGlass, 800); 
         });
     </script>
 </body>
