@@ -2137,31 +2137,6 @@
             if(m) { m.classList.add('opacity-0'); setTimeout(() => m.classList.add('hidden'), 300); }
         }
     </script>
-    <script>
-        // DOM ve tüm arkaplan yüklendikten sonra LiquidGL'i başlat
-        window.addEventListener('load', () => {
-            // Küçük bir gecikme ekliyoruz ki Bento Grid tamamen çizilmiş olsun
-            setTimeout(() => {
-                if(typeof liquidGL === 'function') {
-                    liquidGL({
-                        target: ".widget-glass-bg, .glass-panel", // Efektin uygulanacağı widget ve modallar
-                        snapshot: "body", // Kırılmanın hesaplanacağı arkaplan
-                        resolution: 2.0, // Render kalitesi
-                        reveal: "fade", 
-                        refraction: 0.8, // Sıvı bükülme şiddeti (İstersen artır)
-                        bevelDepth: 0.05, 
-                        bevelWidth: 0.2, 
-                        frost: 10, // Buzlanma ve blur yoğunluğu
-                        shadow: false, 
-                        specular: true, 
-                        magnify: 1
-                    });
-                    console.log("Liquid Glass başarıyla aktif edildi!");
-                } else {
-                    console.warn("LiquidGL yüklenemedi. İnternet bağlantını kontrol et.");
-                }
-            }, 800); // Grid render animasyonları bittikten sonra çalışması için 800ms bekletiyoruz
-        });
-    </script>
+
 </body>
 </html>
