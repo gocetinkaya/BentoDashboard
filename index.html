@@ -2149,12 +2149,16 @@
                     
                     try {
                         initLiquid({
-                            target: ".widget-glass-bg, .glass-panel, #search-container", // Efektin uygulanacağı alanlar
-                            snapshot: "body", // Kırılmanın referans alacağı zemin
-                            resolution: 2.0, // Render kalitesi (Performans için 1.5 yapılabilir)
-                            refraction: 0.8, // Cam bükülme/kırılma şiddeti
-                            frost: 10, // Buzlanma (Blur) yoğunluğu
-                            interactive: true // Fare ile etkileşim (Hover efekti)
+                            // SADECE arka plan katmanına uyguluyoruz, metinleri kütüphaneden kurtarıyoruz!
+                            target: ".widget-glass-bg", 
+                            snapshot: "body", 
+                            // Kaliteyi pürüzsüzlük için ideal seviyeye çekiyoruz (Grenden kurtulmak için)
+                            resolution: 1.5, 
+                            // Kırılmayı neredeyse yok denecek kadar hafifletiyoruz (Hafif bir lens hissi)
+                            refraction: 0.05, 
+                            // Buzlanmayı (greni/pikselliği) tamamen kapatıyoruz! PÜRÜZSÜZ istiyoruz.
+                            frost: 0, 
+                            interactive: true 
                         });
                         console.log("Liquid Glass başarıyla aktif edildi! 🌊");
                     } catch (error) {
