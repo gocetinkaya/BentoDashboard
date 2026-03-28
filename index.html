@@ -9,6 +9,7 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/naughtyduk/liquidGL@main/liquidGL.js"></script>
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -2138,6 +2139,32 @@
             if(m) { m.classList.add('opacity-0'); setTimeout(() => m.classList.add('hidden'), 300); }
         }
     </script>
-
+<script>
+        // Sayfa tamamen yüklendikten sonra sıvı cam efektini başlat
+        window.addEventListener('load', () => {
+            // Bento Grid'in ekrana tam oturması için kısa bir gecikme ekliyoruz
+            setTimeout(() => {
+                if (typeof liquidGL !== 'undefined' || typeof LiquidGL !== 'undefined') {
+                    const initLiquid = typeof liquidGL === 'function' ? liquidGL : LiquidGL;
+                    
+                    try {
+                        initLiquid({
+                            target: ".widget-glass-bg, .glass-panel, #search-container", // Efektin uygulanacağı alanlar
+                            snapshot: "body", // Kırılmanın referans alacağı zemin
+                            resolution: 2.0, // Render kalitesi (Performans için 1.5 yapılabilir)
+                            refraction: 0.8, // Cam bükülme/kırılma şiddeti
+                            frost: 10, // Buzlanma (Blur) yoğunluğu
+                            interactive: true // Fare ile etkileşim (Hover efekti)
+                        });
+                        console.log("Liquid Glass başarıyla aktif edildi! 🌊");
+                    } catch (error) {
+                        console.error("Liquid Glass başlatılırken bir hata oluştu:", error);
+                    }
+                } else {
+                    console.warn("LiquidGL kütüphanesi yüklenemedi. Linkleri kontrol et.");
+                }
+            }, 500); // 500ms bekleme süresi
+        });
+    </script>
 </body>
 </html>
