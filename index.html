@@ -7,10 +7,14 @@
     
     <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHN0eWxlPi5ie2ZpbGw6IzRiNTU2Mzt9QG1lZGlhIChwcmVmZXJzLWNvbG9yLXNjaGVtZTogZGFyayl7LmJ7ZmlsbDojZTVlN2ViO319PC9zdHlsZT48cmVjdCBjbGFzcz0iYiIgeD0iOCIgeT0iOCIgd2lkdGg9IjQ4IiBoZWlnaHQ9IjIwIiByeD0iNiIvPjxyZWN0IGNsYXNzPSJiIiB4PSI4IiB5PSIzMiIgd2lkdGg9IjIyIiBoZWlnaHQ9IjI0IiByeD0iNiIvPjxyZWN0IGNsYXNzPSJiIiB4PSIzNCIgeT0iMzIiIHdpZHRoPSIyMiIgaGVpZ2h0PSIyNCIgcng9IjYiLz48L3N2Zz4=" type="image/svg+xml">
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
     <script src="https://cdn.jsdelivr.net/gh/naughtyduk/liquidGL@main/liquidGL.js"></script>
     
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <script src="https://unpkg.com/lucide@latest"></script>
+
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -151,6 +155,7 @@
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .modal-overlay { background: rgba(0,0,0,0.4); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); transition: all 0.3s; }
+        .backdrop-blur-xl { backdrop-filter: blur(24px) !important; -webkit-backdrop-filter: blur(24px) !important; }
         
         /* PEEK MODE LOGIC FOR SLIDERS */
         .peek-mode { background-color: transparent !important; }
@@ -2133,25 +2138,29 @@
         }
     </script>
     <script>
-        // LiquidGL kütüphanesini orijinal dokümantasyon ayarlarıyla başlat
+        // DOM ve tüm arkaplan yüklendikten sonra LiquidGL'i başlat
         window.addEventListener('load', () => {
-            if(typeof liquidGL === 'function') {
-                liquidGL({
-                    target: ".glass-panel, .widget-glass-bg", // Efektin uygulanacağı class'lar (Açılır pencereler ve widget arka planları)
-                    snapshot: "body", // Kırılmanın hesaplanacağı arkaplan hedefini belirler
-                    resolution: 2.0, // Çözünürlük kalitesi
-                    reveal: "fade", 
-                    refraction: 0.8, // Sıvı bükülme/kırılma oranı (Daha fazla bükülme istersen artır)
-                    bevelDepth: 0.05, 
-                    bevelWidth: 0.2, 
-                    frost: 10, // Buzlanma ve blur yoğunluğu
-                    shadow: false, 
-                    specular: true, 
-                    magnify: 1
-                });
-            } else {
-                console.error("LiquidGL kütüphanesi yüklenemedi! İnternet bağlantını veya CDN linkini kontrol et.");
-            }
+            // Küçük bir gecikme ekliyoruz ki Bento Grid tamamen çizilmiş olsun
+            setTimeout(() => {
+                if(typeof liquidGL === 'function') {
+                    liquidGL({
+                        target: ".widget-glass-bg, .glass-panel", // Efektin uygulanacağı widget ve modallar
+                        snapshot: "body", // Kırılmanın hesaplanacağı arkaplan
+                        resolution: 2.0, // Render kalitesi
+                        reveal: "fade", 
+                        refraction: 0.8, // Sıvı bükülme şiddeti (İstersen artır)
+                        bevelDepth: 0.05, 
+                        bevelWidth: 0.2, 
+                        frost: 10, // Buzlanma ve blur yoğunluğu
+                        shadow: false, 
+                        specular: true, 
+                        magnify: 1
+                    });
+                    console.log("Liquid Glass başarıyla aktif edildi!");
+                } else {
+                    console.warn("LiquidGL yüklenemedi. İnternet bağlantını kontrol et.");
+                }
+            }, 800); // Grid render animasyonları bittikten sonra çalışması için 800ms bekletiyoruz
         });
     </script>
 </body>
