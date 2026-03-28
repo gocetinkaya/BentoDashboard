@@ -107,11 +107,11 @@
         /* WIDGET GRID ANTI-GLITCH ARCHITECTURE */
         .widget-panel {
             position: relative; border-radius: 32px; transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 1; isolation: isolate; transform: translate3d(0,0,0); will-change: transform, opacity; backface-visibility: hidden;
+            z-index: 1; 
         }
         .widget-shadow-bg {
             position: absolute; inset: 0; border-radius: inherit; box-shadow: var(--widget-shadow-outer);
-            background: transparent; z-index: -2; pointer-events: none; transform: translate3d(0,0,0); will-change: transform;
+            background: transparent; z-index: -2; pointer-events: none; 
         }
         .widget-glass-bg {
             position: absolute; inset: 0; border-radius: inherit; background: var(--widget-bg);
@@ -119,19 +119,18 @@
             -webkit-backdrop-filter: blur(var(--widget-blur));
             box-shadow: inset 0 0 0 1px var(--widget-border), var(--widget-shadow-inner);
             z-index: -1; pointer-events: none; overflow: hidden;
-            transform: translate3d(0,0,0);
         }
         .widget-content-wrapper {
             position: relative; width: 100%; height: 100%; border-radius: inherit; overflow: hidden;
-            z-index: 2; transform: translate3d(0,0,0); transition: box-shadow 0.3s ease, background-color 0.3s ease;
+            z-index: 2; transition: box-shadow 0.3s ease, background-color 0.3s ease;
         }
         .widget-content-wrapper > img.absolute { 
             width: calc(100% + 2px) !important; height: calc(100% + 2px) !important; top: -1px !important; left: -1px !important; max-width: none; object-fit: cover; border-radius: inherit; pointer-events: none;
         }
         .transparent-box { background: transparent !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; border-color: transparent !important; box-shadow: none !important; }
 
-        /* GRID ANIMATIONS */
-        #bento-grid { transform: translate3d(0,0,0); will-change: transform, opacity; backface-visibility: hidden; }
+       /* GRID ANIMATIONS */
+        #bento-grid { transition: transform 0.3s ease, opacity 0.3s ease; }
 
         /* EDIT MODE JIGGLE & RESIZE */
         .edit-mode #bento-grid > div:not(.no-jiggle) { animation: jiggle 0.3s infinite; cursor: grab; }
