@@ -69,8 +69,8 @@
         /* MODALS & PANELS */
         .glass-panel {
             background: var(--widget-bg); 
-            backdrop-filter: blur(var(--widget-blur)); 
-            -webkit-backdrop-filter: blur(var(--widget-blur));
+            backdrop-filter: url(#liquid-glass) blur(var(--widget-blur)); 
+            -webkit-backdrop-filter: url(#liquid-glass) blur(var(--widget-blur));
             box-shadow: inset 0 0 0 1px var(--widget-border), var(--widget-shadow-inner), var(--widget-shadow-outer);
             border-radius: 32px; 
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -79,7 +79,7 @@
         /* SEARCH BAR CSS MATCHING DOCK */
         #search-container {
             background: rgba(255,255,255,0.2); 
-            backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+            backdrop-filter: url(#liquid-glass) blur(24px); -webkit-backdrop-filter: url(#liquid-glass) blur(24px);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             border-radius: 9999px;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
@@ -109,7 +109,7 @@
         }
         .widget-glass-bg {
             position: absolute; inset: 0; border-radius: inherit; background: var(--widget-bg);
-            backdrop-filter: blur(var(--widget-blur)); -webkit-backdrop-filter: blur(var(--widget-blur));
+            backdrop-filter: blur(var(--widget-blur)); -webkit-backdrop-filter: url(#liquid-glass) blur(var(--widget-blur));
             box-shadow: inset 0 0 0 1px var(--widget-border), var(--widget-shadow-inner);
             z-index: -1; pointer-events: none; overflow: hidden;
             transform: translate3d(0,0,0);
@@ -148,7 +148,7 @@
         /* MODALS & OVERLAYS */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .modal-overlay { background: rgba(0,0,0,0.4); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); transition: all 0.3s; }
+        .modal-overlay { background: rgba(0,0,0,0.4); backdrop-filter: url(#liquid-glass) blur(16px); -webkit-backdrop-filter: url(#liquid-glass) blur(16px); transition: all 0.3s; }                  /* TAILWIND BACKDROP OVERRIDE */         .backdrop-blur-xl { backdrop-filter: url(#liquid-glass) blur(24px) !important; -webkit-backdrop-filter: url(#liquid-glass) blur(24px) !important; }
         
         /* PEEK MODE LOGIC FOR SLIDERS */
         .peek-mode { background-color: transparent !important; }
@@ -212,7 +212,16 @@
 <body id="body-bg" class="antialiased min-h-screen font-inter">
     
     <div class="bg-grain"></div>
-
+    
+<svg style="visibility: hidden; position: absolute; width: 0; height: 0;" xmlns="http://www.w3.org/2000/svg" version="1.1">
+    <defs>
+        <filter id="liquid-glass">
+            <feTurbulence type="fractalNoise" baseFrequency="0.015" numOctaves="3" result="noise" />
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="15" xChannelSelector="R" yChannelSelector="G" result="displacement" />
+        </filter>
+    </defs>
+</svg>
+    
     <div class="fixed top-6 right-6 z-40 flex flex-col items-end gap-3">
         <div id="search-container" class="flex items-center overflow-hidden relative">
             <button onclick="toggleSearch()" class="w-12 h-12 flex-shrink-0 flex items-center justify-center opacity-70 hover:opacity-100 z-10 cursor-pointer text-current absolute left-0 top-1/2 -translate-y-1/2">
