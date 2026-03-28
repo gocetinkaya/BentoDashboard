@@ -7,7 +7,7 @@
     
     <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHN0eWxlPi5ie2ZpbGw6IzRiNTU2Mzt9QG1lZGlhIChwcmVmZXJzLWNvbG9yLXNjaGVtZTogZGFyayl7LmJ7ZmlsbDojZTVlN2ViO319PC9zdHlsZT48cmVjdCBjbGFzcz0iYiIgeD0iOCIgeT0iOCIgd2lkdGg9IjQ4IiBoZWlnaHQ9IjIwIiByeD0iNiIvPjxyZWN0IGNsYXNzPSJiIiB4PSI4IiB5PSIzMiIgd2lkdGg9IjIyIiBoZWlnaHQ9IjI0IiByeD0iNiIvPjxyZWN0IGNsYXNzPSJiIiB4PSIzNCIgeT0iMzIiIHdpZHRoPSIyMiIgaGVpZ2h0PSIyNCIgcng9IjYiLz48L3N2Zz4=" type="image/svg+xml">
 
-    <script src="liquidGL.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/naughtyduk/liquidGL@main/liquidGL.js"></script>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -2133,17 +2133,24 @@
         }
     </script>
     <script>
-        // liquidGL'i DOM tamamen yüklendikten sonra çalıştırmak, 
-        // arkaplan içeriklerinin doğru algılanmasını sağlar.
+        // LiquidGL kütüphanesini orijinal dokümantasyon ayarlarıyla başlat
         window.addEventListener('load', () => {
-            if(typeof liquidGL !== 'undefined') {
-                liquidGL();
-            } else if (typeof LiquidGL !== 'undefined') {
-                new LiquidGL({
-                    container: document.getElementById('body-bg'),
-                    distortionStrength: 0.5,
-                    glassEffect: true
+            if(typeof liquidGL === 'function') {
+                liquidGL({
+                    target: ".glass-panel, .widget-glass-bg", // Efektin uygulanacağı class'lar (Açılır pencereler ve widget arka planları)
+                    snapshot: "body", // Kırılmanın hesaplanacağı arkaplan hedefini belirler
+                    resolution: 2.0, // Çözünürlük kalitesi
+                    reveal: "fade", 
+                    refraction: 0.8, // Sıvı bükülme/kırılma oranı (Daha fazla bükülme istersen artır)
+                    bevelDepth: 0.05, 
+                    bevelWidth: 0.2, 
+                    frost: 10, // Buzlanma ve blur yoğunluğu
+                    shadow: false, 
+                    specular: true, 
+                    magnify: 1
                 });
+            } else {
+                console.error("LiquidGL kütüphanesi yüklenemedi! İnternet bağlantını veya CDN linkini kontrol et.");
             }
         });
     </script>
