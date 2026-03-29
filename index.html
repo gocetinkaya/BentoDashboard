@@ -55,10 +55,10 @@
         input:focus { outline: none !important; }
         
         /* FONTS */
-        .font-inter { font-family: 'Inter', sans-serif; }
-        .font-serif { font-family: 'Playfair Display', serif; }
-        .font-mono { font-family: 'Roboto Mono', monospace; }
-        .font-caveat { font-family: 'Caveat', cursive; font-size: 1.15em; letter-spacing: 0.5px; }
+        .font-inter { font-family: 'Inter', sans-serif !important; }
+        .font-serif { font-family: 'Playfair Display', serif !important; }
+        .font-mono { font-family: 'Roboto Mono', monospace !important; }
+        .font-caveat { font-family: 'Caveat', cursive !important; font-size: 1.15em; letter-spacing: 0.5px; }
 
         /* GRAIN TEXTURE */
         .bg-grain {
@@ -349,7 +349,7 @@
                     </div>
                     <div id="blur-wrap" class="mt-2 transition-all duration-300 flex items-center gap-4 w-full settings-hide-on-peek" onmousedown="startPeek('blur-wrap')" ontouchstart="startPeek('blur-wrap')">
                         <span class="text-[10px] font-bold uppercase tracking-widest opacity-60 shrink-0">Blur</span>
-                        <input type="range" id="glass-blur" min="0" max="100" class="w-full accent-blue-500 cursor-pointer flex-1" oninput="updateTempSettings()" onmouseup="endPeek()" ontouchend="endPeek()">
+                        <input type="range" id="glass-blur" min="0" max="100" class="w-full accent-blue-500 flex-1" oninput="updateTempSettings()" onmouseup="endPeek()" ontouchend="endPeek()">
                         <span id="blur-val" class="text-xs font-bold opacity-80 shrink-0 w-10 text-right">20%</span>
                     </div>
                 </div>
@@ -379,7 +379,7 @@
                         </div>
                         <div class="mt-2 transition-all duration-300 flex items-center gap-4 w-full settings-hide-on-peek" id="wrap-angle" onmousedown="startPeek('wrap-angle')" ontouchstart="startPeek('wrap-angle')">
                             <span class="text-[10px] font-bold uppercase tracking-widest opacity-60 shrink-0">Angle</span>
-                            <input type="range" id="angle" min="0" max="360" class="w-full accent-blue-500 cursor-pointer flex-1" oninput="updateTempSettings()" onmouseup="endPeek()" ontouchend="endPeek()">
+                            <input type="range" id="angle" min="0" max="360" class="w-full accent-blue-500 flex-1" oninput="updateTempSettings()" onmouseup="endPeek()" ontouchend="endPeek()">
                             <span id="angle-val" class="text-xs font-bold opacity-80 shrink-0 w-8 text-right">90°</span>
                         </div>
                     </div>
@@ -560,6 +560,7 @@
     <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] bg-black/90 dark:bg-white/90 text-white dark:text-black px-6 py-3 rounded-full font-bold shadow-2xl opacity-0 pointer-events-none transition-opacity duration-300 text-sm tracking-wide">Copied!</div>
 
     <script>
+        // Orijinal renk tonlarını korudum, gradient seçildiğinde default 2 şık renk getirir
         const LIGHT_DEFAULTS = { c1: '#fdfbfb', c2: '#ebedee' };
         const DARK_DEFAULTS = { c1: '#303030', c2: '#1a1a1a' };
         
@@ -1108,7 +1109,8 @@
                     }
                     const displayHtml = formatTimer(totalSec);
                     
-                    const iconSize = w.w === 1 ? 'w-4 h-4' : 'w-5 h-5';
+                    const iconSize = w.w === 1 ? 'w-4 h-4' : 'w-6 h-6 md:w-7 md:h-7';
+                    const stopIconSize = w.w === 1 ? 'w-3 h-3' : 'w-4 h-4 md:w-5 md:h-5';
                     const playIconHtml = isFinished ? getRefreshIcon(iconSize) : (isPlaying ? getPauseIcon(iconSize) : getPlayIcon(iconSize));
                     
                     const overlayHtml = `<div id="timer-bg-${w.id}" class="absolute inset-0 z-0 pointer-events-none rounded-[inherit]" style="opacity: 0;"></div>`;
@@ -1123,8 +1125,8 @@
                             </div>
                             <div class="flex items-center justify-center gap-1.5 md:gap-2 w-full relative">
                                 <button id="t-min-${w.id}" onclick="adjTimer('${w.id}', -1)" class="min-w-[28px] min-h-[28px] shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-0 group-hover/pomo:opacity-100 gpu-hover-layer ${isPlaying||isFinished?'invisible':''}"><i data-lucide="minus" class="w-3.5 h-3.5"></i></button>
-                                <button id="timer-play-${w.id}" onclick="toggleTimer('${w.id}')" class="w-9 h-9 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer z-10">${playIconHtml}</button>
-                                <button id="t-stop-${w.id}" onclick="resetTimer('${w.id}')" class="w-9 h-9 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer z-10">${getStopIcon('w-3 h-3')}</button>
+                                <button id="timer-play-${w.id}" onclick="toggleTimer('${w.id}')" class="w-9 h-9 shrink-0 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer z-10">${playIconHtml}</button>
+                                <button id="t-stop-${w.id}" onclick="resetTimer('${w.id}')" class="w-9 h-9 shrink-0 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer z-10">${getStopIcon('w-3 h-3')}</button>
                                 <button id="t-plus-${w.id}" onclick="adjTimer('${w.id}', 1)" class="min-w-[28px] min-h-[28px] shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-0 group-hover/pomo:opacity-100 gpu-hover-layer ${isPlaying||isFinished?'invisible':''}"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>
                             </div>
                             <div class="absolute bottom-2 flex w-full justify-center opacity-0 group-hover/pomo:opacity-100 transition-opacity">
@@ -1144,16 +1146,18 @@
                             <button id="t-min-${w.id}" onclick="adjTimer('${w.id}', -1)" class="absolute -bottom-7 md:-bottom-8 w-6 h-6 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-0 group-hover/pomo:opacity-100 ${isPlaying||isFinished?'invisible':''}"><i data-lucide="minus" class="w-4 h-4"></i></button>
                         </div>
                         <div class="flex items-center justify-center pr-6 md:pr-8 h-full relative">
-                            <div class="flex items-center justify-center gap-2 md:gap-3">
-                                <button id="timer-play-${w.id}" onclick="toggleTimer('${w.id}')" class="w-12 h-12 md:w-14 md:h-14 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer">
-                                    ${playIconHtml}
-                                </button>
-                                <button id="t-stop-${w.id}" onclick="resetTimer('${w.id}')" class="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer">${getStopIcon('w-4 h-4 md:w-5 md:h-5')}</button>
-                            </div>
-                            <div class="absolute top-[calc(50%+32px)] md:top-[calc(50%+38px)] left-[calc(50%-2px)] md:left-[calc(50%-4px)] -translate-x-1/2 opacity-0 group-hover/pomo:opacity-100 transition-opacity">
-                                <button id="timer-sound-${w.id}" onclick="toggleTimerSound('${w.id}', event)" class="hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer text-current bg-transparent">
-                                    ${getCustomSpeakerIcon(soundOn, w.id)}
-                                </button>
+                            <div class="relative flex flex-col items-center justify-center w-full">
+                                <div class="flex items-center justify-center gap-2 md:gap-3">
+                                    <button id="timer-play-${w.id}" onclick="toggleTimer('${w.id}')" class="w-12 h-12 md:w-14 md:h-14 shrink-0 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer">
+                                        ${playIconHtml}
+                                    </button>
+                                    <button id="t-stop-${w.id}" onclick="resetTimer('${w.id}')" class="w-10 h-10 md:w-12 md:h-12 shrink-0 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer">${getStopIcon(stopIconSize)}</button>
+                                </div>
+                                <div class="absolute top-full mt-1.5 flex justify-center w-full opacity-0 group-hover/pomo:opacity-100 transition-opacity">
+                                    <button id="timer-sound-${w.id}" onclick="toggleTimerSound('${w.id}', event)" class="hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer text-current bg-transparent">
+                                        ${getCustomSpeakerIcon(soundOn, w.id)}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>`;
@@ -2098,12 +2102,16 @@
                 if(mainBgLabel) mainBgLabel.innerHTML = `${s.bgImage ? 'Replace Image' : 'Upload Image'} <input type="file" id="bg-upload" class="hidden" accept="image/*" onchange="handleTempBgImageUpload(event)">`;
 
                 const tCol = s.customTextColor || (isD ? '#ffffff' : '#000000');
-                const cpWrapText = document.getElementById('cp-wrap-text'); if(cpWrapText) cpWrapText.style.backgroundColor = tCol; 
-                const hexText = document.getElementById('hexText'); if(hexText && document.activeElement !== hexText) hexText.value = tCol;
+                const colorTextEl = document.getElementById('colorText');
+                if(colorTextEl) colorTextEl.parentElement.style.backgroundColor = tCol; 
+                const hexText = document.getElementById('hexText'); 
+                if(hexText && document.activeElement !== hexText) hexText.value = tCol;
                 
                 const aCol = s.accentColor || '#ef4444';
-                const cpWrapAccent = document.getElementById('cp-wrap-accent'); if(cpWrapAccent) cpWrapAccent.style.backgroundColor = aCol; 
-                const hexAccent = document.getElementById('hexAccent'); if(hexAccent && document.activeElement !== hexAccent) hexAccent.value = aCol;
+                const colorAccentEl = document.getElementById('colorAccent');
+                if(colorAccentEl) colorAccentEl.parentElement.style.backgroundColor = aCol; 
+                const hexAccent = document.getElementById('hexAccent'); 
+                if(hexAccent && document.activeElement !== hexAccent) hexAccent.value = aCol;
                 
                 let wCol = isD ? '#1a1a1a' : '#ffffff';
                 if (s.widgetBgColor && typeof s.widgetBgColor === 'object') { wCol = isD ? s.widgetBgColor.dark : s.widgetBgColor.light; } 
@@ -2116,13 +2124,16 @@
         }
 
         function applyThemeAndBg(s = appState.settings) {
-            const body = document.documentElement;
-            const isD = s.theme === 'dark' || (s.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-            isD ? body.classList.add('dark') : body.classList.remove('dark');
+            const root = document.documentElement;
+            const bodyEl = document.body;
             
-            body.className = body.className.replace(/font-\w+/g, '').trim(); body.classList.add(`font-${s.fontFamily}`);
+            const isD = s.theme === 'dark' || (s.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            isD ? root.classList.add('dark') : root.classList.remove('dark');
+            
+            bodyEl.classList.remove('font-inter', 'font-serif', 'font-mono', 'font-caveat');
+            bodyEl.classList.add(`font-${s.fontFamily}`);
 
-            document.documentElement.style.setProperty('--accent-color', s.accentColor || '#ef4444');
+            root.style.setProperty('--accent-color', s.accentColor || '#ef4444');
 
             const bg = document.getElementById('body-bg');
             if(s.bgType === 'image' && s.bgImage) { bg.style.background = `url(${s.bgImage}) center/cover no-repeat`; } 
@@ -2136,39 +2147,39 @@
                 if (s.widgetBgColor && typeof s.widgetBgColor === 'object') { wCol = isD ? s.widgetBgColor.dark : s.widgetBgColor.light; } 
                 else if (typeof s.widgetBgColor === 'string') { wCol = s.widgetBgColor; }
                 
-                document.documentElement.style.setProperty('--widget-bg', wCol); 
-                document.documentElement.style.setProperty('--widget-blur', '0px'); 
-                document.documentElement.style.setProperty('--widget-border', 'transparent'); 
-                document.documentElement.style.setProperty('--widget-shadow-outer', 'none');
-                document.documentElement.style.setProperty('--widget-shadow-inner', 'none');
+                root.style.setProperty('--widget-bg', wCol); 
+                root.style.setProperty('--widget-blur', '0px'); 
+                root.style.setProperty('--widget-border', 'transparent'); 
+                root.style.setProperty('--widget-shadow-outer', 'none');
+                root.style.setProperty('--widget-shadow-inner', 'none');
                 
                 if(!s.customTextColor) {
-                    document.documentElement.style.setProperty('--custom-text', isD ? '#ffffff' : '#000000');
-                    document.body.classList.add('custom-text-active');
+                    root.style.setProperty('--custom-text', isD ? '#ffffff' : '#000000');
+                    bodyEl.classList.add('custom-text-active');
                 } else {
-                    document.documentElement.style.setProperty('--custom-text', s.customTextColor);
-                    document.body.classList.add('custom-text-active');
+                    root.style.setProperty('--custom-text', s.customTextColor);
+                    bodyEl.classList.add('custom-text-active');
                 }
             } else if(s.widgetBgMode === 'transparent') {
-                document.documentElement.style.setProperty('--widget-bg', 'transparent'); 
-                document.documentElement.style.setProperty('--widget-blur', '0px'); 
-                document.documentElement.style.setProperty('--widget-border', 'transparent'); 
-                document.documentElement.style.setProperty('--widget-shadow-outer', 'none');
-                document.documentElement.style.setProperty('--widget-shadow-inner', 'none');
-                if(s.customTextColor) { document.documentElement.style.setProperty('--custom-text', s.customTextColor); document.body.classList.add('custom-text-active'); } 
-                else { document.body.classList.remove('custom-text-active'); }
+                root.style.setProperty('--widget-bg', 'transparent'); 
+                root.style.setProperty('--widget-blur', '0px'); 
+                root.style.setProperty('--widget-border', 'transparent'); 
+                root.style.setProperty('--widget-shadow-outer', 'none');
+                root.style.setProperty('--widget-shadow-inner', 'none');
+                if(s.customTextColor) { root.style.setProperty('--custom-text', s.customTextColor); bodyEl.classList.add('custom-text-active'); } 
+                else { bodyEl.classList.remove('custom-text-active'); }
             } else {
-                document.documentElement.style.setProperty('--widget-bg', isD ? 'rgba(30, 30, 30, 0.4)' : 'rgba(255, 255, 255, 0.3)'); 
+                root.style.setProperty('--widget-bg', isD ? 'rgba(30, 30, 30, 0.4)' : 'rgba(255, 255, 255, 0.3)'); 
                 
                 const blurVal = s.glassBlur !== undefined ? s.glassBlur : 20;
-                document.documentElement.style.setProperty('--widget-blur', (blurVal * 0.64) + 'px'); 
+                root.style.setProperty('--widget-blur', (blurVal * 0.64) + 'px'); 
                 
-                document.documentElement.style.setProperty('--widget-border', isD ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.4)'); 
-                document.documentElement.style.setProperty('--widget-shadow-outer', isD ? '0 8px 32px 0 rgba(0, 0, 0, 0.3)' : '0 8px 32px 0 rgba(0, 0, 0, 0.05)');
-                document.documentElement.style.setProperty('--widget-shadow-inner', isD ? 'inset 0 1px 1px rgba(255, 255, 255, 0.05)' : 'inset 0 1px 1px rgba(255, 255, 255, 0.5)');
+                root.style.setProperty('--widget-border', isD ? 'rgba(255, 255, 255, 0.1)' : 'rgba(255, 255, 255, 0.4)'); 
+                root.style.setProperty('--widget-shadow-outer', isD ? '0 8px 32px 0 rgba(0, 0, 0, 0.3)' : '0 8px 32px 0 rgba(0, 0, 0, 0.05)');
+                root.style.setProperty('--widget-shadow-inner', isD ? 'inset 0 1px 1px rgba(255, 255, 255, 0.05)' : 'inset 0 1px 1px rgba(255, 255, 255, 0.5)');
                 
-                if(s.customTextColor) { document.documentElement.style.setProperty('--custom-text', s.customTextColor); document.body.classList.add('custom-text-active'); } 
-                else { document.body.classList.remove('custom-text-active'); }
+                if(s.customTextColor) { root.style.setProperty('--custom-text', s.customTextColor); bodyEl.classList.add('custom-text-active'); } 
+                else { bodyEl.classList.remove('custom-text-active'); }
             }
         }
 
