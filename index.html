@@ -6,13 +6,9 @@
     <title>Bento Dashboard</title>
     
     <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHN0eWxlPi5ie2ZpbGw6IzRiNTU2Mzt9QG1lZGlhIChwcmVmZXJzLWNvbG9yLXNjaGVtZTogZGFyayl7LmJ7ZmlsbDojZTVlN2ViO319PC9zdHlsZT48cmVjdCBjbGFzcz0iYiIgeD0iOCIgeT0iOCIgd2lkdGg9IjQ4IiBoZWlnaHQ9IjIwIiByeD0iNiIvPjxyZWN0IGNsYXNzPSJiIiB4PSI4IiB5PSIzMiIgd2lkdGg9IjIyIiBoZWlnaHQ9IjI0IiByeD0iNiIvPjxyZWN0IGNsYXNzPSJiIiB4PSIzNCIgeT0iMzIiIHdpZHRoPSIyMiIgaGVpZ2h0PSIyNCIgcng9IjYiLz48L3N2Zz4=" type="image/svg+xml">
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <script src="https://unpkg.com/lucide@latest"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -129,13 +125,7 @@
         }
         .transparent-box { background: transparent !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; border-color: transparent !important; box-shadow: none !important; }
 
-        /* LİQUİD GLASS ÇAKIŞMA ÖNLEYİCİ */
-        body.liquid-active .widget-glass-bg {
-            backdrop-filter: none !important;
-            -webkit-backdrop-filter: none !important;
-        }
-
-       /* GRID ANIMATIONS */
+        /* GRID ANIMATIONS */
         #bento-grid { transition: transform 0.3s ease, opacity 0.3s ease; }
 
         /* EDIT MODE JIGGLE, RESIZE & INTERACTION PROTECT */
@@ -201,8 +191,16 @@
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6) !important;
         }
 
-        /* TIMER INPUT MASK LOGIC */
-        .timer-input-mask { opacity: 0; color: inherit; background: transparent; transition: opacity 0.2s; outline: none; border: none; }
+        /* TIMER INPUT MASK LOGIC (Hizalama ve Seçim Düzeltmesi) */
+        .timer-input-mask { 
+            opacity: 0; 
+            color: inherit; 
+            background: transparent; 
+            transition: opacity 0.2s; 
+            outline: none; 
+            border: none; 
+            letter-spacing: -0.05em; /* Seçildiğinde rakamların genişlemesini engeller */
+        }
         .timer-input-mask:focus { opacity: 1; outline: none !important; }
         .timer-input-mask:focus + h2 { opacity: 0; }
         .timer-input-mask::selection { background-color: var(--accent-color); color: #fff; }
@@ -306,6 +304,32 @@
             <div class="w-px h-6 bg-current opacity-20 mx-1 hidden md:block"></div>
             <button onclick="toggleSettings()" class="w-11 h-11 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition flex items-center justify-center text-current shadow-sm shrink-0 cursor-pointer" title="Appearance"><i data-lucide="palette" class="w-5 h-5 opacity-80 text-current"></i></button>
             <button onclick="toggleEditMode()" class="px-5 h-11 font-bold bg-black/10 dark:bg-white/20 hover:bg-black/20 dark:hover:bg-white/30 text-current transition rounded-full text-sm shadow-sm ml-1 shrink-0 cursor-pointer">Done</button>
+        </div>
+    </div>
+
+    <button onclick="showModal('author-modal')" class="fixed bottom-6 right-6 z-40 opacity-50 hover:opacity-100 transition cursor-pointer text-xs md:text-sm font-semibold text-current outline-none flex items-center gap-1 group/author">
+        Made by Gökhan Çetinkaya with <span class="text-red-500 group-hover/author:scale-110 transition-transform">❤️</span>
+    </button>
+
+    <div id="author-modal" class="fixed inset-0 z-[70] hidden flex items-center justify-center modal-overlay opacity-0 transition-opacity duration-300 text-current">
+        <div class="glass-panel max-w-sm w-full p-8 relative flex flex-col items-center shadow-2xl mx-4 text-center">
+            <button onclick="hideModal('author-modal')" class="absolute top-4 right-4 opacity-50 hover:opacity-100 transition cursor-pointer"><i data-lucide="x" class="w-5 h-5"></i></button>
+            <div class="w-16 h-16 bg-gradient-to-tr from-pink-500 to-orange-400 rounded-full flex items-center justify-center mb-4 text-white shadow-lg">
+                <span class="text-2xl">👋</span>
+            </div>
+            <h2 class="text-2xl font-bold mb-2 opacity-90">Gökhan Çetinkaya</h2>
+            <p class="text-sm opacity-70 mb-6">Made with ❤️ for better productivity.</p>
+            
+            <div class="flex flex-col gap-3 w-full">
+                <a href="https://instagram.com/gocetinkaya" target="_blank" class="w-full py-3 rounded-xl bg-black/5 dark:bg-white/10 font-bold hover:bg-black/10 dark:hover:bg-white/20 transition flex items-center justify-center gap-2 cursor-pointer border border-black/5 dark:border-white/10 text-current">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="opacity-80"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+                    @gocetinkaya
+                </a>
+                <a href="https://buymeacoffee.com/gokhanc" target="_blank" class="w-full py-3 rounded-xl bg-[#FFDD00] text-black font-bold shadow-md hover:bg-[#FFEA4C] transition flex items-center justify-center gap-2 cursor-pointer border border-transparent">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" x2="6" y1="2" y2="4"/><line x1="10" x2="10" y1="2" y2="4"/><line x1="14" x2="14" y1="2" y2="4"/></svg>
+                    Buy me a coffee
+                </a>
+            </div>
         </div>
     </div>
 
@@ -579,8 +603,10 @@
         const LIGHT_DEFAULTS = { c1: '#fdfbfb', c2: '#ebedee' };
         const DARK_DEFAULTS = { c1: '#303030', c2: '#1a1a1a' };
         
-        const ICONS = ['mail','hard-drive','link','youtube','twitter','github','music','map','video','message-circle','camera','shopping-cart','coffee','monitor','smartphone','pen-tool','folder','image','star','heart','settings','book','briefcase','calendar','clock','cloud','globe','key','lock','mic','moon','sun','umbrella','zap','battery','bell','activity','airplay','alarm-check','align-center','anchor','aperture','archive','award','bar-chart','bluetooth','bookmark','box','cast','check','chrome','clipboard','code','compass','copy','cpu','crosshair','database','download','droplet','eye','feather','film','flag','gift','headphones','home','info','instagram','layout','life-buoy','linkedin','list','map-pin','maximize','menu','navigation','package','paperclip','pie-chart','play','power','printer','radio','refresh-cw','save','search','send','server','share','shield','slack','sliders','speaker','square','target','terminal','thermometer','thumbs-up','toggle-left','tool','trash','trello','trending-up','tv','twitch','type','unlock','upload','user','users','wifi','wind','x','zoom-in','sticky-note', 'accessibility', 'alarm-clock', 'alert-circle', 'alert-octagon', 'alert-triangle', 'align-justify', 'align-left', 'align-right', 'battery-charging', 'bell-off', 'bold', 'book-open', 'camera-off', 'check-circle', 'check-square', 'chevron-down', 'chevron-left', 'chevron-right', 'chevron-up', 'chevrons-down', 'chevrons-left', 'chevrons-right', 'chevrons-up', 'cloud-drizzle', 'cloud-lightning', 'cloud-off', 'cloud-rain', 'cloud-snow', 'codesandbox', 'command', 'corner-down-left', 'corner-down-right', 'corner-left-down', 'corner-left-up', 'corner-right-down', 'corner-right-up', 'corner-up-left', 'corner-up-right', 'credit-card', 'crop', 'delete', 'disc', 'divide', 'divide-circle', 'divide-square', 'download-cloud', 'edit', 'edit-2', 'edit-3', 'external-link', 'fast-forward', 'file', 'file-minus', 'file-plus', 'file-text', 'filter', 'folder-minus', 'folder-plus', 'frown', 'grid', 'hash', 'help-circle', 'hexagon', 'inbox', 'italic', 'layers', 'link-2', 'loader', 'log-in', 'log-out', 'maximize-2', 'meh', 'mic-off', 'minimize', 'minimize-2', 'minus', 'minus-circle', 'minus-square', 'more-horizontal', 'more-vertical', 'mouse-pointer', 'move', 'navigation-2', 'octagon', 'pause', 'pause-circle', 'percent', 'phone', 'phone-call', 'phone-forwarded', 'phone-incoming', 'phone-missed', 'phone-off', 'phone-outgoing', 'play-circle', 'plus', 'plus-circle', 'plus-square', 'pocket', 'refresh-ccw', 'repeat', 'rewind', 'rotate-ccw', 'rotate-cw', 'rss', 'scissors', 'shield-off', 'shopping-bag', 'shuffle', 'sidebar', 'skip-back', 'skip-forward', 'slash', 'smile', 'stop-circle', 'sunrise', 'sunset', 'tablet', 'tag', 'thumbs-down', 'toggle-right', 'trash-2', 'trending-down', 'triangle', 'truck', 'underline', 'upload-cloud', 'user-check', 'user-minus', 'user-plus', 'user-x', 'video-off', 'voicemail', 'volume', 'volume-1', 'volume-2', 'volume-x', 'watch', 'wifi-off', 'x-circle', 'x-octagon', 'x-square', 'zap-off', 'zoom-out', 'gamepad', 'bus', 'car', 'bike', 'train', 'plane', 'square-dashed'];
+        const ICONS = ['mail','hard-drive','link','music','map','video','message-circle','camera','shopping-cart','coffee','monitor','smartphone','pen-tool','folder','image','star','heart','settings','book','briefcase','calendar','clock','cloud','globe','key','lock','mic','moon','sun','umbrella','zap','battery','bell','activity','airplay','alarm-check','align-center','anchor','aperture','archive','award','bar-chart','bluetooth','bookmark','box','cast','check','clipboard','code','compass','copy','cpu','crosshair','database','download','droplet','eye','feather','film','flag','gift','headphones','home','info','layout','life-buoy','list','map-pin','maximize','menu','navigation','package','paperclip','pie-chart','play','power','printer','radio','refresh-cw','save','search','send','server','share','shield','sliders','speaker','square','target','terminal','thermometer','thumbs-up','toggle-left','tool','trash','trending-up','tv','type','unlock','upload','user','users','wifi','wind','x','zoom-in','sticky-note','accessibility','alarm-clock','alert-circle','align-justify','battery-charging','bell-off','bold','book-open','camera-off','check-circle','chevron-down','cloud-lightning','cloud-rain','cloud-snow','command','credit-card','crop','delete','disc','divide','download-cloud','edit','edit-2','external-link','fast-forward','file','file-text','filter','folder-plus','grid','hash','help-circle','hexagon','inbox','italic','layers','link-2','loader','log-in','log-out','maximize-2','mic-off','minimize','minus','more-horizontal','more-vertical','mouse-pointer','move','navigation-2','octagon','pause','percent','phone','phone-off','play-circle','plus','plus-circle','refresh-ccw','repeat','rewind','rotate-ccw','rotate-cw','rss','scissors','shield-off','shopping-bag','shuffle','sidebar','skip-back','skip-forward','slash','smile','stop-circle','sunrise','sunset','tablet','tag','thumbs-down','toggle-right','trash-2','trending-down','triangle','truck','underline','upload-cloud','user-check','user-minus','user-plus','user-x','video-off','voicemail','volume','volume-1','volume-2','volume-x','watch','wifi-off','zap-off','zoom-out','gamepad','bus','car','bike','train','plane','square-dashed'];
         
+        const EMOJIS = ['😀','😃','😄','😁','😆','😅','😂','🤣','🥲','☺️','😊','😇','🙂','🙃','😉','😌','😍','🥰','😘','😗','😙','😚','😋','😛','😝','😜','🤪','🤨','🧐','🤓','😎','🥸','🤩','🥳','😏','😒','😞','😔','😟','😕','🙁','☹️','😣','😖','😫','😩','🥺','😢','😭','😤','😠','😡','🤬','🤯','😳','🥵','🥶','😱','😨','😰','😥','😓','🤗','🤔','🤭','🤫','🤥','😶','😐','😑','😬','🙄','😯','😦','😧','😮','😲','🥱','😴','🤤','😪','😵','🤐','🥴','🤢','🤮','🤧','😷','🤒','🤕','🤑','🤠','😈','👿','👹','👺','🤡','💩','👻','💀','☠️','👽','👾','🤖','🎃','😺','😸','😹','😻','😼','😽','🙀','😿','😾','🙈','🙉','🙊','❤️','🔥','✨','🌟','💫','💥','💢','💦','💨','🐵','🐒','🦍','🦧','🐶','🐕','🦮','🐕‍🦺','🐩','🐺','🦊','🦝','🐱','🐈','🐈‍⬛','🦁','🐯','🐅','🐆','🐴','🐎','🦄','🦓','🦌','🦬','🐮','🐂','🐃','🐄','🐷','🐖','🐗','🐽','🐏','🐑','🐐','🐪','🐫','🦙','🐘','🦏','🦛','🐭','🐁','🐀','🐹','🐰','🐇','🐿️','🦫','🦔','🦇','🐻','🐻‍❄️','🐨','🐼','🦥','🦦','🦨','🦘','🦉','🐊'];
+
         function loadState() {
             let saved = localStorage.getItem(STORAGE_KEY);
             if (saved) {
@@ -881,7 +907,7 @@
         }
         function autoUpdateWeather() { getCurrentWidgets().filter(w => w.type === 'weather').forEach(w => fetchWeather(w, true)); }
 
-        // Timer Input Handling
+        // MÜKEMMEL 4 HANELİ TİMER INPUT MANTIĞI
         function handleTimerKeyDown(e, id) {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -889,21 +915,23 @@
                 return;
             }
             const allowedKeys = ['Backspace', 'ArrowLeft', 'ArrowRight', 'Delete', 'Tab', ':'];
+            // Numara veya fonksiyon tuşu değilse engelle
             if (!/^[0-9]$/.test(e.key) && !allowedKeys.includes(e.key) && !e.metaKey && !e.ctrlKey) {
                 e.preventDefault();
             }
         }
-        
+
         function handleTimerInput(e, id) {
             let el = e.target;
             let clean = el.value.replace(/[^0-9]/g, '');
             if(clean.length > 4) clean = clean.slice(0, 4);
             
+            // Eğer sayı varsa 20:00 formatına oturtarak yazdır (görsel olarak)
             let formatted = clean;
             if (clean.length > 2) {
                 formatted = clean.slice(0, clean.length - 2) + ':' + clean.slice(clean.length - 2);
             }
-            el.value = formatted;
+            el.value = formatted; // Input değerine de ':' ekliyoruz ki seçim pürüzsüz olsun
             
             let padded = clean.padEnd(4, '0');
             let m = padded.slice(0, 2);
@@ -916,13 +944,6 @@
             if(dispEl) {
                 dispEl.innerHTML = formatTimerString(m, s, isLarge);
             }
-        }
-
-        function formatTimerString(m, s, isLarge) {
-            if (isLarge) {
-                return `<span class="timer-min">${m}</span><span class="relative -top-[0.05em] -ml-1">:</span><span class="timer-sec -ml-2">${s}</span>`;
-            }
-            return `<span class="timer-min">${m}</span><span class="relative -top-[0.05em] -ml-0.5">:</span><span class="timer-sec -ml-1">${s}</span>`;
         }
 
         // Timer Operations
@@ -950,7 +971,6 @@
             saveState(); 
             reRenderWidget(id);
         }
-        
         function setCustomTime(id, val) {
             val = val.trim();
             let mins = 25;
@@ -981,7 +1001,6 @@
                 resetTimer(id); 
             }
         }
-        
         function toggleTimer(id) {
             const w = getCurrentWidgets().find(w => w.id === id);
             if(!w) return;
@@ -1006,13 +1025,11 @@
                 reRenderWidget(id);
             }
         }
-        
         function resetTimer(id) {
             if (activeTimerId === id) clearInterval(timerInterval);
             activeTimerId = null; if (finishedTimerId === id) finishedTimerId = null;
             timerRemaining = 0; timerElapsed = 0; reRenderWidget(id);
         }
-        
         function timerFinished(id) {
             clearInterval(timerInterval); activeTimerId = null; finishedTimerId = id; timerRemaining = 0;
             const w = getCurrentWidgets().find(wd => wd.id === id);
@@ -1041,7 +1058,6 @@
             if(el) el.classList.add('animate-jiggle-short');
             setTimeout(() => { if(el) el.classList.remove('animate-jiggle-short'); }, 400);
         }
-        
         function updateTimerDisplay(id) {
             const w = getCurrentWidgets().find(w => w.id === id); if(!w) return;
             const isDown = w.data.direction !== 'up'; const totalSec = isDown ? timerRemaining : timerElapsed;
@@ -1052,6 +1068,13 @@
                 const s = String(totalSec%60).padStart(2,'0');
                 dispEl.innerHTML = formatTimerString(m, s, isLarge);
             }
+        }
+
+        function formatTimerString(m, s, isLarge) {
+            if (isLarge) {
+                return `<span class="timer-min">${m}</span><span class="relative -top-[0.05em] -ml-1">:</span><span class="timer-sec -ml-2">${s}</span>`;
+            }
+            return `<span class="timer-min">${m}</span><span class="relative -top-[0.05em] -ml-0.5">:</span><span class="timer-sec -ml-1">${s}</span>`;
         }
 
         function renderDashboard() {
@@ -1203,7 +1226,7 @@
                         ${overlayHtml}
                         <div class="w-full h-full flex flex-col items-center justify-center relative group/pomo p-2 pt-2 z-10 text-current">
                             <div class="flex items-center justify-center w-full relative mb-1.5 md:mb-2">
-                                <input type="text" id="timer-input-${w.id}" class="timer-input-mask absolute inset-0 w-full h-full cursor-text z-20 text-[3rem] md:text-[3.5rem] font-extrabold tracking-tighter font-mono text-center" maxlength="5" value="${m}:${s}" oninput="handleTimerInput(event, '${w.id}')" onblur="setCustomTime('${w.id}', this.value)" onfocus="this.select()" onkeydown="handleTimerKeyDown(event, '${w.id}')">
+                                <input type="tel" id="timer-input-${w.id}" class="timer-input-mask absolute inset-0 w-full h-full cursor-text z-20 text-[3rem] md:text-[3.5rem] font-extrabold tracking-tighter font-mono text-center" maxlength="5" value="${m}:${s}" oninput="handleTimerInput(event, '${w.id}')" onblur="setCustomTime('${w.id}', this.value)" onfocus="this.select()" onkeydown="handleTimerKeyDown(event, '${w.id}')">
                                 <h2 class="text-[3rem] md:text-[3.5rem] font-extrabold tracking-tighter font-mono drop-shadow-sm leading-none flex items-center justify-center pointer-events-none transition-opacity" id="timer-disp-${w.id}" style="min-width: 3ch; text-align: center;">${displayHtml}</h2>
                             </div>
                             <div class="flex items-center justify-center gap-0.5 md:gap-1 w-full relative px-1">
@@ -2018,10 +2041,7 @@
             const btnEdit = document.getElementById('btn-edit-mode'), footer = document.getElementById('edit-footer');
             if(isEditMode) {
                 if(isSearching) toggleSearch(); btnEdit.classList.add('opacity-0', 'pointer-events-none'); footer.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-10');
-            } else { 
-                btnEdit.classList.remove('opacity-0', 'pointer-events-none'); footer.classList.add('opacity-0', 'pointer-events-none', 'translate-y-10'); 
-                if (typeof refreshLiquidGlass === 'function') setTimeout(refreshLiquidGlass, 300);
-            }
+            } else { btnEdit.classList.remove('opacity-0', 'pointer-events-none'); footer.classList.add('opacity-0', 'pointer-events-none', 'translate-y-10'); }
             renderDashboard();
         }
         function toggleProfileModal() { showModal('profile-modal'); }
@@ -2259,7 +2279,7 @@
             root.style.setProperty('--accent-color', s.accentColor || '#ef4444');
 
             const bg = document.getElementById('body-bg');
-            if(s.bgType === 'image' && s.bgImage) { bg.style.background = `url(${s.bgImage}) center/cover no-repeat`; } 
+            if(s.bgType === 'image' && s.bgImage) { bg.style.background = `url(${s.bgImage}) center/cover no-repeat fixed`; }
             else { 
                 const c = isD ? (s.darkColors || DARK_DEFAULTS) : (s.lightColors || LIGHT_DEFAULTS); 
                 bg.style.background = s.bgType === 'gradient' ? `linear-gradient(${s.angle}deg, ${c.c1}, ${c.c2})` : c.c1;
@@ -2322,49 +2342,6 @@
             const m = document.getElementById(id); 
             if(m) { m.classList.add('opacity-0'); setTimeout(() => m.classList.add('hidden'), 300); }
         }
-    </script>
-    <script>
-        // --- LİQUİD GLASS ÇEKİRDEK SİSTEMİ (iOS Style & Persistence) ---
-        let initLiquid = null;
-
-        if (typeof liquidGL !== 'undefined' || typeof LiquidGL !== 'undefined') {
-            initLiquid = typeof liquidGL === 'function' ? liquidGL : LiquidGL;
-        } else {
-            console.warn("LiquidGL kütüphanesi yüklenemedi. Linkleri kontrol et.");
-        }
-
-        function refreshLiquidGlass() {
-            if (!initLiquid) return;
-
-            console.log("🌊 Liquid Glass tazeleniyor...");
-
-            // ÖNCE TEMİZLİK: Eski WebGL canvas'larını temizle
-            const targets = document.querySelectorAll('.widget-glass-bg, .glass-panel, #search-container');
-            targets.forEach(target => {
-                const canvas = target.querySelector('canvas');
-                if (canvas) canvas.remove();
-            });
-
-            document.body.classList.add('liquid-active');
-
-            try {
-                initLiquid({
-                    target: ".widget-glass-bg, .glass-panel, #search-container", 
-                    snapshot: "body", 
-                    resolution: 1.5, 
-                    refraction: 0.04, 
-                    frost: 35, 
-                    interactive: true 
-                });
-                console.log("Liquid Glass pürüzsüz ayarlarla aktif edildi! ✨");
-            } catch (error) {
-                console.error("Liquid Glass başlatılırken bir hata oluştu:", error);
-            }
-        }
-
-        window.addEventListener('load', () => {
-            setTimeout(refreshLiquidGlass, 800); 
-        });
     </script>
 </body>
 </html>
