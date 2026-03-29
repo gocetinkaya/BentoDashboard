@@ -18,7 +18,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Roboto+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Gochi+Hand&family=Inter:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Roboto+Mono:wght@500;700;800&display=swap" rel="stylesheet">
 
     <script>
         tailwind.config = {
@@ -63,7 +63,8 @@
         .font-inter { font-family: 'Inter', sans-serif !important; }
         .font-serif { font-family: 'Playfair Display', serif !important; }
         .font-mono { font-family: 'Roboto Mono', monospace !important; }
-        .font-caveat { font-family: 'Caveat', cursive !important; font-size: 1.15em; letter-spacing: 0.5px; }
+        /* GÜNCELLEME: Gochi Hand font ataması yapıldı */
+        .font-caveat { font-family: 'Gochi Hand', cursive !important; font-size: 1.25em; letter-spacing: 0.5px; }
 
         /* GRAIN TEXTURE */
         .bg-grain {
@@ -201,6 +202,12 @@
             background: rgba(0,0,0,0.5) !important;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6) !important;
         }
+
+        /* TIMER INPUT MASK LOGIC (DÜZELTİLDİ) */
+        .timer-input-mask { opacity: 0; color: inherit; background: transparent; transition: opacity 0.2s; }
+        .timer-input-mask:focus { opacity: 1; outline: none !important; }
+        .timer-input-mask:focus + h2 { opacity: 0; }
+        .timer-input-mask::selection { background-color: var(--accent-color); color: #fff; }
 
         /* iOS STYLE TOGGLES */
         .ios-toggle { position: relative; display: inline-block; width: 40px; height: 24px; background-color: rgba(0,0,0,0.15); border-radius: 9999px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; flex-shrink: 0; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1); }
@@ -571,7 +578,6 @@
     <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] bg-black/90 dark:bg-white/90 text-white dark:text-black px-6 py-3 rounded-full font-bold shadow-2xl opacity-0 pointer-events-none transition-opacity duration-300 text-sm tracking-wide">Copied!</div>
 
     <script>
-        // Orijinal renk tonlarını korudum, gradient seçildiğinde default 2 şık renk getirir
         const LIGHT_DEFAULTS = { c1: '#fdfbfb', c2: '#ebedee' };
         const DARK_DEFAULTS = { c1: '#303030', c2: '#1a1a1a' };
         
@@ -896,7 +902,7 @@
                 if (isLarge) {
                     dispEl.innerHTML = `<span class="timer-min">${m}</span><span class="relative -top-[0.05em] -ml-1">:</span><span class="timer-sec -ml-2">${s}</span>`;
                 } else {
-                    dispEl.innerHTML = `<span class="timer-min">${m}</span><span class="relative -top-[0.05em] mx-px">:</span><span class="timer-sec">${s}</span>`;
+                    dispEl.innerHTML = `<span class="timer-min">${m}</span><span class="relative -top-[0.05em] -ml-0.5">:</span><span class="timer-sec -ml-1">${s}</span>`;
                 }
             }
         }
@@ -927,16 +933,36 @@
             reRenderWidget(id);
         }
         function setCustomTime(id, val) {
-            let clean = String(val).replace(/[^0-9]/g, '').padEnd(4, '0');
-            let m = parseInt(clean.slice(0, 2)) || 0;
-            let s = parseInt(clean.slice(2, 4)) || 0;
-            let mins = m + (s / 60);
+            // Boşlukları temizle
+            val = val.trim();
+            let mins = 25;
+            
+            if(val.includes(':')) {
+                let parts = val.split(':');
+                let m = parseInt(parts[0].replace(/[^0-9]/g, '')) || 0;
+                let s = parseInt(parts[1].replace(/[^0-9]/g, '')) || 0;
+                mins = m + (s / 60);
+            } else {
+                // ":" yoksa, 2000 -> 20 dakika 00 saniye mantığıyla hesapla
+                let clean = val.replace(/[^0-9]/g, '');
+                if (clean.length > 2) {
+                    let s = parseInt(clean.slice(-2)) || 0;
+                    let m = parseInt(clean.slice(0, -2)) || 0;
+                    mins = m + (s / 60);
+                } else if (clean.length > 0) {
+                    mins = parseInt(clean); // Eğer sadece "25" girilmişse 25dk say
+                }
+            }
             
             if(isNaN(mins) || mins <= 0) mins = 0.25;
             if(mins > 90) mins = 90;
             
             const w = getCurrentWidgets().find(wd => wd.id === id);
-            if(w) { w.data.timerMinutes = mins; saveState(); resetTimer(id); }
+            if(w) { 
+                w.data.timerMinutes = mins; 
+                saveState(); 
+                resetTimer(id); 
+            }
         }
         function toggleTimer(id) {
             const w = getCurrentWidgets().find(w => w.id === id);
@@ -1005,10 +1031,11 @@
         function formatTimer(totalSec, isLarge = false) {
             const minStr = String(Math.floor(totalSec/60)).padStart(2,'0');
             const secStr = String(totalSec%60).padStart(2,'0');
+            // Büyük boy timerlarda ":" ve saniye arası daha yakın
             if (isLarge) {
                 return `<span class="timer-min">${minStr}</span><span class="relative -top-[0.05em] -ml-1">:</span><span class="timer-sec -ml-2">${secStr}</span>`;
             }
-            return `<span class="timer-min">${minStr}</span><span class="relative -top-[0.05em] mx-px">:</span><span class="timer-sec">${secStr}</span>`;
+            return `<span class="timer-min">${minStr}</span><span class="relative -top-[0.05em] -ml-0.5">:</span><span class="timer-sec -ml-1">${secStr}</span>`;
         }
 
         function renderDashboard() {
@@ -1146,8 +1173,8 @@
                     const isLargeTimer = w.w > 1;
                     const displayHtml = formatTimer(totalSec, isLargeTimer);
                     
-                    const iconSize = w.w === 1 ? 'w-4 h-4' : 'w-6 h-6 md:w-7 md:h-7';
-                    const stopIconSize = w.w === 1 ? 'w-3 h-3' : 'w-4 h-4 md:w-5 md:h-5';
+                    const iconSize = w.w === 1 ? 'w-5 h-5' : 'w-6 h-6 md:w-7 md:h-7';
+                    const stopIconSize = w.w === 1 ? 'w-4 h-4' : 'w-4 h-4 md:w-5 md:h-5';
                     const playIconHtml = isFinished ? getRefreshIcon(iconSize) : (isPlaying ? getPauseIcon(iconSize) : getPlayIcon(iconSize));
                     
                     const overlayHtml = `<div id="timer-bg-${w.id}" class="absolute inset-0 z-0 pointer-events-none rounded-[inherit]" style="opacity: 0;"></div>`;
@@ -1156,15 +1183,15 @@
                     if(!isLargeTimer) {
                         return `
                         ${overlayHtml}
-                        <div class="w-full h-full flex flex-col items-center justify-center relative group/pomo p-2 z-10 text-current">
+                        <div class="w-full h-full flex flex-col items-center justify-center relative group/pomo p-2 pt-2 z-10 text-current">
                             <div class="flex items-center justify-center w-full relative mb-1.5 md:mb-2">
-                                <input type="tel" id="timer-input-${w.id}" class="absolute inset-0 w-full h-full opacity-0 cursor-text z-20" maxlength="4" value="${(Math.floor(totalSec/60).toString().padStart(2,'0')) + ((totalSec%60).toString().padStart(2,'0'))}" oninput="handleTimerInput(event, '${w.id}')" onblur="setCustomTime('${w.id}', this.value)" onfocus="this.select()">
-                                <h2 class="text-[3rem] md:text-[3.5rem] font-extrabold tracking-tighter font-mono drop-shadow-sm leading-none flex items-center justify-center pointer-events-none" id="timer-disp-${w.id}" style="min-width: 3ch; text-align: center;">${displayHtml}</h2>
+                                <input type="tel" id="timer-input-${w.id}" class="timer-input-mask absolute inset-0 w-full h-full cursor-text z-20 text-[3rem] md:text-[3.5rem] font-extrabold tracking-tighter font-mono text-center" maxlength="4" value="${(Math.floor(totalSec/60).toString().padStart(2,'0')) + ((totalSec%60).toString().padStart(2,'0'))}" oninput="handleTimerInput(event, '${w.id}')" onblur="setCustomTime('${w.id}', this.value)" onfocus="this.select()">
+                                <h2 class="text-[3rem] md:text-[3.5rem] font-extrabold tracking-tighter font-mono drop-shadow-sm leading-none flex items-center justify-center pointer-events-none transition-opacity" id="timer-disp-${w.id}" style="min-width: 3ch; text-align: center;">${displayHtml}</h2>
                             </div>
                             <div class="flex items-center justify-center gap-1 w-full relative px-2">
                                 <button id="t-min-${w.id}" onclick="adjTimer('${w.id}', -1)" class="min-w-[24px] min-h-[24px] shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-0 group-hover/pomo:opacity-100 gpu-hover-layer ${isPlaying||isFinished?'invisible':''}"><i data-lucide="minus" class="w-3.5 h-3.5"></i></button>
                                 <button id="timer-play-${w.id}" onclick="toggleTimer('${w.id}')" class="w-8 h-8 shrink-0 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer z-10">${playIconHtml}</button>
-                                <button id="t-stop-${w.id}" onclick="resetTimer('${w.id}')" class="w-8 h-8 shrink-0 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer z-10">${getStopIcon('w-3 h-3')}</button>
+                                <button id="t-stop-${w.id}" onclick="resetTimer('${w.id}')" class="w-8 h-8 shrink-0 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer z-10">${getStopIcon(stopIconSize)}</button>
                                 <button id="t-plus-${w.id}" onclick="adjTimer('${w.id}', 1)" class="min-w-[24px] min-h-[24px] shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-0 group-hover/pomo:opacity-100 gpu-hover-layer ${isPlaying||isFinished?'invisible':''}"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>
                             </div>
                             <div class="absolute bottom-1.5 flex w-full justify-center opacity-0 group-hover/pomo:opacity-100 transition-opacity">
@@ -1180,8 +1207,10 @@
                     <div class="w-full h-full flex items-center justify-between px-0 relative group/pomo z-10 text-current">
                         <div class="flex flex-col items-center justify-center relative w-fit h-full pl-4 md:pl-5">
                             <button id="t-plus-${w.id}" onclick="adjTimer('${w.id}', 1)" class="absolute -top-7 md:-top-8 w-6 h-6 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-0 group-hover/pomo:opacity-100 ${isPlaying||isFinished?'invisible':''}"><i data-lucide="plus" class="w-4 h-4"></i></button>
-                            <input type="tel" id="timer-input-${w.id}" class="absolute inset-0 w-full h-full opacity-0 cursor-text z-20" maxlength="4" value="${(Math.floor(totalSec/60).toString().padStart(2,'0')) + ((totalSec%60).toString().padStart(2,'0'))}" oninput="handleTimerInput(event, '${w.id}')" onblur="setCustomTime('${w.id}', this.value)" onfocus="this.select()">
-                            <h2 class="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tighter font-mono drop-shadow-sm leading-none flex items-center justify-center pointer-events-none" id="timer-disp-${w.id}" style="min-width: 3ch; text-align: center;">${displayHtml}</h2>
+                            <div class="relative flex w-full justify-center">
+                                <input type="tel" id="timer-input-${w.id}" class="timer-input-mask absolute inset-0 w-full h-full cursor-text z-20 text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tighter font-mono text-center" maxlength="4" value="${(Math.floor(totalSec/60).toString().padStart(2,'0')) + ((totalSec%60).toString().padStart(2,'0'))}" oninput="handleTimerInput(event, '${w.id}')" onblur="setCustomTime('${w.id}', this.value)" onfocus="this.select()">
+                                <h2 class="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tighter font-mono drop-shadow-sm leading-none pointer-events-none transition-opacity flex items-center justify-center" id="timer-disp-${w.id}" style="min-width: 3ch; text-align: center;">${displayHtml}</h2>
+                            </div>
                             <button id="t-min-${w.id}" onclick="adjTimer('${w.id}', -1)" class="absolute -bottom-7 md:-bottom-8 w-6 h-6 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-0 group-hover/pomo:opacity-100 ${isPlaying||isFinished?'invisible':''}"><i data-lucide="minus" class="w-4 h-4"></i></button>
                         </div>
                         <div class="flex items-center justify-center pr-6 md:pr-8 h-full relative">
@@ -1192,7 +1221,7 @@
                                     </button>
                                     <button id="t-stop-${w.id}" onclick="resetTimer('${w.id}')" class="w-10 h-10 md:w-12 md:h-12 shrink-0 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer">${getStopIcon(stopIconSize)}</button>
                                 </div>
-                                <div class="absolute top-full mt-1.5 flex justify-center w-full opacity-0 group-hover/pomo:opacity-100 transition-opacity left-1/2 -translate-x-1/2">
+                                <div class="absolute top-full mt-1.5 flex justify-center w-full opacity-0 group-hover/pomo:opacity-100 transition-opacity left-[calc(50%)] md:left-[calc(50%-2px)] -translate-x-1/2">
                                     <button id="timer-sound-${w.id}" onclick="toggleTimerSound('${w.id}', event)" class="hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer text-current bg-transparent">
                                         ${getCustomSpeakerIcon(soundOn, w.id)}
                                     </button>
@@ -1492,22 +1521,16 @@
                 const w = getCurrentWidgets().find(w => w.id === wId);
                 const idx = w.data.tasks.findIndex(t => t.id === tId);
                 if (idx > 0) {
-                    const prevId = w.data.tasks[idx - 1].id;
+                    const prevEl = e.target.parentElement.previousElementSibling?.querySelector('div[contenteditable]');
+                    e.target.parentElement.remove();
                     w.data.tasks.splice(idx, 1);
                     saveState();
-                    reRenderWidget(wId);
-                    setTimeout(() => {
-                        const prevEl = document.querySelector(`[data-id="${wId}"] #node-${prevId} div[contenteditable]`);
-                        if (prevEl) {
-                            prevEl.focus();
-                            const range = document.createRange();
-                            range.selectNodeContents(prevEl);
-                            range.collapse(false); // Sona git
-                            const sel = window.getSelection();
-                            sel.removeAllRanges();
-                            sel.addRange(range);
-                        }
-                    }, 10);
+                    if (prevEl) {
+                        prevEl.focus();
+                        const range = document.createRange(); const sel = window.getSelection();
+                        range.selectNodeContents(prevEl); range.collapse(false);
+                        sel.removeAllRanges(); sel.addRange(range);
+                    }
                 }
             }
         }
