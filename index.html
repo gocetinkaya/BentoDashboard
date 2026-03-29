@@ -63,7 +63,6 @@
         .font-inter { font-family: 'Inter', sans-serif !important; }
         .font-serif { font-family: 'Playfair Display', serif !important; }
         .font-mono { font-family: 'Roboto Mono', monospace !important; }
-        /* GÜNCELLEME: Gochi Hand font ataması yapıldı */
         .font-caveat { font-family: 'Gochi Hand', cursive !important; font-size: 1.25em; letter-spacing: 0.5px; }
 
         /* GRAIN TEXTURE */
@@ -203,8 +202,8 @@
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6) !important;
         }
 
-        /* TIMER INPUT MASK LOGIC (DÜZELTİLDİ) */
-        .timer-input-mask { opacity: 0; color: inherit; background: transparent; transition: opacity 0.2s; }
+        /* TIMER INPUT MASK LOGIC */
+        .timer-input-mask { opacity: 0; color: inherit; background: transparent; transition: opacity 0.2s; outline: none; border: none; }
         .timer-input-mask:focus { opacity: 1; outline: none !important; }
         .timer-input-mask:focus + h2 { opacity: 0; }
         .timer-input-mask::selection { background-color: var(--accent-color); color: #fff; }
@@ -883,12 +882,29 @@
         }
         function autoUpdateWeather() { getCurrentWidgets().filter(w => w.type === 'weather').forEach(w => fetchWeather(w, true)); }
 
-        // MÜKEMMEL 4 HANELİ TİMER INPUT MANTIĞI
+        // Timer Input Handling
+        function handleTimerKeyDown(e, id) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                e.target.blur();
+                return;
+            }
+            const allowedKeys = ['Backspace', 'ArrowLeft', 'ArrowRight', 'Delete', 'Tab', ':'];
+            if (!/^[0-9]$/.test(e.key) && !allowedKeys.includes(e.key) && !e.metaKey && !e.ctrlKey) {
+                e.preventDefault();
+            }
+        }
+        
         function handleTimerInput(e, id) {
             let el = e.target;
             let clean = el.value.replace(/[^0-9]/g, '');
             if(clean.length > 4) clean = clean.slice(0, 4);
-            el.value = clean;
+            
+            let formatted = clean;
+            if (clean.length > 2) {
+                formatted = clean.slice(0, clean.length - 2) + ':' + clean.slice(clean.length - 2);
+            }
+            el.value = formatted;
             
             let padded = clean.padEnd(4, '0');
             let m = padded.slice(0, 2);
@@ -899,12 +915,15 @@
             const dispEl = document.getElementById(`timer-disp-${id}`);
             
             if(dispEl) {
-                if (isLarge) {
-                    dispEl.innerHTML = `<span class="timer-min">${m}</span><span class="relative -top-[0.05em] -ml-1">:</span><span class="timer-sec -ml-2">${s}</span>`;
-                } else {
-                    dispEl.innerHTML = `<span class="timer-min">${m}</span><span class="relative -top-[0.05em] -ml-0.5">:</span><span class="timer-sec -ml-1">${s}</span>`;
-                }
+                dispEl.innerHTML = formatTimerString(m, s, isLarge);
             }
+        }
+
+        function formatTimerString(m, s, isLarge) {
+            if (isLarge) {
+                return `<span class="timer-min">${m}</span><span class="relative -top-[0.05em] -ml-1">:</span><span class="timer-sec -ml-2">${s}</span>`;
+            }
+            return `<span class="timer-min">${m}</span><span class="relative -top-[0.05em] -ml-0.5">:</span><span class="timer-sec -ml-1">${s}</span>`;
         }
 
         // Timer Operations
@@ -932,8 +951,8 @@
             saveState(); 
             reRenderWidget(id);
         }
+        
         function setCustomTime(id, val) {
-            // Boşlukları temizle
             val = val.trim();
             let mins = 25;
             
@@ -943,14 +962,13 @@
                 let s = parseInt(parts[1].replace(/[^0-9]/g, '')) || 0;
                 mins = m + (s / 60);
             } else {
-                // ":" yoksa, 2000 -> 20 dakika 00 saniye mantığıyla hesapla
                 let clean = val.replace(/[^0-9]/g, '');
                 if (clean.length > 2) {
                     let s = parseInt(clean.slice(-2)) || 0;
                     let m = parseInt(clean.slice(0, -2)) || 0;
                     mins = m + (s / 60);
                 } else if (clean.length > 0) {
-                    mins = parseInt(clean); // Eğer sadece "25" girilmişse 25dk say
+                    mins = parseInt(clean); 
                 }
             }
             
@@ -964,6 +982,7 @@
                 resetTimer(id); 
             }
         }
+        
         function toggleTimer(id) {
             const w = getCurrentWidgets().find(w => w.id === id);
             if(!w) return;
@@ -988,11 +1007,13 @@
                 reRenderWidget(id);
             }
         }
+        
         function resetTimer(id) {
             if (activeTimerId === id) clearInterval(timerInterval);
             activeTimerId = null; if (finishedTimerId === id) finishedTimerId = null;
             timerRemaining = 0; timerElapsed = 0; reRenderWidget(id);
         }
+        
         function timerFinished(id) {
             clearInterval(timerInterval); activeTimerId = null; finishedTimerId = id; timerRemaining = 0;
             const w = getCurrentWidgets().find(wd => wd.id === id);
@@ -1021,21 +1042,17 @@
             if(el) el.classList.add('animate-jiggle-short');
             setTimeout(() => { if(el) el.classList.remove('animate-jiggle-short'); }, 400);
         }
+        
         function updateTimerDisplay(id) {
             const w = getCurrentWidgets().find(w => w.id === id); if(!w) return;
             const isDown = w.data.direction !== 'up'; const totalSec = isDown ? timerRemaining : timerElapsed;
             const dispEl = document.getElementById(`timer-disp-${id}`); 
-            if(dispEl) dispEl.innerHTML = formatTimer(totalSec, w.w > 1);
-        }
-
-        function formatTimer(totalSec, isLarge = false) {
-            const minStr = String(Math.floor(totalSec/60)).padStart(2,'0');
-            const secStr = String(totalSec%60).padStart(2,'0');
-            // Büyük boy timerlarda ":" ve saniye arası daha yakın
-            if (isLarge) {
-                return `<span class="timer-min">${minStr}</span><span class="relative -top-[0.05em] -ml-1">:</span><span class="timer-sec -ml-2">${secStr}</span>`;
+            if(dispEl) {
+                const isLarge = w.w > 1;
+                const m = String(Math.floor(totalSec/60)).padStart(2,'0');
+                const s = String(totalSec%60).padStart(2,'0');
+                dispEl.innerHTML = formatTimerString(m, s, isLarge);
             }
-            return `<span class="timer-min">${minStr}</span><span class="relative -top-[0.05em] -ml-0.5">:</span><span class="timer-sec -ml-1">${secStr}</span>`;
         }
 
         function renderDashboard() {
@@ -1171,7 +1188,9 @@
                         totalSec = isDown ? timerRemaining : timerElapsed;
                     }
                     const isLargeTimer = w.w > 1;
-                    const displayHtml = formatTimer(totalSec, isLargeTimer);
+                    const m = String(Math.floor(totalSec/60)).padStart(2,'0');
+                    const s = String(totalSec%60).padStart(2,'0');
+                    const displayHtml = formatTimerString(m, s, isLargeTimer);
                     
                     const iconSize = w.w === 1 ? 'w-5 h-5' : 'w-6 h-6 md:w-7 md:h-7';
                     const stopIconSize = w.w === 1 ? 'w-4 h-4' : 'w-4 h-4 md:w-5 md:h-5';
@@ -1185,10 +1204,10 @@
                         ${overlayHtml}
                         <div class="w-full h-full flex flex-col items-center justify-center relative group/pomo p-2 pt-2 z-10 text-current">
                             <div class="flex items-center justify-center w-full relative mb-1.5 md:mb-2">
-                                <input type="tel" id="timer-input-${w.id}" class="timer-input-mask absolute inset-0 w-full h-full cursor-text z-20 text-[3rem] md:text-[3.5rem] font-extrabold tracking-tighter font-mono text-center" maxlength="4" value="${(Math.floor(totalSec/60).toString().padStart(2,'0')) + ((totalSec%60).toString().padStart(2,'0'))}" oninput="handleTimerInput(event, '${w.id}')" onblur="setCustomTime('${w.id}', this.value)" onfocus="this.select()">
+                                <input type="text" id="timer-input-${w.id}" class="timer-input-mask absolute inset-0 w-full h-full cursor-text z-20 text-[3rem] md:text-[3.5rem] font-extrabold tracking-tighter font-mono text-center" maxlength="5" value="${m}:${s}" oninput="handleTimerInput(event, '${w.id}')" onblur="setCustomTime('${w.id}', this.value)" onfocus="this.select()" onkeydown="handleTimerKeyDown(event, '${w.id}')">
                                 <h2 class="text-[3rem] md:text-[3.5rem] font-extrabold tracking-tighter font-mono drop-shadow-sm leading-none flex items-center justify-center pointer-events-none transition-opacity" id="timer-disp-${w.id}" style="min-width: 3ch; text-align: center;">${displayHtml}</h2>
                             </div>
-                            <div class="flex items-center justify-center gap-1 w-full relative px-2">
+                            <div class="flex items-center justify-center gap-0.5 md:gap-1 w-full relative px-1">
                                 <button id="t-min-${w.id}" onclick="adjTimer('${w.id}', -1)" class="min-w-[24px] min-h-[24px] shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-0 group-hover/pomo:opacity-100 gpu-hover-layer ${isPlaying||isFinished?'invisible':''}"><i data-lucide="minus" class="w-3.5 h-3.5"></i></button>
                                 <button id="timer-play-${w.id}" onclick="toggleTimer('${w.id}')" class="w-8 h-8 shrink-0 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer z-10">${playIconHtml}</button>
                                 <button id="t-stop-${w.id}" onclick="resetTimer('${w.id}')" class="w-8 h-8 shrink-0 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer z-10">${getStopIcon(stopIconSize)}</button>
@@ -1206,12 +1225,16 @@
                     ${overlayHtml}
                     <div class="w-full h-full flex items-center justify-between px-0 relative group/pomo z-10 text-current">
                         <div class="flex flex-col items-center justify-center relative w-fit h-full pl-4 md:pl-5">
-                            <button id="t-plus-${w.id}" onclick="adjTimer('${w.id}', 1)" class="absolute -top-7 md:-top-8 w-6 h-6 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-0 group-hover/pomo:opacity-100 ${isPlaying||isFinished?'invisible':''}"><i data-lucide="plus" class="w-4 h-4"></i></button>
-                            <div class="relative flex w-full justify-center">
-                                <input type="tel" id="timer-input-${w.id}" class="timer-input-mask absolute inset-0 w-full h-full cursor-text z-20 text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tighter font-mono text-center" maxlength="4" value="${(Math.floor(totalSec/60).toString().padStart(2,'0')) + ((totalSec%60).toString().padStart(2,'0'))}" oninput="handleTimerInput(event, '${w.id}')" onblur="setCustomTime('${w.id}', this.value)" onfocus="this.select()">
-                                <h2 class="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tighter font-mono drop-shadow-sm leading-none pointer-events-none transition-opacity flex items-center justify-center" id="timer-disp-${w.id}" style="min-width: 3ch; text-align: center;">${displayHtml}</h2>
+                            <div class="relative flex flex-col items-center justify-center">
+                                <button id="t-plus-${w.id}" onclick="adjTimer('${w.id}', 1)" class="absolute -top-7 md:-top-8 w-6 h-6 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-0 group-hover/pomo:opacity-100 ${isPlaying||isFinished?'invisible':''}"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                                
+                                <div class="relative flex w-full justify-center">
+                                    <input type="text" id="timer-input-${w.id}" class="timer-input-mask absolute inset-0 w-full h-full cursor-text z-20 text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tighter font-mono text-center" maxlength="5" value="${m}:${s}" oninput="handleTimerInput(event, '${w.id}')" onblur="setCustomTime('${w.id}', this.value)" onfocus="this.select()" onkeydown="handleTimerKeyDown(event, '${w.id}')">
+                                    <h2 class="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tighter font-mono drop-shadow-sm leading-none pointer-events-none transition-opacity flex items-center justify-center" id="timer-disp-${w.id}" style="min-width: 3ch; text-align: center;">${displayHtml}</h2>
+                                </div>
+                                
+                                <button id="t-min-${w.id}" onclick="adjTimer('${w.id}', -1)" class="absolute -bottom-7 md:-bottom-8 w-6 h-6 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-0 group-hover/pomo:opacity-100 ${isPlaying||isFinished?'invisible':''}"><i data-lucide="minus" class="w-4 h-4"></i></button>
                             </div>
-                            <button id="t-min-${w.id}" onclick="adjTimer('${w.id}', -1)" class="absolute -bottom-7 md:-bottom-8 w-6 h-6 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-0 group-hover/pomo:opacity-100 ${isPlaying||isFinished?'invisible':''}"><i data-lucide="minus" class="w-4 h-4"></i></button>
                         </div>
                         <div class="flex items-center justify-center pr-6 md:pr-8 h-full relative">
                             <div class="relative flex flex-col items-center justify-center w-full">
@@ -1221,7 +1244,7 @@
                                     </button>
                                     <button id="t-stop-${w.id}" onclick="resetTimer('${w.id}')" class="w-10 h-10 md:w-12 md:h-12 shrink-0 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer">${getStopIcon(stopIconSize)}</button>
                                 </div>
-                                <div class="absolute top-full mt-1.5 flex justify-center w-full opacity-0 group-hover/pomo:opacity-100 transition-opacity left-[calc(50%)] md:left-[calc(50%-2px)] -translate-x-1/2">
+                                <div class="absolute top-full mt-1.5 flex justify-center w-full opacity-0 group-hover/pomo:opacity-100 transition-opacity left-[calc(50%+1px)] md:left-[calc(50%+2px)] -translate-x-1/2">
                                     <button id="timer-sound-${w.id}" onclick="toggleTimerSound('${w.id}', event)" class="hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer text-current bg-transparent">
                                         ${getCustomSpeakerIcon(soundOn, w.id)}
                                     </button>
@@ -1444,7 +1467,6 @@
                 const el = document.getElementById(`note-text-${id}`);
                 let lines = [];
                 if (el) {
-                    // HTML içindeki <br> ve <div> lerle oluşturulmuş satır başlarını temizle
                     const temp = document.createElement('div');
                     temp.innerHTML = el.innerHTML.replace(/<br\s*\/?>/gi, '\n').replace(/<\/div>\s*<div[^>]*>/gi, '\n').replace(/<div[^>]*>/gi, '').replace(/<\/div>/gi, '');
                     lines = temp.innerText.split('\n');
@@ -1477,7 +1499,6 @@
                 let beforeStr = el.innerText;
                 let afterStr = '';
                 
-                // Cursor pozisyonundan metni ikiye bölme
                 if (sel.rangeCount > 0) {
                     const range = sel.getRangeAt(0);
                     const pre = range.cloneRange();
@@ -1502,7 +1523,6 @@
                 
                 reRenderWidget(wId);
                 
-                // Yeni oluşan cümlenin başına cursoru odakla
                 setTimeout(() => {
                     const newEl = document.querySelector(`[data-id="${wId}"] #node-${newId} div[contenteditable]`);
                     if (newEl) {
@@ -1999,7 +2019,10 @@
             const btnEdit = document.getElementById('btn-edit-mode'), footer = document.getElementById('edit-footer');
             if(isEditMode) {
                 if(isSearching) toggleSearch(); btnEdit.classList.add('opacity-0', 'pointer-events-none'); footer.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-10');
-            } else { btnEdit.classList.remove('opacity-0', 'pointer-events-none'); footer.classList.add('opacity-0', 'pointer-events-none', 'translate-y-10'); }
+            } else { 
+                btnEdit.classList.remove('opacity-0', 'pointer-events-none'); footer.classList.add('opacity-0', 'pointer-events-none', 'translate-y-10'); 
+                if (typeof refreshLiquidGlass === 'function') setTimeout(refreshLiquidGlass, 300);
+            }
             renderDashboard();
         }
         function toggleProfileModal() { showModal('profile-modal'); }
@@ -2300,6 +2323,49 @@
             const m = document.getElementById(id); 
             if(m) { m.classList.add('opacity-0'); setTimeout(() => m.classList.add('hidden'), 300); }
         }
+    </script>
+    <script>
+        // --- LİQUİD GLASS ÇEKİRDEK SİSTEMİ (iOS Style & Persistence) ---
+        let initLiquid = null;
+
+        if (typeof liquidGL !== 'undefined' || typeof LiquidGL !== 'undefined') {
+            initLiquid = typeof liquidGL === 'function' ? liquidGL : LiquidGL;
+        } else {
+            console.warn("LiquidGL kütüphanesi yüklenemedi. Linkleri kontrol et.");
+        }
+
+        function refreshLiquidGlass() {
+            if (!initLiquid) return;
+
+            console.log("🌊 Liquid Glass tazeleniyor...");
+
+            // ÖNCE TEMİZLİK: Eski WebGL canvas'larını temizle
+            const targets = document.querySelectorAll('.widget-glass-bg, .glass-panel, #search-container');
+            targets.forEach(target => {
+                const canvas = target.querySelector('canvas');
+                if (canvas) canvas.remove();
+            });
+
+            document.body.classList.add('liquid-active');
+
+            try {
+                initLiquid({
+                    target: ".widget-glass-bg, .glass-panel, #search-container", 
+                    snapshot: "body", 
+                    resolution: 1.5, 
+                    refraction: 0.04, 
+                    frost: 35, 
+                    interactive: true 
+                });
+                console.log("Liquid Glass pürüzsüz ayarlarla aktif edildi! ✨");
+            } catch (error) {
+                console.error("Liquid Glass başlatılırken bir hata oluştu:", error);
+            }
+        }
+
+        window.addEventListener('load', () => {
+            setTimeout(refreshLiquidGlass, 800); 
+        });
     </script>
 </body>
 </html>
