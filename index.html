@@ -6,14 +6,9 @@
     <title>Bento Dashboard</title>
     
     <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHN0eWxlPi5ie2ZpbGw6IzRiNTU2Mzt9QG1lZGlhIChwcmVmZXJzLWNvbG9yLXNjaGVtZTogZGFyayl7LmJ7ZmlsbDojZTVlN2ViO319PC9zdHlsZT48cmVjdCBjbGFzcz0iYiIgeD0iOCIgeT0iOCIgd2lkdGg9IjQ4IiBoZWlnaHQ9IjIwIiByeD0iNiIvPjxyZWN0IGNsYXNzPSJiIiB4PSI4IiB5PSIzMiIgd2lkdGg9IjIyIiBoZWlnaHQ9IjI0IiByeD0iNiIvPjxyZWN0IGNsYXNzPSJiIiB4PSIzNCIgeT0iMzIiIHdpZHRoPSIyMiIgaGVpZ2h0PSIyNCIgcng9IjYiLz48L3N2Zz4=" type="image/svg+xml">
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="liquidGL.js"></script>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <script src="https://unpkg.com/lucide@latest"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -53,8 +48,8 @@
         body:not(.custom-text-active) { color: #000; }
         .dark body:not(.custom-text-active) { color: #fff; }
         
-        /* ENABLE SELECTION ONLY ON INPUTS */
-        .allow-select, input, textarea, [contenteditable="true"] { user-select: text !important; -webkit-user-select: text !important; cursor: text !important; }
+        /* ENABLE SELECTION ONLY ON INPUTS (Sadece metin inputlarında I-beam çıkar) */
+        .allow-select, input[type="text"], input[type="password"], input[type="number"], textarea, [contenteditable="true"] { user-select: text !important; -webkit-user-select: text !important; cursor: text !important; }
         input:focus { outline: none !important; }
         
         /* FONTS */
@@ -128,13 +123,7 @@
         }
         .transparent-box { background: transparent !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; border-color: transparent !important; box-shadow: none !important; }
 
-        /* LİQUİD GLASS ÇAKIŞMA ÖNLEYİCİ */
-        body.liquid-active .widget-glass-bg {
-            backdrop-filter: none !important;
-            -webkit-backdrop-filter: none !important;
-        }
-
-       /* GRID ANIMATIONS */
+        /* GRID ANIMATIONS */
         #bento-grid { transition: transform 0.3s ease, opacity 0.3s ease; }
 
         /* EDIT MODE JIGGLE & RESIZE */
@@ -195,9 +184,9 @@
         input[type="color"] { opacity: 0; width: 100%; height: 100%; cursor: pointer !important; position: absolute; top:0; left:0; border: none; outline: none; }
         .color-dot { width: 32px; height: 32px; flex-shrink: 0; border-radius: 50%; border: 2px solid rgba(255,255,255,0.8); box-shadow: 0 2px 8px rgba(0,0,0,0.2); position: relative; overflow: hidden; background-color: currentColor; cursor: pointer !important; }
 
-        /* RANGE INPUT RESET */
-        input[type="range"] { outline: none !important; }
-        input[type="range"]::-webkit-slider-thumb { outline: none !important; }
+        /* RANGE INPUT RESET & CURSOR FIX */
+        input[type="range"] { outline: none !important; cursor: pointer !important; }
+        input[type="range"]::-webkit-slider-thumb { outline: none !important; cursor: pointer !important; }
         input[type="range"]:focus { outline: none !important; }
 
         /* EXTRAS */
@@ -339,7 +328,7 @@
                     </div>
                     <div id="blur-wrap" class="mt-2 transition-all duration-300 flex items-center gap-4 w-full settings-hide-on-peek" onmousedown="startPeek('blur-wrap')" ontouchstart="startPeek('blur-wrap')">
                         <span class="text-[10px] font-bold uppercase tracking-widest opacity-60 shrink-0">Blur</span>
-                        <input type="range" id="glass-blur" min="0" max="100" class="w-full accent-blue-500 cursor-pointer flex-1" oninput="updateTempSettings()" onmouseup="endPeek()" ontouchend="endPeek()">
+                        <input type="range" id="glass-blur" min="0" max="100" class="w-full accent-blue-500 flex-1" oninput="updateTempSettings()" onmouseup="endPeek()" ontouchend="endPeek()">
                         <span id="blur-val" class="text-xs font-bold opacity-80 shrink-0 w-10 text-right">20%</span>
                     </div>
                 </div>
@@ -369,7 +358,7 @@
                         </div>
                         <div class="mt-2 transition-all duration-300 flex items-center gap-4 w-full settings-hide-on-peek" id="wrap-angle" onmousedown="startPeek('wrap-angle')" ontouchstart="startPeek('wrap-angle')">
                             <span class="text-[10px] font-bold uppercase tracking-widest opacity-60 shrink-0">Angle</span>
-                            <input type="range" id="angle" min="0" max="360" class="w-full accent-blue-500 cursor-pointer flex-1" oninput="updateTempSettings()" onmouseup="endPeek()" ontouchend="endPeek()">
+                            <input type="range" id="angle" min="0" max="360" class="w-full accent-blue-500 flex-1" oninput="updateTempSettings()" onmouseup="endPeek()" ontouchend="endPeek()">
                             <span id="angle-val" class="text-xs font-bold opacity-80 shrink-0 w-8 text-right">90°</span>
                         </div>
                     </div>
@@ -1020,8 +1009,6 @@
 
                 const contentWrapper = document.createElement('div'); 
                 contentWrapper.className = 'widget-content-wrapper'; 
-                // ÖNEMLİ DEĞİŞİKLİK BURADA: İçeriğin bükülmesini (hayalet efekti) engeller.
-                contentWrapper.setAttribute('data-html2canvas-ignore', 'true'); 
                 contentWrapper.innerHTML = getWidgetContent(widget); 
                 el.appendChild(contentWrapper);
                 
@@ -1888,8 +1875,6 @@
                 if(isSearching) toggleSearch(); btnEdit.classList.add('opacity-0', 'pointer-events-none'); footer.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-10');
             } else { 
                 btnEdit.classList.remove('opacity-0', 'pointer-events-none'); footer.classList.add('opacity-0', 'pointer-events-none', 'translate-y-10'); 
-                // ÖNEMLİ: Edit modundan çıkıldığında liquid effect'i tazeleyelim
-                if (typeof refreshLiquidGlass === 'function') setTimeout(refreshLiquidGlass, 300);
             }
             renderDashboard();
         }
@@ -2089,7 +2074,7 @@
             document.documentElement.style.setProperty('--accent-color', s.accentColor || '#ef4444');
 
             const bg = document.getElementById('body-bg');
-            if(s.bgType === 'image' && s.bgImage) { bg.style.background = `url(${s.bgImage}) center/cover no-repeat`; } /* fixed kelimesini sildik */
+            if(s.bgType === 'image' && s.bgImage) { bg.style.background = `url(${s.bgImage}) center/cover no-repeat`; } 
             else { 
                 const c = isD ? (s.darkColors || DARK_DEFAULTS) : (s.lightColors || LIGHT_DEFAULTS); 
                 bg.style.background = s.bgType === 'gradient' ? `linear-gradient(${s.angle}deg, ${c.c1}, ${c.c2})` : c.c1;
@@ -2152,50 +2137,6 @@
             const m = document.getElementById(id); 
             if(m) { m.classList.add('opacity-0'); setTimeout(() => m.classList.add('hidden'), 300); }
         }
-    </script>
-    <script>
-        // --- LİQUİD GLASS ÇEKİRDEK SİSTEMİ (iOS Style & Persistence) ---
-        let initLiquid = null;
-
-        if (typeof liquidGL !== 'undefined' || typeof LiquidGL !== 'undefined') {
-            initLiquid = typeof liquidGL === 'function' ? liquidGL : LiquidGL;
-        } else {
-            console.warn("LiquidGL kütüphanesi yüklenemedi. Linkleri kontrol et.");
-        }
-
-        function refreshLiquidGlass() {
-            if (!initLiquid) return;
-
-            console.log("🌊 Liquid Glass tazeleniyor...");
-
-            // ÖNCE TEMİZLİK: Eski WebGL canvas'larını temizle
-            const targets = document.querySelectorAll('.widget-glass-bg, .glass-panel, #search-container');
-            targets.forEach(target => {
-                // target'ın içindeki sadece canvas'ları sil
-                const canvas = target.querySelector('canvas');
-                if (canvas) canvas.remove();
-            });
-
-            document.body.classList.add('liquid-active');
-
-            try {
-                initLiquid({
-                    target: ".widget-glass-bg, .glass-panel, #search-container", 
-                    snapshot: "body", 
-                    resolution: 1.5, 
-                    refraction: 0.04, 
-                    frost: 35, 
-                    interactive: true 
-                });
-                console.log("Liquid Glass pürüzsüz ayarlarla aktif edildi! ✨");
-            } catch (error) {
-                console.error("Liquid Glass başlatılırken bir hata oluştu:", error);
-            }
-        }
-
-        window.addEventListener('load', () => {
-            setTimeout(refreshLiquidGlass, 800); 
-        });
     </script>
 </body>
 </html>
