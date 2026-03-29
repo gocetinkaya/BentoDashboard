@@ -169,11 +169,26 @@
             backdrop-filter: none !important; 
             -webkit-backdrop-filter: none !important; 
         }
-        /* Tüm ayarları (renkler, butonlar vs.) gizler */
         .peek-mode #settings-modal .glass-panel > * { 
             opacity: 0 !important; 
             pointer-events: none !important; 
             transition: opacity 0.2s ease; 
+        }
+        
+        .peek-active { 
+            visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; 
+            position: fixed !important; top: 40px !important; left: 50% !important; transform: translateX(-50%) !important; z-index: 99999 !important; 
+            padding: 16px 32px !important; border-radius: 9999px !important; width: 640px !important; max-width: 90vw !important;
+            background: rgba(255,255,255,0.2) !important; 
+            backdrop-filter: blur(24px) !important; 
+            -webkit-backdrop-filter: blur(24px) !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4) !important;
+            color: var(--custom-text) !important;
+            border: none !important;
+        }
+        .dark .peek-active {
+            background: rgba(0,0,0,0.5) !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6) !important;
         }
 
         /* iOS STYLE TOGGLES */
@@ -219,8 +234,8 @@
     
     <div class="bg-grain"></div>
     
-    <div id="peek-value-display" class="fixed inset-0 z-[999999] hidden flex-col items-center justify-center pointer-events-none opacity-0 transition-opacity duration-200">
-        <span class="text-[12vw] md:text-[6vw] font-black text-white drop-shadow-[0_10px_40px_rgba(0,0,0,0.5)] tracking-tighter" id="peek-text"></span>
+    <div id="peek-value-display" class="fixed top-12 left-1/2 -translate-x-1/2 z-[999999] hidden flex-col items-center justify-start pointer-events-none opacity-0 transition-opacity duration-200">
+        <span class="text-[10vw] md:text-[5vw] font-black text-white drop-shadow-[0_8px_30px_rgba(0,0,0,0.5)] tracking-tighter" id="peek-text"></span>
     </div>
 
     <div class="fixed top-6 right-6 z-40 flex flex-col items-end gap-3">
@@ -334,7 +349,7 @@
                     </div>
                     <div id="blur-wrap" class="mt-2 transition-all duration-300 flex items-center gap-4 w-full settings-hide-on-peek" onmousedown="startPeek('blur-wrap')" ontouchstart="startPeek('blur-wrap')">
                         <span class="text-[10px] font-bold uppercase tracking-widest opacity-60 shrink-0">Blur</span>
-                        <input type="range" id="glass-blur" min="0" max="100" class="w-full accent-blue-500 flex-1" oninput="updateTempSettings()" onmouseup="endPeek()" ontouchend="endPeek()">
+                        <input type="range" id="glass-blur" min="0" max="100" class="w-full accent-blue-500 cursor-pointer flex-1" oninput="updateTempSettings()" onmouseup="endPeek()" ontouchend="endPeek()">
                         <span id="blur-val" class="text-xs font-bold opacity-80 shrink-0 w-10 text-right">20%</span>
                     </div>
                 </div>
@@ -364,7 +379,7 @@
                         </div>
                         <div class="mt-2 transition-all duration-300 flex items-center gap-4 w-full settings-hide-on-peek" id="wrap-angle" onmousedown="startPeek('wrap-angle')" ontouchstart="startPeek('wrap-angle')">
                             <span class="text-[10px] font-bold uppercase tracking-widest opacity-60 shrink-0">Angle</span>
-                            <input type="range" id="angle" min="0" max="360" class="w-full accent-blue-500 flex-1" oninput="updateTempSettings()" onmouseup="endPeek()" ontouchend="endPeek()">
+                            <input type="range" id="angle" min="0" max="360" class="w-full accent-blue-500 cursor-pointer flex-1" oninput="updateTempSettings()" onmouseup="endPeek()" ontouchend="endPeek()">
                             <span id="angle-val" class="text-xs font-bold opacity-80 shrink-0 w-8 text-right">90°</span>
                         </div>
                     </div>
@@ -545,8 +560,8 @@
     <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] bg-black/90 dark:bg-white/90 text-white dark:text-black px-6 py-3 rounded-full font-bold shadow-2xl opacity-0 pointer-events-none transition-opacity duration-300 text-sm tracking-wide">Copied!</div>
 
     <script>
-        const LIGHT_DEFAULTS = { c1: '#e6e6e6', c2: '#e6e6e6' };
-        const DARK_DEFAULTS = { c1: '#262626', c2: '#262626' };
+        const LIGHT_DEFAULTS = { c1: '#fdfbfb', c2: '#ebedee' };
+        const DARK_DEFAULTS = { c1: '#303030', c2: '#1a1a1a' };
         
         const ICONS = ['mail','hard-drive','link','youtube','twitter','github','music','map','video','message-circle','camera','shopping-cart','coffee','monitor','smartphone','pen-tool','folder','image','star','heart','settings','book','briefcase','calendar','clock','cloud','globe','key','lock','mic','moon','sun','umbrella','zap','battery','bell','activity','airplay','alarm-check','align-center','anchor','aperture','archive','award','bar-chart','bluetooth','bookmark','box','cast','check','chrome','clipboard','code','compass','copy','cpu','crosshair','database','download','droplet','eye','feather','film','flag','gift','headphones','home','info','instagram','layout','life-buoy','linkedin','list','map-pin','maximize','menu','navigation','package','paperclip','pie-chart','play','power','printer','radio','refresh-cw','save','search','send','server','share','shield','slack','sliders','speaker','square','target','terminal','thermometer','thumbs-up','toggle-left','tool','trash','trello','trending-up','tv','twitch','type','unlock','upload','user','users','wifi','wind','x','zoom-in','sticky-note', 'accessibility', 'alarm-clock', 'alert-circle', 'alert-octagon', 'alert-triangle', 'align-justify', 'align-left', 'align-right', 'battery-charging', 'bell-off', 'bold', 'book-open', 'camera-off', 'check-circle', 'check-square', 'chevron-down', 'chevron-left', 'chevron-right', 'chevron-up', 'chevrons-down', 'chevrons-left', 'chevrons-right', 'chevrons-up', 'cloud-drizzle', 'cloud-lightning', 'cloud-off', 'cloud-rain', 'cloud-snow', 'codesandbox', 'command', 'corner-down-left', 'corner-down-right', 'corner-left-down', 'corner-left-up', 'corner-right-down', 'corner-right-up', 'corner-up-left', 'corner-up-right', 'credit-card', 'crop', 'delete', 'disc', 'divide', 'divide-circle', 'divide-square', 'download-cloud', 'edit', 'edit-2', 'edit-3', 'external-link', 'fast-forward', 'file', 'file-minus', 'file-plus', 'file-text', 'filter', 'folder-minus', 'folder-plus', 'frown', 'grid', 'hash', 'help-circle', 'hexagon', 'inbox', 'italic', 'layers', 'link-2', 'loader', 'log-in', 'log-out', 'maximize-2', 'meh', 'mic-off', 'minimize', 'minimize-2', 'minus', 'minus-circle', 'minus-square', 'more-horizontal', 'more-vertical', 'mouse-pointer', 'move', 'navigation-2', 'octagon', 'pause', 'pause-circle', 'percent', 'phone', 'phone-call', 'phone-forwarded', 'phone-incoming', 'phone-missed', 'phone-off', 'phone-outgoing', 'play-circle', 'plus', 'plus-circle', 'plus-square', 'pocket', 'refresh-ccw', 'repeat', 'rewind', 'rotate-ccw', 'rotate-cw', 'rss', 'scissors', 'shield-off', 'shopping-bag', 'shuffle', 'sidebar', 'skip-back', 'skip-forward', 'slash', 'smile', 'stop-circle', 'sunrise', 'sunset', 'tablet', 'tag', 'thumbs-down', 'toggle-right', 'trash-2', 'trending-down', 'triangle', 'truck', 'underline', 'upload-cloud', 'user-check', 'user-minus', 'user-plus', 'user-x', 'video-off', 'voicemail', 'volume', 'volume-1', 'volume-2', 'volume-x', 'watch', 'wifi-off', 'x-circle', 'x-octagon', 'x-square', 'zap-off', 'zoom-out', 'gamepad', 'bus', 'car', 'bike', 'train', 'plane', 'square-dashed'];
         
@@ -1103,14 +1118,14 @@
                         return `
                         ${overlayHtml}
                         <div class="w-full h-full flex flex-col items-center justify-center relative group/pomo p-2 pt-2 z-10 text-current">
-                            <div class="flex items-center justify-center gap-1 w-full relative mb-1">
-                                <button id="t-min-${w.id}" onclick="adjTimer('${w.id}', -1)" class="min-w-[28px] min-h-[28px] shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-0 group-hover/pomo:opacity-100 gpu-hover-layer ${isPlaying||isFinished?'invisible':''}"><i data-lucide="minus" class="w-3.5 h-3.5"></i></button>
-                                <h2 contenteditable="true" onblur="setCustomTime('${w.id}', this.innerText)" onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}" class="text-3xl font-extrabold tracking-tighter font-mono drop-shadow-sm allow-select outline-none flex items-center justify-center" id="timer-disp-${w.id}" spellcheck="false" style="min-width: 3ch; text-align: center;">${displayHtml}</h2>
-                                <button id="t-plus-${w.id}" onclick="adjTimer('${w.id}', 1)" class="min-w-[28px] min-h-[28px] shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-0 group-hover/pomo:opacity-100 gpu-hover-layer ${isPlaying||isFinished?'invisible':''}"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>
+                            <div class="flex items-center justify-center w-full relative mb-3">
+                                <h2 contenteditable="true" onblur="setCustomTime('${w.id}', this.innerText)" onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}" class="text-4xl md:text-[2.5rem] font-extrabold tracking-tighter font-mono drop-shadow-sm allow-select outline-none flex items-center justify-center" id="timer-disp-${w.id}" spellcheck="false" style="min-width: 3ch; text-align: center;">${displayHtml}</h2>
                             </div>
-                            <div class="flex items-center justify-center gap-2 w-full relative">
+                            <div class="flex items-center justify-center gap-1.5 md:gap-2 w-full relative">
+                                <button id="t-min-${w.id}" onclick="adjTimer('${w.id}', -1)" class="min-w-[28px] min-h-[28px] shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-0 group-hover/pomo:opacity-100 gpu-hover-layer ${isPlaying||isFinished?'invisible':''}"><i data-lucide="minus" class="w-3.5 h-3.5"></i></button>
                                 <button id="timer-play-${w.id}" onclick="toggleTimer('${w.id}')" class="w-9 h-9 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer z-10">${playIconHtml}</button>
                                 <button id="t-stop-${w.id}" onclick="resetTimer('${w.id}')" class="w-9 h-9 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer z-10">${getStopIcon('w-3 h-3')}</button>
+                                <button id="t-plus-${w.id}" onclick="adjTimer('${w.id}', 1)" class="min-w-[28px] min-h-[28px] shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-0 group-hover/pomo:opacity-100 gpu-hover-layer ${isPlaying||isFinished?'invisible':''}"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>
                             </div>
                             <div class="absolute bottom-2 flex w-full justify-center opacity-0 group-hover/pomo:opacity-100 transition-opacity">
                                 <button id="timer-sound-${w.id}" onclick="toggleTimerSound('${w.id}', event)" class="w-7 h-7 flex items-center justify-center bg-transparent rounded-full hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer text-current">
@@ -1123,7 +1138,7 @@
                     return `
                     ${overlayHtml}
                     <div class="w-full h-full flex items-center justify-between px-0 relative group/pomo z-10 text-current">
-                        <div class="flex flex-col items-center justify-center relative w-fit h-full" style="padding-left: calc(100% / 14 - 6px);">
+                        <div class="flex flex-col items-center justify-center relative w-fit h-full pl-4 md:pl-5">
                             <button id="t-plus-${w.id}" onclick="adjTimer('${w.id}', 1)" class="absolute -top-7 md:-top-8 w-6 h-6 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-0 group-hover/pomo:opacity-100 ${isPlaying||isFinished?'invisible':''}"><i data-lucide="plus" class="w-4 h-4"></i></button>
                             <h2 contenteditable="true" onblur="setCustomTime('${w.id}', this.innerText)" onkeydown="if(event.key==='Enter'){event.preventDefault(); this.blur();}" class="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tighter font-mono drop-shadow-sm leading-none allow-select outline-none flex items-center justify-center" id="timer-disp-${w.id}" spellcheck="false" style="min-width: 3ch; text-align: center;">${displayHtml}</h2>
                             <button id="t-min-${w.id}" onclick="adjTimer('${w.id}', -1)" class="absolute -bottom-7 md:-bottom-8 w-6 h-6 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-0 group-hover/pomo:opacity-100 ${isPlaying||isFinished?'invisible':''}"><i data-lucide="minus" class="w-4 h-4"></i></button>
@@ -1135,7 +1150,7 @@
                                 </button>
                                 <button id="t-stop-${w.id}" onclick="resetTimer('${w.id}')" class="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer">${getStopIcon('w-4 h-4 md:w-5 md:h-5')}</button>
                             </div>
-                            <div class="absolute top-[calc(50%+32px)] md:top-[calc(50%+38px)] left-[calc(50%-12px)] md:left-[calc(50%-16px)] -translate-x-1/2 opacity-0 group-hover/pomo:opacity-100 transition-opacity">
+                            <div class="absolute top-[calc(50%+32px)] md:top-[calc(50%+38px)] left-[calc(50%-2px)] md:left-[calc(50%-4px)] -translate-x-1/2 opacity-0 group-hover/pomo:opacity-100 transition-opacity">
                                 <button id="timer-sound-${w.id}" onclick="toggleTimerSound('${w.id}', event)" class="hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer text-current bg-transparent">
                                     ${getCustomSpeakerIcon(soundOn, w.id)}
                                 </button>
@@ -2067,6 +2082,9 @@
                 }
                 const wrapC2el = document.getElementById('wrap-c2'); if(wrapC2el) wrapC2el.querySelector('.color-dot').style.backgroundColor = c.c2;
                 
+                const color1 = document.getElementById('color1'); if(color1) color1.value = c.c1;
+                const color2 = document.getElementById('color2'); if(color2) color2.value = c.c2;
+
                 const hex1 = document.getElementById('hex1'); if(hex1 && document.activeElement !== hex1) hex1.value = c.c1; 
                 const hex2 = document.getElementById('hex2'); if(hex2 && document.activeElement !== hex2) hex2.value = c.c2;
                 
@@ -2107,7 +2125,7 @@
             document.documentElement.style.setProperty('--accent-color', s.accentColor || '#ef4444');
 
             const bg = document.getElementById('body-bg');
-            if(s.bgType === 'image' && s.bgImage) { bg.style.background = `url(${s.bgImage}) center/cover no-repeat fixed`; }
+            if(s.bgType === 'image' && s.bgImage) { bg.style.background = `url(${s.bgImage}) center/cover no-repeat`; } 
             else { 
                 const c = isD ? (s.darkColors || DARK_DEFAULTS) : (s.lightColors || LIGHT_DEFAULTS); 
                 bg.style.background = s.bgType === 'gradient' ? `linear-gradient(${s.angle}deg, ${c.c1}, ${c.c2})` : c.c1;
