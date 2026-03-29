@@ -560,7 +560,6 @@
     <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] bg-black/90 dark:bg-white/90 text-white dark:text-black px-6 py-3 rounded-full font-bold shadow-2xl opacity-0 pointer-events-none transition-opacity duration-300 text-sm tracking-wide">Copied!</div>
 
     <script>
-        // Orijinal renk tonlarını korudum, gradient seçildiğinde default 2 şık renk getirir
         const LIGHT_DEFAULTS = { c1: '#fdfbfb', c2: '#ebedee' };
         const DARK_DEFAULTS = { c1: '#303030', c2: '#1a1a1a' };
         
@@ -866,7 +865,7 @@
         }
         function autoUpdateWeather() { getCurrentWidgets().filter(w => w.type === 'weather').forEach(w => fetchWeather(w, true)); }
 
-        // Timer Input Handler
+        // Timer Input Handler (Sadece numara ve 4 haneli mantığı destekler)
         function handleTimerKeyDown(e, id) {
             if (e.key === 'Enter') {
                 e.preventDefault();
@@ -874,17 +873,9 @@
                 return;
             }
             const allowedKeys = ['Backspace', 'ArrowLeft', 'ArrowRight', 'Delete', 'Tab', ':'];
-            // Rakam veya izin verilen kontrol tuşu değilse engelle
-            if (!/^[0-9]$/.test(e.key) && !allowedKeys.includes(e.key)) {
+            // Sadece rakamlara, ":" işaretine ve navigasyon tuşlarına izin ver
+            if (!/^[0-9]$/.test(e.key) && !allowedKeys.includes(e.key) && !e.metaKey && !e.ctrlKey) {
                 e.preventDefault();
-                return;
-            }
-            // 5 Karakter sınırı (Sadece rakam/noktalama girilmek isteniyorsa ve metin seçili değilse)
-            if (/^[0-9:]$/.test(e.key)) {
-                const sel = window.getSelection();
-                if (sel.isCollapsed && e.target.innerText.length >= 5) {
-                    e.preventDefault();
-                }
             }
         }
 
@@ -914,18 +905,36 @@
             reRenderWidget(id);
         }
         function setCustomTime(id, val) {
-            val = val.replace(/[^0-9:]/g, '');
+            // Boşlukları temizle
+            val = val.trim();
             let mins = 25;
+            
             if(val.includes(':')) {
                 let parts = val.split(':');
-                mins = parseInt(parts[0]||0) + (parseInt(parts[1]||0)/60);
+                let m = parseInt(parts[0].replace(/[^0-9]/g, '')) || 0;
+                let s = parseInt(parts[1].replace(/[^0-9]/g, '')) || 0;
+                mins = m + (s / 60);
             } else {
-                mins = parseFloat(val);
+                // ":" yoksa, 2000 -> 20 dakika 00 saniye mantığıyla hesapla
+                let clean = val.replace(/[^0-9]/g, '');
+                if (clean.length > 2) {
+                    let s = parseInt(clean.slice(-2)) || 0;
+                    let m = parseInt(clean.slice(0, -2)) || 0;
+                    mins = m + (s / 60);
+                } else if (clean.length > 0) {
+                    mins = parseInt(clean); // Eğer sadece "25" girilmişse 25dk say
+                }
             }
+            
             if(isNaN(mins) || mins <= 0) mins = 0.25;
             if(mins > 90) mins = 90;
+            
             const w = getCurrentWidgets().find(wd => wd.id === id);
-            if(w) { w.data.timerMinutes = mins; saveState(); resetTimer(id); }
+            if(w) { 
+                w.data.timerMinutes = mins; 
+                saveState(); 
+                resetTimer(id); 
+            }
         }
         function toggleTimer(id) {
             const w = getCurrentWidgets().find(w => w.id === id);
@@ -994,7 +1003,7 @@
         function formatTimer(totalSec, isLarge = false) {
             const minStr = String(Math.floor(totalSec/60)).padStart(2,'0');
             const secStr = String(totalSec%60).padStart(2,'0');
-            // Büyük timer ise ": " bir birim, saniye ise ekstra bir birim sola çekilir
+            // Büyük boy timerlarda ":" ve saniye arası daha yakın
             if (isLarge) {
                 return `<span class="timer-min">${minStr}</span><span class="relative -top-[0.05em] -ml-1">:</span><span class="timer-sec -ml-2">${secStr}</span>`;
             }
@@ -1147,14 +1156,14 @@
                         return `
                         ${overlayHtml}
                         <div class="w-full h-full flex flex-col items-center justify-center relative group/pomo p-2 pt-2 z-10 text-current">
-                            <div class="flex items-center justify-center gap-1.5 w-full relative mb-2">
-                                <button id="t-min-${w.id}" onclick="adjTimer('${w.id}', -1)" class="min-w-[24px] min-h-[24px] shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-0 group-hover/pomo:opacity-100 gpu-hover-layer ${isPlaying||isFinished?'invisible':''}"><i data-lucide="minus" class="w-3 h-3"></i></button>
-                                <h2 contenteditable="true" onblur="setCustomTime('${w.id}', this.innerText)" onkeydown="handleTimerKeyDown(event, '${w.id}')" class="text-4xl font-extrabold tracking-tighter font-mono drop-shadow-sm allow-select outline-none flex items-center justify-center" id="timer-disp-${w.id}" spellcheck="false" style="min-width: 3ch; text-align: center;">${displayHtml}</h2>
-                                <button id="t-plus-${w.id}" onclick="adjTimer('${w.id}', 1)" class="min-w-[24px] min-h-[24px] shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-0 group-hover/pomo:opacity-100 gpu-hover-layer ${isPlaying||isFinished?'invisible':''}"><i data-lucide="plus" class="w-3 h-3"></i></button>
+                            <div class="flex items-center justify-center w-full relative mb-2 md:mb-3">
+                                <h2 contenteditable="true" onblur="setCustomTime('${w.id}', this.innerText)" onkeydown="handleTimerKeyDown(event, '${w.id}')" class="text-5xl md:text-[3.25rem] font-extrabold tracking-tighter font-mono drop-shadow-sm allow-select outline-none flex items-center justify-center" id="timer-disp-${w.id}" spellcheck="false" style="min-width: 3ch; text-align: center;">${displayHtml}</h2>
                             </div>
-                            <div class="flex items-center justify-center gap-2 w-full relative">
-                                <button id="timer-play-${w.id}" onclick="toggleTimer('${w.id}')" class="w-9 h-9 shrink-0 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer z-10">${playIconHtml}</button>
-                                <button id="t-stop-${w.id}" onclick="resetTimer('${w.id}')" class="w-9 h-9 shrink-0 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer z-10">${getStopIcon('w-3 h-3')}</button>
+                            <div class="flex items-center justify-center gap-2 md:gap-3 w-full relative">
+                                <button id="t-min-${w.id}" onclick="adjTimer('${w.id}', -1)" class="min-w-[28px] min-h-[28px] shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-0 group-hover/pomo:opacity-100 gpu-hover-layer ${isPlaying||isFinished?'invisible':''}"><i data-lucide="minus" class="w-3.5 h-3.5"></i></button>
+                                <button id="timer-play-${w.id}" onclick="toggleTimer('${w.id}')" class="w-10 h-10 shrink-0 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer z-10">${playIconHtml}</button>
+                                <button id="t-stop-${w.id}" onclick="resetTimer('${w.id}')" class="w-10 h-10 shrink-0 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer z-10">${getStopIcon('w-3 h-3')}</button>
+                                <button id="t-plus-${w.id}" onclick="adjTimer('${w.id}', 1)" class="min-w-[28px] min-h-[28px] shrink-0 w-7 h-7 flex items-center justify-center rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-0 group-hover/pomo:opacity-100 gpu-hover-layer ${isPlaying||isFinished?'invisible':''}"><i data-lucide="plus" class="w-3.5 h-3.5"></i></button>
                             </div>
                             <div class="absolute bottom-2 flex w-full justify-center opacity-0 group-hover/pomo:opacity-100 transition-opacity">
                                 <button id="timer-sound-${w.id}" onclick="toggleTimerSound('${w.id}', event)" class="w-7 h-7 flex items-center justify-center bg-transparent rounded-full hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer text-current">
@@ -1180,7 +1189,7 @@
                                     </button>
                                     <button id="t-stop-${w.id}" onclick="resetTimer('${w.id}')" class="w-10 h-10 md:w-12 md:h-12 shrink-0 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer">${getStopIcon(stopIconSize)}</button>
                                 </div>
-                                <div class="absolute top-full mt-1.5 flex justify-center w-full opacity-0 group-hover/pomo:opacity-100 transition-opacity left-[calc(50%-6px)] md:left-[calc(50%-8px)] -translate-x-1/2">
+                                <div class="absolute top-full mt-1.5 flex justify-center w-full opacity-0 group-hover/pomo:opacity-100 transition-opacity">
                                     <button id="timer-sound-${w.id}" onclick="toggleTimerSound('${w.id}', event)" class="hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer text-current bg-transparent">
                                         ${getCustomSpeakerIcon(soundOn, w.id)}
                                     </button>
@@ -1228,7 +1237,7 @@
                             </div>
                         `;
                     } else {
-                        noteBody = `<div id="note-text-${w.id}" contenteditable="true" onblur="saveNoteData('${w.id}')" class="allow-select flex-1 w-full h-full bg-transparent resize-none border-none outline-none text-sm font-medium leading-relaxed no-scrollbar focus:opacity-100 transition-opacity pb-20 empty-placeholder" data-placeholder="Write something...">${w.data.text || ''}</div>`;
+                        noteBody = `<div id="note-text-${w.id}" contenteditable="true" onblur="saveNoteData('${w.id}')" class="allow-select flex-1 w-full h-full bg-transparent resize-none border-none outline-none text-sm font-medium leading-relaxed no-scrollbar focus:opacity-100 transition-opacity pb-20 empty-placeholder overflow-y-auto" data-placeholder="Write something...">${w.data.text || ''}</div>`;
                     }
                     
                     return `
