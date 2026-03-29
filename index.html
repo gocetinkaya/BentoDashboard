@@ -48,8 +48,10 @@
         body:not(.custom-text-active) { color: #000; }
         .dark body:not(.custom-text-active) { color: #fff; }
         
-        /* ENABLE SELECTION ONLY ON INPUTS (Sadece metin inputlarında I-beam çıkar) */
-        .allow-select, input[type="text"], input[type="password"], input[type="number"], textarea, [contenteditable="true"] { user-select: text !important; -webkit-user-select: text !important; cursor: text !important; }
+        /* ENABLE SELECTION ONLY ON PROPER TEXT INPUTS */
+        .allow-select, input[type="text"], input[type="password"], input[type="number"], textarea, [contenteditable="true"] { 
+            user-select: text !important; -webkit-user-select: text !important; cursor: text !important; 
+        }
         input:focus { outline: none !important; }
         
         /* FONTS */
@@ -126,9 +128,11 @@
         /* GRID ANIMATIONS */
         #bento-grid { transition: transform 0.3s ease, opacity 0.3s ease; }
 
-        /* EDIT MODE JIGGLE & RESIZE */
+        /* EDIT MODE JIGGLE, RESIZE & INTERACTION PROTECT */
         .edit-mode #bento-grid > div:not(.no-jiggle) { animation: jiggle 0.3s infinite; cursor: grab; }
         .edit-mode #bento-grid > div:active { cursor: grabbing; }
+        .edit-mode .widget-content-wrapper { pointer-events: none !important; user-select: none !important; }
+        
         @keyframes jiggle { 0% { transform: rotate(-0.5deg); } 50% { transform: rotate(0.5deg); } 100% { transform: rotate(-0.5deg); } }
 
         /* ANIMATIONS */
@@ -152,26 +156,24 @@
         .backdrop-blur-xl { backdrop-filter: blur(24px) !important; -webkit-backdrop-filter: blur(24px) !important; }
         
         /* PEEK MODE LOGIC FOR SLIDERS */
-        .peek-mode { background-color: transparent !important; }
-        .peek-mode * { user-select: none !important; -webkit-user-select: none !important; }
-        .peek-mode .modal-overlay { background: transparent !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; pointer-events: none; }
-        .peek-mode .settings-hide-on-peek:not(.peek-active) { visibility: hidden !important; opacity: 0 !important; transition: opacity 0.2s, visibility 0.2s; pointer-events: none; }
-        .peek-mode .glass-panel { background: transparent !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; box-shadow: none !important; border-color: transparent !important; }
-        
-        .peek-active { 
-            visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; 
-            position: fixed !important; top: 40px !important; left: 50% !important; transform: translateX(-50%) !important; z-index: 99999 !important; 
-            padding: 16px 32px !important; border-radius: 9999px !important; width: 640px !important; max-width: 90vw !important;
-            background: rgba(255,255,255,0.2) !important; 
-            backdrop-filter: blur(24px) !important; 
-            -webkit-backdrop-filter: blur(24px) !important;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4) !important;
-            color: var(--custom-text) !important;
-            border: none !important;
+        .peek-mode .modal-overlay { 
+            background: transparent !important; 
+            backdrop-filter: none !important; 
+            -webkit-backdrop-filter: none !important; 
+            pointer-events: none; 
         }
-        .dark .peek-active {
-            background: rgba(0,0,0,0.5) !important;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6) !important;
+        .peek-mode #settings-modal .glass-panel { 
+            background: transparent !important; 
+            border-color: transparent !important; 
+            box-shadow: none !important; 
+            backdrop-filter: none !important; 
+            -webkit-backdrop-filter: none !important; 
+        }
+        /* Tüm ayarları (renkler, butonlar vs.) gizler */
+        .peek-mode #settings-modal .glass-panel > * { 
+            opacity: 0 !important; 
+            pointer-events: none !important; 
+            transition: opacity 0.2s ease; 
         }
 
         /* iOS STYLE TOGGLES */
@@ -181,10 +183,10 @@
         input[type="checkbox"]:checked + .ios-toggle { background-color: var(--accent-color); }
         input[type="checkbox"]:checked + .ios-toggle::after { transform: translateX(16px); }
 
+        /* POINTER FIX FOR RANGE AND COLOR INPUTS */
         input[type="color"] { opacity: 0; width: 100%; height: 100%; cursor: pointer !important; position: absolute; top:0; left:0; border: none; outline: none; }
         .color-dot { width: 32px; height: 32px; flex-shrink: 0; border-radius: 50%; border: 2px solid rgba(255,255,255,0.8); box-shadow: 0 2px 8px rgba(0,0,0,0.2); position: relative; overflow: hidden; background-color: currentColor; cursor: pointer !important; }
 
-        /* RANGE INPUT RESET & CURSOR FIX */
         input[type="range"] { outline: none !important; cursor: pointer !important; }
         input[type="range"]::-webkit-slider-thumb { outline: none !important; cursor: pointer !important; }
         input[type="range"]:focus { outline: none !important; }
@@ -217,6 +219,10 @@
     
     <div class="bg-grain"></div>
     
+    <div id="peek-value-display" class="fixed inset-0 z-[999999] hidden flex-col items-center justify-center pointer-events-none opacity-0 transition-opacity duration-200">
+        <span class="text-[12vw] md:text-[6vw] font-black text-white drop-shadow-[0_10px_40px_rgba(0,0,0,0.5)] tracking-tighter" id="peek-text"></span>
+    </div>
+
     <div class="fixed top-6 right-6 z-40 flex flex-col items-end gap-3">
         <div id="search-container" class="flex items-center overflow-hidden relative">
             <button onclick="toggleSearch()" class="w-12 h-12 flex-shrink-0 flex items-center justify-center opacity-70 hover:opacity-100 z-10 cursor-pointer text-current absolute left-0 top-1/2 -translate-y-1/2">
@@ -1005,7 +1011,7 @@
                 controls.innerHTML += `<button onclick="deleteWidget('${widget.id}')" class="p-2.5 bg-red-500/90 rounded-full hover:scale-110 active:scale-95 text-white backdrop-blur shadow-xl transition-all cursor-pointer gpu-hover-layer"><i data-lucide="trash-2" class="w-4 h-4"></i></button>`;
                 el.appendChild(controls);
 
-                if(!isSearching) { const handle = document.createElement('div'); handle.className = 'resize-handle'; handle.dataset.id = widget.id; el.appendChild(handle); }
+                if(!isSearching) { const handle = document.createElement('div'); handle.className = 'resize-handle z-40'; handle.dataset.id = widget.id; el.appendChild(handle); }
 
                 const contentWrapper = document.createElement('div'); 
                 contentWrapper.className = 'widget-content-wrapper'; 
@@ -1129,7 +1135,7 @@
                                 </button>
                                 <button id="t-stop-${w.id}" onclick="resetTimer('${w.id}')" class="w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer">${getStopIcon('w-4 h-4 md:w-5 md:h-5')}</button>
                             </div>
-                            <div class="absolute top-[calc(50%+32px)] md:top-[calc(50%+38px)] left-1/2 -translate-x-1/2 opacity-0 group-hover/pomo:opacity-100 transition-opacity">
+                            <div class="absolute top-[calc(50%+32px)] md:top-[calc(50%+38px)] left-[calc(50%-12px)] md:left-[calc(50%-16px)] -translate-x-1/2 opacity-0 group-hover/pomo:opacity-100 transition-opacity">
                                 <button id="timer-sound-${w.id}" onclick="toggleTimerSound('${w.id}', event)" class="hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer text-current bg-transparent">
                                     ${getCustomSpeakerIcon(soundOn, w.id)}
                                 </button>
@@ -1873,9 +1879,7 @@
             const btnEdit = document.getElementById('btn-edit-mode'), footer = document.getElementById('edit-footer');
             if(isEditMode) {
                 if(isSearching) toggleSearch(); btnEdit.classList.add('opacity-0', 'pointer-events-none'); footer.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-10');
-            } else { 
-                btnEdit.classList.remove('opacity-0', 'pointer-events-none'); footer.classList.add('opacity-0', 'pointer-events-none', 'translate-y-10'); 
-            }
+            } else { btnEdit.classList.remove('opacity-0', 'pointer-events-none'); footer.classList.add('opacity-0', 'pointer-events-none', 'translate-y-10'); }
             renderDashboard();
         }
         function toggleProfileModal() { showModal('profile-modal'); }
@@ -1922,16 +1926,42 @@
         }
 
         let peekTimeout;
-        function startPeek() { 
+        let currentPeekType = '';
+        
+        function startPeek(type) { 
             clearTimeout(peekTimeout); 
+            currentPeekType = type;
             document.body.classList.add('peek-mode'); 
+            
+            const valDisplay = document.getElementById('peek-value-display');
+            valDisplay.classList.remove('hidden');
+            updatePeekValue();
+            
+            setTimeout(() => valDisplay.classList.remove('opacity-0'), 10);
+            
             document.addEventListener('mouseup', endPeek, {once: true}); 
             document.addEventListener('touchend', endPeek, {once: true}); 
         }
+        
         function endPeek() { 
+            currentPeekType = '';
+            const valDisplay = document.getElementById('peek-value-display');
+            valDisplay.classList.add('opacity-0');
+            
             peekTimeout = setTimeout(()=>{ 
                 document.body.classList.remove('peek-mode'); 
+                valDisplay.classList.add('hidden');
             }, 200); 
+        }
+        
+        function updatePeekValue() {
+            if(!currentPeekType) return;
+            const valDisplay = document.getElementById('peek-text');
+            if(currentPeekType === 'blur-wrap') {
+                valDisplay.innerText = document.getElementById('glass-blur').value + '%';
+            } else if(currentPeekType === 'wrap-angle') {
+                valDisplay.innerText = document.getElementById('angle').value + '°';
+            }
         }
 
         function setTempTheme(t) { tempSettings.theme = t; applyThemeAndBg(tempSettings); updateSettingsUI(tempSettings); }
@@ -1955,7 +1985,10 @@
                     else tempSettings.widgetBgColor.light = colorWidget.value;
                 }
                 if(isD) { tempSettings.darkColors.c1 = c1; tempSettings.darkColors.c2 = c2; } else { tempSettings.lightColors.c1 = c1; tempSettings.lightColors.c2 = c2; }
-                applyThemeAndBg(tempSettings); updateSettingsUI(tempSettings);
+                
+                applyThemeAndBg(tempSettings); 
+                updateSettingsUI(tempSettings);
+                updatePeekValue(); 
             } catch(e) {}
         }
 
@@ -2074,7 +2107,7 @@
             document.documentElement.style.setProperty('--accent-color', s.accentColor || '#ef4444');
 
             const bg = document.getElementById('body-bg');
-            if(s.bgType === 'image' && s.bgImage) { bg.style.background = `url(${s.bgImage}) center/cover no-repeat`; } 
+            if(s.bgType === 'image' && s.bgImage) { bg.style.background = `url(${s.bgImage}) center/cover no-repeat fixed`; }
             else { 
                 const c = isD ? (s.darkColors || DARK_DEFAULTS) : (s.lightColors || LIGHT_DEFAULTS); 
                 bg.style.background = s.bgType === 'gradient' ? `linear-gradient(${s.angle}deg, ${c.c1}, ${c.c2})` : c.c1;
