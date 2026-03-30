@@ -100,7 +100,7 @@
         #search-container:not(.active) #search-input, #search-container:not(.active) #search-close { opacity: 0; pointer-events: none; display: none; }
         #search-container.active #search-input, #search-container.active #search-close { opacity: 1; pointer-events: auto; display: block; }
 
-        /* WIDGET GRID ANTI-GLITCH ARCHITECTURE */
+        /* WIDGET GRID ARCHITECTURE */
         .widget-panel {
             position: relative; border-radius: 32px; transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             z-index: 1; 
@@ -191,7 +191,7 @@
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6) !important;
         }
 
-        /* TIMER INPUT MASK LOGIC (Hizalama ve Seçim Düzeltmesi) */
+        /* TIMER INPUT MASK LOGIC */
         .timer-input-mask { 
             opacity: 0; 
             color: inherit; 
@@ -199,7 +199,7 @@
             transition: opacity 0.2s; 
             outline: none; 
             border: none; 
-            letter-spacing: -0.05em; /* Seçildiğinde rakamların genişlemesini engeller */
+            letter-spacing: -0.05em;
         }
         .timer-input-mask:focus { opacity: 1; outline: none !important; }
         .timer-input-mask:focus + h2 { opacity: 0; }
@@ -298,8 +298,10 @@
             <button onclick="addWidget('clock', 4, 2)" class="w-11 h-11 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition flex items-center justify-center text-current shadow-sm shrink-0 cursor-pointer" title="Clock"><i data-lucide="clock" class="w-5 h-5 opacity-80 text-current"></i></button>
             <button onclick="addWidget('timer', 1, 1)" class="w-11 h-11 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition flex items-center justify-center text-current shadow-sm shrink-0 cursor-pointer" title="Timer"><i data-lucide="timer" class="w-5 h-5 opacity-80 text-current"></i></button>
             <button onclick="addWidget('weather', 2, 1)" class="w-11 h-11 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition flex items-center justify-center text-current shadow-sm shrink-0 cursor-pointer" title="Weather"><i data-lucide="cloud-sun" class="w-5 h-5 opacity-80 text-current"></i></button>
+            <button onclick="addWidget('text', 2, 1)" class="w-11 h-11 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition flex items-center justify-center text-current shadow-sm shrink-0 cursor-pointer" title="Text"><i data-lucide="type" class="w-5 h-5 opacity-80 text-current"></i></button>
             <button onclick="addWidget('notes', 2, 2)" class="w-11 h-11 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition flex items-center justify-center text-current shadow-sm shrink-0 cursor-pointer" title="Sticky Note"><i data-lucide="sticky-note" class="w-5 h-5 opacity-80 text-current"></i></button>
             <button onclick="addWidget('calendar', 2, 2)" class="w-11 h-11 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition flex items-center justify-center text-current shadow-sm shrink-0 cursor-pointer" title="Calendar"><i data-lucide="calendar" class="w-5 h-5 opacity-80 text-current"></i></button>
+            <button onclick="addWidget('calculator', 2, 2)" class="w-11 h-11 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition flex items-center justify-center text-current shadow-sm shrink-0 cursor-pointer" title="Calculator"><i data-lucide="calculator" class="w-5 h-5 opacity-80 text-current"></i></button>
             <button onclick="addWidget('spacer', 1, 1)" class="w-11 h-11 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition flex items-center justify-center text-current shadow-sm shrink-0 cursor-pointer opacity-70" title="Invisible Spacer"><i data-lucide="square-dashed" class="w-5 h-5 text-current"></i></button>
             <div class="w-px h-6 bg-current opacity-20 mx-1 hidden md:block"></div>
             <button onclick="toggleSettings()" class="w-11 h-11 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition flex items-center justify-center text-current shadow-sm shrink-0 cursor-pointer" title="Appearance"><i data-lucide="palette" class="w-5 h-5 opacity-80 text-current"></i></button>
@@ -600,10 +602,21 @@
     <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] bg-black/90 dark:bg-white/90 text-white dark:text-black px-6 py-3 rounded-full font-bold shadow-2xl opacity-0 pointer-events-none transition-opacity duration-300 text-sm tracking-wide">Copied!</div>
 
     <script>
+        function setTempWidgetFont(f) {
+            document.getElementById('eb-selected-font').value = f;
+            ['inter','serif','mono','caveat'].forEach(font => {
+                const el = document.getElementById('btn-wfont-'+font);
+                if(el) {
+                    if (font === f) el.className = `flex-1 py-1.5 rounded-lg text-sm font-bold bg-black/10 dark:bg-white/10 shadow-sm transition cursor-pointer font-${font} text-current ${font==='caveat'?'text-[16px]':''}`;
+                    else el.className = `flex-1 py-1.5 rounded-lg text-sm font-medium opacity-50 hover:opacity-100 transition cursor-pointer font-${font} text-current ${font==='caveat'?'text-[16px]':''}`;
+                }
+            });
+        }
+
         const LIGHT_DEFAULTS = { c1: '#fdfbfb', c2: '#ebedee' };
         const DARK_DEFAULTS = { c1: '#303030', c2: '#1a1a1a' };
         
-        const ICONS = ['mail','hard-drive','link','music','map','video','message-circle','camera','shopping-cart','coffee','monitor','smartphone','pen-tool','folder','image','star','heart','settings','book','briefcase','calendar','clock','cloud','globe','key','lock','mic','moon','sun','umbrella','zap','battery','bell','activity','airplay','alarm-check','align-center','anchor','aperture','archive','award','bar-chart','bluetooth','bookmark','box','cast','check','clipboard','code','compass','copy','cpu','crosshair','database','download','droplet','eye','feather','film','flag','gift','headphones','home','info','layout','life-buoy','list','map-pin','maximize','menu','navigation','package','paperclip','pie-chart','play','power','printer','radio','refresh-cw','save','search','send','server','share','shield','sliders','speaker','square','target','terminal','thermometer','thumbs-up','toggle-left','tool','trash','trending-up','tv','type','unlock','upload','user','users','wifi','wind','x','zoom-in','sticky-note','accessibility','alarm-clock','alert-circle','align-justify','battery-charging','bell-off','bold','book-open','camera-off','check-circle','chevron-down','cloud-lightning','cloud-rain','cloud-snow','command','credit-card','crop','delete','disc','divide','download-cloud','edit','edit-2','external-link','fast-forward','file','file-text','filter','folder-plus','grid','hash','help-circle','hexagon','inbox','italic','layers','link-2','loader','log-in','log-out','maximize-2','mic-off','minimize','minus','more-horizontal','more-vertical','mouse-pointer','move','navigation-2','octagon','pause','percent','phone','phone-off','play-circle','plus','plus-circle','refresh-ccw','repeat','rewind','rotate-ccw','rotate-cw','rss','scissors','shield-off','shopping-bag','shuffle','sidebar','skip-back','skip-forward','slash','smile','stop-circle','sunrise','sunset','tablet','tag','thumbs-down','toggle-right','trash-2','trending-down','triangle','truck','underline','upload-cloud','user-check','user-minus','user-plus','user-x','video-off','voicemail','volume','volume-1','volume-2','volume-x','watch','wifi-off','zap-off','zoom-out','gamepad','bus','car','bike','train','plane','square-dashed'];
+        const ICONS = ['mail','hard-drive','link','music','map','video','message-circle','camera','shopping-cart','coffee','monitor','smartphone','pen-tool','folder','image','star','heart','settings','book','briefcase','calendar','clock','cloud','globe','key','lock','mic','moon','sun','umbrella','zap','battery','bell','activity','airplay','alarm-check','align-center','anchor','aperture','archive','award','bar-chart','bluetooth','bookmark','box','cast','check','clipboard','code','compass','copy','cpu','crosshair','database','download','droplet','eye','feather','film','flag','gift','headphones','home','info','layout','life-buoy','list','map-pin','maximize','menu','navigation','package','paperclip','pie-chart','play','power','printer','radio','refresh-cw','save','search','send','server','share','shield','sliders','speaker','square','target','terminal','thermometer','thumbs-up','toggle-left','tool','trash','trending-up','tv','type','unlock','upload','user','users','wifi','wind','x','zoom-in','sticky-note','accessibility','alarm-clock','alert-circle','align-justify','battery-charging','bell-off','bold','book-open','camera-off','check-circle','chevron-down','cloud-lightning','cloud-rain','cloud-snow','command','credit-card','crop','delete','disc','divide','download-cloud','edit','edit-2','external-link','fast-forward','file','file-text','filter','folder-plus','grid','hash','help-circle','hexagon','inbox','italic','layers','link-2','loader','log-in','log-out','maximize-2','mic-off','minimize','minus','more-horizontal','more-vertical','mouse-pointer','move','navigation-2','octagon','pause','percent','phone','phone-off','play-circle','plus','plus-circle','refresh-ccw','repeat','rewind','rotate-ccw','rotate-cw','rss','scissors','shield-off','shopping-bag','shuffle','sidebar','skip-back','skip-forward','slash','smile','stop-circle','sunrise','sunset','tablet','tag','thumbs-down','toggle-right','trash-2','trending-down','triangle','truck','underline','upload-cloud','user-check','user-minus','user-plus','user-x','video-off','voicemail','volume','volume-1','volume-2','volume-x','watch','wifi-off','zap-off','zoom-out','gamepad','bus','car','bike','train','plane','square-dashed', 'calculator'];
         
         const EMOJIS = ['😀','😃','😄','😁','😆','😅','😂','🤣','🥲','☺️','😊','😇','🙂','🙃','😉','😌','😍','🥰','😘','😗','😙','😚','😋','😛','😝','😜','🤪','🤨','🧐','🤓','😎','🥸','🤩','🥳','😏','😒','😞','😔','😟','😕','🙁','☹️','😣','😖','😫','😩','🥺','😢','😭','😤','😠','😡','🤬','🤯','😳','🥵','🥶','😱','😨','😰','😥','😓','🤗','🤔','🤭','🤫','🤥','😶','😐','😑','😬','🙄','😯','😦','😧','😮','😲','🥱','😴','🤤','😪','😵','🤐','🥴','🤢','🤮','🤧','😷','🤒','🤕','🤑','🤠','😈','👿','👹','👺','🤡','💩','👻','💀','☠️','👽','👾','🤖','🎃','😺','😸','😹','😻','😼','😽','🙀','😿','😾','🙈','🙉','🙊','❤️','🔥','✨','🌟','💫','💥','💢','💦','💨','🐵','🐒','🦍','🦧','🐶','🐕','🦮','🐕‍🦺','🐩','🐺','🦊','🦝','🐱','🐈','🐈‍⬛','🦁','🐯','🐅','🐆','🐴','🐎','🦄','🦓','🦌','🦬','🐮','🐂','🐃','🐄','🐷','🐖','🐗','🐽','🐏','🐑','🐐','🐪','🐫','🦙','🐘','🦏','🦛','🐭','🐁','🐀','🐹','🐰','🐇','🐿️','🦫','🦔','🦇','🐻','🐻‍❄️','🐨','🐼','🦥','🦦','🦨','🦘','🦉','🐊'];
 
@@ -627,7 +640,8 @@
                             { id: 'w_timer', type: 'timer', w: 2, h: 1, data: { timerMinutes: 25, direction: 'down', playSound: true } },
                             { id: 'w_calendar', type: 'calendar', w: 2, h: 2, data: {} },
                             { id: 'w_notes', type: 'notes', w: 2, h: 2, data: { text: "", title: "" } },
-                            { id: 'w_spacer', type: 'spacer', w: 2, h: 1, data: { transparent: true } },
+                            { id: 'w_text', type: 'text', w: 2, h: 1, data: { text: "Focus Time", customFont: true, fontFamily: 'caveat', transparent: false } },
+                            { id: 'w_calculator', type: 'calculator', w: 2, h: 2, data: { display: '0', expr: '' } },
                             { id: 'w_link1', type: 'smart', w: 1, h: 1, data: { action: 'link', content: 'https://gmail.com', title: 'Mail', icon: 'mail', isEmoji: false, bgImage: null, overlay: true } },
                             { id: 'w_link2', type: 'smart', w: 1, h: 1, data: { action: 'link', content: 'https://drive.google.com', title: 'Drive', icon: 'hard-drive', isEmoji: false, bgImage: null, overlay: true } }
                         ]
@@ -756,6 +770,8 @@
             if(resizeWidget.type === 'clock') { newW = Math.max(2, Math.min(6, newW)); newH = Math.max(1, Math.min(2, newH)); }
             if(resizeWidget.type === 'timer') { newW = Math.max(1, Math.min(2, newW)); newH = 1; }
             if(resizeWidget.type === 'notes') { newW = Math.max(2, Math.min(4, newW)); newH = Math.max(1, Math.min(4, newH)); }
+            if(resizeWidget.type === 'text') { newW = Math.max(1, Math.min(6, newW)); newH = Math.max(1, Math.min(6, newH)); }
+            if(resizeWidget.type === 'calculator') { newW = 2; newH = 2; } // Hesap makinesi sabit 2x2
             if(resizeWidget.type === 'calendar') { newW = Math.max(1, Math.min(6, newW)); newH = Math.max(1, Math.min(4, newH)); }
 
             newW = Math.min(newW, activeCols); 
@@ -971,6 +987,7 @@
             saveState(); 
             reRenderWidget(id);
         }
+        
         function setCustomTime(id, val) {
             val = val.trim();
             let mins = 25;
@@ -1001,6 +1018,7 @@
                 resetTimer(id); 
             }
         }
+        
         function toggleTimer(id) {
             const w = getCurrentWidgets().find(w => w.id === id);
             if(!w) return;
@@ -1025,11 +1043,13 @@
                 reRenderWidget(id);
             }
         }
+        
         function resetTimer(id) {
             if (activeTimerId === id) clearInterval(timerInterval);
             activeTimerId = null; if (finishedTimerId === id) finishedTimerId = null;
             timerRemaining = 0; timerElapsed = 0; reRenderWidget(id);
         }
+        
         function timerFinished(id) {
             clearInterval(timerInterval); activeTimerId = null; finishedTimerId = id; timerRemaining = 0;
             const w = getCurrentWidgets().find(wd => wd.id === id);
@@ -1058,6 +1078,7 @@
             if(el) el.classList.add('animate-jiggle-short');
             setTimeout(() => { if(el) el.classList.remove('animate-jiggle-short'); }, 400);
         }
+        
         function updateTimerDisplay(id) {
             const w = getCurrentWidgets().find(w => w.id === id); if(!w) return;
             const isDown = w.data.direction !== 'up'; const totalSec = isDown ? timerRemaining : timerElapsed;
@@ -1075,6 +1096,46 @@
                 return `<span class="timer-min">${m}</span><span class="relative -top-[0.05em] -ml-1">:</span><span class="timer-sec -ml-2">${s}</span>`;
             }
             return `<span class="timer-min">${m}</span><span class="relative -top-[0.05em] -ml-0.5">:</span><span class="timer-sec -ml-1">${s}</span>`;
+        }
+
+        // Calculator Logic
+        function calcPress(id, key) {
+            const w = getCurrentWidgets().find(wd => wd.id === id);
+            if(!w) return;
+            if(!w.data.calcState) w.data.calcState = { disp: '0', op: null, prev: null, newNum: false };
+            
+            let s = w.data.calcState;
+            
+            if (/[0-9]/.test(key)) {
+                if(s.newNum || s.disp === '0') { s.disp = key; s.newNum = false; }
+                else { s.disp += key; }
+            } else if (key === 'C') {
+                s.disp = '0'; s.op = null; s.prev = null; s.newNum = false;
+            } else if (key === '±') {
+                if(s.disp !== '0') s.disp = s.disp.startsWith('-') ? s.disp.slice(1) : '-' + s.disp;
+            } else if (key === '%') {
+                s.disp = String(parseFloat(s.disp) / 100);
+            } else if (key === '.') {
+                if(!s.disp.includes('.')) s.disp += '.';
+            } else if (['+','-','*','/'].includes(key)) {
+                if(s.op && !s.newNum) {
+                    try { s.disp = String(eval(s.prev + s.op.replace('×','*').replace('÷','/') + s.disp)); } catch(e) {}
+                }
+                s.prev = s.disp;
+                s.op = key;
+                s.newNum = true;
+            } else if (key === '=') {
+                if(s.op && s.prev) {
+                    try { s.disp = String(eval(s.prev + s.op.replace('×','*').replace('÷','/') + s.disp)); } catch(e) { s.disp = 'Error'; }
+                    s.op = null; s.prev = null; s.newNum = true;
+                }
+            }
+            w.data.display = s.disp;
+            if(w.data.display.length > 10 && w.data.display !== 'Error') {
+                w.data.display = parseFloat(w.data.display).toPrecision(8).replace(/\.?0+$/, "");
+            }
+            saveState();
+            reRenderWidget(id);
         }
 
         function renderDashboard() {
@@ -1125,7 +1186,7 @@
                 }
 
                 const controls = document.createElement('div'); controls.className = `absolute top-3 right-3 z-30 gap-2 ${isEditMode && !isSearching ? 'flex' : 'hidden'}`;
-                if (['smart', 'weather', 'clock', 'calendar', 'timer', 'notes'].includes(widget.type)) { controls.innerHTML += `<button onclick="openEditWidget('${widget.id}')" class="p-2.5 bg-black/20 dark:bg-white/20 rounded-full hover:scale-110 active:scale-95 text-white backdrop-blur shadow-xl transition-all cursor-pointer gpu-hover-layer"><i data-lucide="edit-2" class="w-4 h-4"></i></button>`; }
+                if (['smart', 'weather', 'clock', 'calendar', 'timer', 'notes', 'text', 'calculator'].includes(widget.type)) { controls.innerHTML += `<button onclick="openEditWidget('${widget.id}')" class="p-2.5 bg-black/20 dark:bg-white/20 rounded-full hover:scale-110 active:scale-95 text-white backdrop-blur shadow-xl transition-all cursor-pointer gpu-hover-layer"><i data-lucide="edit-2" class="w-4 h-4"></i></button>`; }
                 controls.innerHTML += `<button onclick="deleteWidget('${widget.id}')" class="p-2.5 bg-red-500/90 rounded-full hover:scale-110 active:scale-95 text-white backdrop-blur shadow-xl transition-all cursor-pointer gpu-hover-layer"><i data-lucide="trash-2" class="w-4 h-4"></i></button>`;
                 el.appendChild(controls);
 
@@ -1143,6 +1204,48 @@
             lastMinute = -1; updateClockElements(); 
             widgets.forEach(w => { if(w.type === 'weather') fetchWeather(w, true); });
             if(!isSearching) { initSortable(); initResizeHandlers(); } adjustGridAspect();
+            
+            // Checklist sürükle bırak fonksiyonlarını aktif et
+            widgets.forEach(w => {
+                if(w.type === 'notes' && w.data.isListMode) {
+                    initTaskSortable(w.id);
+                }
+            });
+        }
+
+        function initTaskSortable(wId) {
+            if(isEditMode) return; 
+            const activeList = document.getElementById(`tasks-active-${wId}`);
+            const doneList = document.getElementById(`tasks-done-${wId}`);
+            
+            const onEndTask = function() {
+                const w = getCurrentWidgets().find(wd => wd.id === wId);
+                if(!w) return;
+                let newTasks = [];
+                if(activeList) {
+                    Array.from(activeList.children).forEach(child => {
+                        const tId = child.id.replace('node-', '');
+                        const task = w.data.tasks.find(t => t.id === tId);
+                        if(task) newTasks.push(task);
+                    });
+                }
+                if(doneList) {
+                    Array.from(doneList.children).forEach(child => {
+                        const tId = child.id.replace('node-', '');
+                        const task = w.data.tasks.find(t => t.id === tId);
+                        if(task) newTasks.push(task);
+                    });
+                }
+                w.data.tasks = newTasks;
+                saveState();
+            };
+
+            if(activeList && !activeList.sortableInstance) {
+                activeList.sortableInstance = new Sortable(activeList, { handle: '.task-drag-handle', animation: 150, onEnd: onEndTask });
+            }
+            if(doneList && !doneList.sortableInstance) {
+                doneList.sortableInstance = new Sortable(doneList, { handle: '.task-drag-handle', animation: 150, onEnd: onEndTask });
+            }
         }
 
         function reRenderWidget(id) {
@@ -1151,6 +1254,7 @@
             if(el && w) {
                 el.innerHTML = getWidgetContent(w);
                 try { lucide.createIcons({root: el}); } catch(e){}
+                if(w.type === 'notes' && w.data.isListMode) initTaskSortable(w.id);
             }
         }
 
@@ -1158,6 +1262,62 @@
             switch(w.type) {
                 case 'spacer':
                     return isEditMode ? `<div class="w-full h-full border-2 border-dashed border-black/30 dark:border-white/30 rounded-[32px] flex items-center justify-center opacity-40 text-current"><i data-lucide="square-dashed" class="w-8 h-8"></i></div>` : `<div class="w-full h-full"></div>`;
+
+                case 'calculator':
+                    const disp = w.data.display || '0';
+                    const acColorCalc = w.data.accentColor || appState.settings.accentColor || '#ef4444';
+                    const btnClass = "w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 rounded-full font-mono text-lg md:text-xl font-bold transition-all cursor-pointer hover:scale-105 active:scale-95 shrink-0";
+                    const btnClassOp = "w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-black/10 dark:bg-white/20 hover:bg-black/20 dark:hover:bg-white/30 rounded-full font-mono text-lg md:text-xl font-bold transition-all cursor-pointer hover:scale-105 active:scale-95 shrink-0"; 
+                    
+                    return `
+                    <div class="w-full h-full flex flex-col p-4 text-current">
+                        <div class="w-full flex-1 flex items-end justify-end pb-2 overflow-hidden px-2">
+                            <span class="text-4xl md:text-5xl font-extrabold tracking-tighter font-mono drop-shadow-sm truncate allow-select">${disp}</span>
+                        </div>
+                        <div class="grid grid-cols-4 gap-2 w-full max-w-[240px] mx-auto pb-1">
+                            <button onclick="calcPress('${w.id}', 'C')" class="${btnClassOp} opacity-80">C</button>
+                            <button onclick="calcPress('${w.id}', '±')" class="${btnClassOp} opacity-80">±</button>
+                            <button onclick="calcPress('${w.id}', '%')" class="${btnClassOp} opacity-80">%</button>
+                            <button onclick="calcPress('${w.id}', '/')" class="${btnClassOp}" style="color: ${acColorCalc};">÷</button>
+                            
+                            <button onclick="calcPress('${w.id}', '7')" class="${btnClass}">7</button>
+                            <button onclick="calcPress('${w.id}', '8')" class="${btnClass}">8</button>
+                            <button onclick="calcPress('${w.id}', '9')" class="${btnClass}">9</button>
+                            <button onclick="calcPress('${w.id}', '*')" class="${btnClassOp}" style="color: ${acColorCalc};">×</button>
+                            
+                            <button onclick="calcPress('${w.id}', '4')" class="${btnClass}">4</button>
+                            <button onclick="calcPress('${w.id}', '5')" class="${btnClass}">5</button>
+                            <button onclick="calcPress('${w.id}', '6')" class="${btnClass}">6</button>
+                            <button onclick="calcPress('${w.id}', '-')" class="${btnClassOp}" style="color: ${acColorCalc};">−</button>
+                            
+                            <button onclick="calcPress('${w.id}', '1')" class="${btnClass}">1</button>
+                            <button onclick="calcPress('${w.id}', '2')" class="${btnClass}">2</button>
+                            <button onclick="calcPress('${w.id}', '3')" class="${btnClass}">3</button>
+                            <button onclick="calcPress('${w.id}', '+')" class="${btnClassOp}" style="color: ${acColorCalc};">+</button>
+                            
+                            <button onclick="calcPress('${w.id}', '0')" class="${btnClass} col-span-2 !w-full justify-start pl-5">0</button>
+                            <button onclick="calcPress('${w.id}', '.')" class="${btnClass}">.</button>
+                            <button onclick="calcPress('${w.id}', '=')" class="${btnClassOp}" style="background-color: ${acColorCalc}; color: white;">=</button>
+                        </div>
+                    </div>`;
+
+                case 'text':
+                    let textBgImg = '';
+                    if(w.data.bgImage) { const overlay = w.data.overlay !== false ? 'opacity-50 dark:opacity-40' : 'opacity-100'; textBgImg = `<img src="${w.data.bgImage}" class="absolute inset-0 w-full h-full object-cover z-0 ${overlay} transition-opacity duration-300" />`; }
+                    
+                    const fontClass = w.data.customFont && w.data.fontFamily ? `font-${w.data.fontFamily}` : '';
+                    let scaleStyle = `font-size: clamp(1rem, ${w.w * 1.5}rem + ${w.h * 1}rem, 10rem);`;
+                    let formattedText = (w.data.text || 'Text Widget').replace(/\n/g, '<br>');
+                    
+                    return `
+                    <div class="@container w-full h-full flex flex-col items-center justify-center relative text-current p-4 md:p-5 text-center overflow-y-auto no-scrollbar">
+                        ${textBgImg}
+                        <div class="z-10 w-full h-full flex items-center justify-center">
+                            <h3 class="${fontClass} font-bold tracking-tight drop-shadow-sm break-words w-full" style="${scaleStyle} line-height: 1.15;">
+                                ${formattedText}
+                            </h3>
+                        </div>
+                    </div>`;
 
                 case 'smart': 
                     let bgImg = '';
@@ -1247,16 +1407,14 @@
                     ${overlayHtml}
                     <div class="w-full h-full flex items-center justify-between px-0 relative group/pomo z-10 text-current">
                         <div class="flex flex-col items-center justify-center relative w-fit h-full pl-4 md:pl-5">
-                            <div class="relative flex flex-col items-center justify-center">
-                                <button id="t-plus-${w.id}" onclick="adjTimer('${w.id}', 1)" class="absolute -top-7 md:-top-8 w-6 h-6 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-0 group-hover/pomo:opacity-100 ${isPlaying||isFinished?'invisible':''}"><i data-lucide="plus" class="w-4 h-4"></i></button>
-                                
-                                <div class="relative flex w-full justify-center">
-                                    <input type="text" id="timer-input-${w.id}" class="timer-input-mask absolute inset-0 w-full h-full cursor-text z-20 text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tighter font-mono text-center" maxlength="5" value="${m}:${s}" oninput="handleTimerInput(event, '${w.id}')" onblur="setCustomTime('${w.id}', this.value)" onfocus="this.select()" onkeydown="handleTimerKeyDown(event, '${w.id}')">
-                                    <h2 class="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tighter font-mono drop-shadow-sm leading-none pointer-events-none transition-opacity flex items-center justify-center" id="timer-disp-${w.id}" style="min-width: 3ch; text-align: center;">${displayHtml}</h2>
-                                </div>
-                                
-                                <button id="t-min-${w.id}" onclick="adjTimer('${w.id}', -1)" class="absolute -bottom-7 md:-bottom-8 w-6 h-6 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-0 group-hover/pomo:opacity-100 ${isPlaying||isFinished?'invisible':''}"><i data-lucide="minus" class="w-4 h-4"></i></button>
+                            <button id="t-plus-${w.id}" onclick="adjTimer('${w.id}', 1)" class="absolute -top-7 md:-top-8 w-6 h-6 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-0 group-hover/pomo:opacity-100 ${isPlaying||isFinished?'invisible':''}"><i data-lucide="plus" class="w-4 h-4"></i></button>
+                            
+                            <div class="relative flex w-full justify-center">
+                                <input type="text" id="timer-input-${w.id}" class="timer-input-mask absolute inset-0 w-full h-full cursor-text z-20 text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tighter font-mono text-center" maxlength="5" value="${m}:${s}" oninput="handleTimerInput(event, '${w.id}')" onblur="setCustomTime('${w.id}', this.value)" onfocus="this.select()" onkeydown="handleTimerKeyDown(event, '${w.id}')">
+                                <h2 class="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tighter font-mono drop-shadow-sm leading-none pointer-events-none transition-opacity flex items-center justify-center" id="timer-disp-${w.id}" style="min-width: 3ch; text-align: center;">${displayHtml}</h2>
                             </div>
+                            
+                            <button id="t-min-${w.id}" onclick="adjTimer('${w.id}', -1)" class="absolute -bottom-7 md:-bottom-8 w-6 h-6 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-0 group-hover/pomo:opacity-100 ${isPlaying||isFinished?'invisible':''}"><i data-lucide="minus" class="w-4 h-4"></i></button>
                         </div>
                         <div class="flex items-center justify-center pr-6 md:pr-8 h-full relative">
                             <div class="relative flex flex-col items-center justify-center w-full">
@@ -1266,7 +1424,7 @@
                                     </button>
                                     <button id="t-stop-${w.id}" onclick="resetTimer('${w.id}')" class="w-10 h-10 md:w-12 md:h-12 shrink-0 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer">${getStopIcon(stopIconSize)}</button>
                                 </div>
-                                <div class="absolute top-full mt-1.5 flex justify-center w-full opacity-0 group-hover/pomo:opacity-100 transition-opacity left-[calc(50%+1px)] md:left-[calc(50%+2px)] -translate-x-1/2">
+                                <div class="absolute top-full mt-1.5 flex justify-center w-full opacity-0 group-hover/pomo:opacity-100 transition-opacity left-[calc(50%)] md:left-[calc(50%-2px)] -translate-x-1/2">
                                     <button id="timer-sound-${w.id}" onclick="toggleTimerSound('${w.id}', event)" class="hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer text-current bg-transparent">
                                         ${getCustomSpeakerIcon(soundOn, w.id)}
                                     </button>
@@ -1296,17 +1454,18 @@
                         const doneTasks = tasks.filter(t => t.checked);
                         
                         const renderTask = (t) => `
-                            <div class="flex items-start gap-2 mb-2 group/task relative checklist-mode-task" id="node-${t.id}">
+                            <div class="flex items-start gap-2 mb-2 group/task relative checklist-mode-task pr-4" id="node-${t.id}">
+                                <button onmousedown="event.preventDefault()" class="task-drag-handle mt-0.5 shrink-0 w-4 h-4 opacity-0 group-hover/task:opacity-50 cursor-grab flex items-center justify-center text-current"><i data-lucide="grip-vertical" class="w-3 h-3"></i></button>
                                 <button onmousedown="event.preventDefault()" onclick="toggleTask('${w.id}', '${t.id}')" class="mt-0.5 shrink-0 w-3.5 h-3.5 rounded-full border border-current flex items-center justify-center hover:bg-black/10 dark:hover:bg-white/10 transition-colors opacity-80 cursor-pointer">
                                     ${t.checked ? `<i data-lucide="check" class="w-2.5 h-2.5"></i>` : ''}
                                 </button>
                                 <div contenteditable="true" onkeydown="handleTaskKey(event, '${w.id}', '${t.id}')" onblur="updateTask('${w.id}', '${t.id}', this.innerHTML)" class="allow-select flex-1 bg-transparent border-none outline-none text-sm font-medium ${t.checked ? 'line-through opacity-40' : 'opacity-80 focus:opacity-100'}">${t.text}</div>
-                                <button onmousedown="event.preventDefault()" onclick="deleteTask('${w.id}', '${t.id}')" class="opacity-0 group-hover/task:opacity-100 text-current transition-opacity absolute right-0 px-1 hover:scale-110 active:scale-95 cursor-pointer flex items-center justify-center h-full bg-transparent border-none shadow-none"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
+                                <button onmousedown="event.preventDefault()" onclick="deleteTask('${w.id}', '${t.id}')" class="opacity-0 group-hover/task:opacity-100 text-current transition-opacity absolute -right-4 px-1 hover:scale-110 active:scale-95 cursor-pointer flex items-center justify-center h-full bg-transparent border-none shadow-none"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
                             </div>
                         `;
                         
                         noteBody = `
-                            <div class="flex-1 w-full overflow-y-auto no-scrollbar pb-20">
+                            <div class="flex-1 w-full overflow-y-auto no-scrollbar pb-20 allow-select">
                                 <div id="tasks-active-${w.id}">${activeTasks.map(renderTask).join('')}</div>
                                 ${doneTasks.length > 0 ? `<div class="w-full h-px bg-current opacity-10 my-2" id="tasks-divider-${w.id}"></div>` : `<div class="w-full h-px bg-current opacity-10 my-2 hidden" id="tasks-divider-${w.id}"></div>`}
                                 <div id="tasks-done-${w.id}">${doneTasks.map(renderTask).join('')}</div>
@@ -1427,10 +1586,19 @@
 
         /** NOTES LOGIC **/
         function execNoteCmd(cmd, id, val = null) { 
-            if(cmd === 'hiliteColor') { document.execCommand('backColor', false, val); }
-            else { document.execCommand(cmd, false, null); }
+            if(cmd === 'hiliteColor') { 
+                let currentColor = document.queryCommandValue('backColor');
+                // Mevcut renk zaten uygulanmışsa veya default ise kaldır
+                if (currentColor !== 'transparent' && currentColor !== 'rgba(0, 0, 0, 0)') {
+                    document.execCommand('backColor', false, 'transparent');
+                } else {
+                    document.execCommand('backColor', false, val); 
+                }
+            } else { 
+                document.execCommand(cmd, false, null); 
+            }
             saveNoteData(id);
-            window.getSelection().removeAllRanges();
+            // Seçimi korumak için removeAllRanges'ı sildik!
         }
         function saveNoteTitle(id) {
             const el = document.getElementById(`note-title-${id}`); 
@@ -1489,6 +1657,7 @@
                 const el = document.getElementById(`note-text-${id}`);
                 let lines = [];
                 if (el) {
+                    // HTML içindeki <br> ve <div> lerle oluşturulmuş satır başlarını temizle
                     const temp = document.createElement('div');
                     temp.innerHTML = el.innerHTML.replace(/<br\s*\/?>/gi, '\n').replace(/<\/div>\s*<div[^>]*>/gi, '\n').replace(/<div[^>]*>/gi, '').replace(/<\/div>/gi, '');
                     lines = temp.innerText.split('\n');
@@ -1521,6 +1690,7 @@
                 let beforeStr = el.innerText;
                 let afterStr = '';
                 
+                // Cursor pozisyonundan metni ikiye bölme
                 if (sel.rangeCount > 0) {
                     const range = sel.getRangeAt(0);
                     const pre = range.cloneRange();
@@ -1545,6 +1715,7 @@
                 
                 reRenderWidget(wId);
                 
+                // Yeni oluşan cümlenin başına cursoru odakla
                 setTimeout(() => {
                     const newEl = document.querySelector(`[data-id="${wId}"] #node-${newId} div[contenteditable]`);
                     if (newEl) {
@@ -1632,10 +1803,11 @@
             saveState();
             
             const taskHtml = `
-                <div class="flex items-start gap-2 mb-2 group/task relative checklist-mode-task" id="node-${newId}">
+                <div class="flex items-start gap-2 mb-2 group/task relative checklist-mode-task pr-4" id="node-${newId}">
+                    <button onmousedown="event.preventDefault()" class="task-drag-handle mt-0.5 shrink-0 w-4 h-4 opacity-0 group-hover/task:opacity-50 cursor-grab flex items-center justify-center text-current"><i data-lucide="grip-vertical" class="w-3 h-3"></i></button>
                     <button onmousedown="event.preventDefault()" onclick="toggleTask('${wId}', '${newId}')" class="mt-0.5 shrink-0 w-3.5 h-3.5 rounded-full border border-current flex items-center justify-center hover:bg-black/10 dark:hover:bg-white/10 transition-colors opacity-80 cursor-pointer"></button>
                     <div contenteditable="true" onkeydown="handleTaskKey(event, '${wId}', '${newId}')" onblur="updateTask('${wId}', '${newId}', this.innerHTML)" class="allow-select flex-1 bg-transparent border-none outline-none text-sm font-medium opacity-80 focus:opacity-100"></div>
-                    <button onmousedown="event.preventDefault()" onclick="deleteTask('${wId}', '${newId}')" class="opacity-0 group-hover/task:opacity-100 text-current transition-opacity absolute right-0 px-1 hover:scale-110 active:scale-95 cursor-pointer flex items-center justify-center h-full bg-transparent border-none shadow-none"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
+                    <button onmousedown="event.preventDefault()" onclick="deleteTask('${wId}', '${newId}')" class="opacity-0 group-hover/task:opacity-100 text-current transition-opacity absolute -right-4 px-1 hover:scale-110 active:scale-95 cursor-pointer flex items-center justify-center h-full bg-transparent border-none shadow-none"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
                 </div>
             `;
             const activeList = document.getElementById(`tasks-active-${wId}`);
@@ -1789,6 +1961,17 @@
             return null;
         }
 
+        function setTempWidgetFont(f) {
+            document.getElementById('eb-selected-font').value = f;
+            ['inter','serif','mono','caveat'].forEach(font => {
+                const el = document.getElementById('btn-wfont-'+font);
+                if(el) {
+                    if (font === f) el.className = `flex-1 py-1.5 rounded-lg text-sm font-bold bg-black/10 dark:bg-white/10 shadow-sm transition cursor-pointer font-${font} text-current ${font==='caveat'?'text-[16px]':''}`;
+                    else el.className = `flex-1 py-1.5 rounded-lg text-sm font-medium opacity-50 hover:opacity-100 transition cursor-pointer font-${font} text-current ${font==='caveat'?'text-[16px]':''}`;
+                }
+            });
+        }
+
         function openEditWidget(id) {
             currentEditId = id; const w = getCurrentWidgets().find(w => w.id === id);
             requirePassword(w.data.password, () => {
@@ -1820,7 +2003,45 @@
                     const body = document.getElementById('eb-body');
                     let specificHtml = '';
                     
-                    if(w.type === 'weather') {
+                    if(w.type === 'text') {
+                        document.getElementById('eb-title').innerText = "Edit Text Box";
+                        const isCustomFont = !!w.data.customFont;
+                        const currentFont = w.data.fontFamily || 'inter';
+                        
+                        specificHtml = `
+                            <div class="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/10 flex flex-col gap-3 mb-3">
+                                <label class="block text-[10px] font-bold opacity-80 mb-1 uppercase tracking-widest text-current">Text Content</label>
+                                <textarea id="eb-text-content" class="allow-select w-full p-2.5 rounded-lg bg-black/5 dark:bg-white/10 outline-none font-medium text-sm border border-transparent focus:ring-2 focus:ring-current/20 bg-transparent text-current resize-none" rows="3" placeholder="Enter your text here...">${w.data.text || ''}</textarea>
+                            </div>
+                            
+                            <div class="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/10 flex flex-col gap-3 mb-3">
+                                ${createSettingRow('eb-custom-font', 'Custom Font', isCustomFont, "document.getElementById('eb-font-wrap').style.display = this.checked ? 'block' : 'none'")}
+                                <div id="eb-font-wrap" class="pt-2" style="display: ${isCustomFont ? 'block' : 'none'};">
+                                    <div class="grid grid-cols-2 gap-2 p-1 bg-black/5 dark:bg-white/5 rounded-xl border border-black/5 dark:border-white/10">
+                                        <button onclick="setTempWidgetFont('inter')" id="btn-wfont-inter" class="flex-1 py-1.5 rounded-lg text-sm ${currentFont === 'inter' ? 'font-bold bg-black/10 dark:bg-white/10 shadow-sm' : 'font-medium opacity-50'} transition cursor-pointer font-inter text-current">Inter</button>
+                                        <button onclick="setTempWidgetFont('serif')" id="btn-wfont-serif" class="flex-1 py-1.5 rounded-lg text-sm ${currentFont === 'serif' ? 'font-bold bg-black/10 dark:bg-white/10 shadow-sm' : 'font-medium opacity-50'} transition cursor-pointer font-serif text-current">Serif</button>
+                                        <button onclick="setTempWidgetFont('mono')" id="btn-wfont-mono" class="flex-1 py-1.5 rounded-lg text-sm ${currentFont === 'mono' ? 'font-bold bg-black/10 dark:bg-white/10 shadow-sm' : 'font-medium opacity-50'} transition cursor-pointer font-mono text-current">Mono</button>
+                                        <button onclick="setTempWidgetFont('caveat')" id="btn-wfont-caveat" class="flex-1 py-1.5 rounded-lg text-[16px] ${currentFont === 'caveat' ? 'font-bold bg-black/10 dark:bg-white/10 shadow-sm' : 'font-medium opacity-50'} transition cursor-pointer font-caveat text-current">Script</button>
+                                    </div>
+                                    <input type="hidden" id="eb-selected-font" value="${currentFont}">
+                                </div>
+                            </div>
+
+                            <div class="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/10 flex flex-col gap-3 mb-3">
+                                <span class="text-[10px] font-bold opacity-80 uppercase tracking-widest block mb-1 text-current">Image Background</span>
+                                <div class="flex items-center gap-2">
+                                    <label id="eb-upload-label" class="flex-1 py-2.5 rounded-lg bg-black/5 dark:bg-white/10 hover:bg-black/10 transition flex justify-center cursor-pointer text-[10px] font-bold uppercase tracking-widest text-current">
+                                        Upload Image <input type="file" id="eb-photo" class="hidden" accept="image/*" onchange="handleWidgetPhoto(event)">
+                                    </label>
+                                    <button id="eb-trash-btn" onclick="clearWidgetPhoto()" class="p-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 rounded-lg transition cursor-pointer hover:scale-110 active:scale-95" style="display: none;"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                                </div>
+                                <div class="w-full h-px bg-black/10 dark:bg-white/10"></div>
+                                ${createSettingRow('eb-img-overlay', 'Tint Image', w.data.overlay !== false)}
+                            </div>
+                        `;
+                        const hasImg = !!w.data.bgImage;
+                        setTimeout(() => refreshUploadUI(hasImg), 10);
+                    } else if(w.type === 'weather') {
                         document.getElementById('eb-title').innerText = "Edit Weather";
                         specificHtml = `
                             <div class="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/10 mb-3">
@@ -1986,6 +2207,12 @@
             w.data.transparent = document.getElementById('eb-trans').checked;
             w.data.textColor = document.getElementById('eb-use-text-color').checked ? document.getElementById('eb-text-color').value : null;
 
+            if(w.type === 'text') { 
+                w.data.text = document.getElementById('eb-text-content').value;
+                w.data.customFont = document.getElementById('eb-custom-font')?.checked;
+                w.data.fontFamily = document.getElementById('eb-selected-font')?.value || 'inter';
+                w.data.overlay = document.getElementById('eb-img-overlay') ? document.getElementById('eb-img-overlay').checked : true;
+            }
             if(w.type === 'weather') { w.data.city = document.getElementById('eb-city').value; fetchWeather(w, false); }
             if(w.type === 'timer') { 
                 w.data.timerMinutes = parseFloat(document.getElementById('eb-timer-min').value) || 25; 
@@ -2041,7 +2268,9 @@
             const btnEdit = document.getElementById('btn-edit-mode'), footer = document.getElementById('edit-footer');
             if(isEditMode) {
                 if(isSearching) toggleSearch(); btnEdit.classList.add('opacity-0', 'pointer-events-none'); footer.classList.remove('opacity-0', 'pointer-events-none', 'translate-y-10');
-            } else { btnEdit.classList.remove('opacity-0', 'pointer-events-none'); footer.classList.add('opacity-0', 'pointer-events-none', 'translate-y-10'); }
+            } else { 
+                btnEdit.classList.remove('opacity-0', 'pointer-events-none'); footer.classList.add('opacity-0', 'pointer-events-none', 'translate-y-10'); 
+            }
             renderDashboard();
         }
         function toggleProfileModal() { showModal('profile-modal'); }
@@ -2054,6 +2283,8 @@
             if(type === 'clock' || type === 'calendar') data = { transparent: false };
             if(type === 'timer') data = { timerMinutes: 25, direction: 'down', transparent: false, playSound: true };
             if(type === 'notes') data = { text: '', title: '' };
+            if(type === 'text') data = { text: 'Text', customFont: false, fontFamily: 'inter', transparent: false, overlay: true };
+            if(type === 'calculator') data = { display: '0', expr: '' };
 
             getCurrentWidgets().push({ id: newId, type, w, h, data });
             if(type === 'smart' && data.action === 'space') appState.spaces[newId] = { title: 'Folder', widgets: [] };
