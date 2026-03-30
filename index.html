@@ -6,7 +6,7 @@
     <title>Bento Dashboard</title>
     
     <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHN0eWxlPi5ie2ZpbGw6IzRiNTU2Mzt9QG1lZGlhIChwcmVmZXJzLWNvbG9yLXNjaGVtZTogZGFyayl7LmJ7ZmlsbDojZTVlN2ViO319PC9zdHlsZT48cmVjdCBjbGFzcz0iYiIgeD0iOCIgeT0iOCIgd2lkdGg9IjQ4IiBoZWlnaHQ9IjIwIiByeD0iNiIvPjxyZWN0IGNsYXNzPSJiIiB4PSI4IiB5PSIzMiIgd2lkdGg9IjIyIiBoZWlnaHQ9IjI0IiByeD0iNiIvPjxyZWN0IGNsYXNzPSJiIiB4PSIzNCIgeT0iMzIiIHdpZHRoPSIyMiIgaGVpZ2h0PSIyNCIgcng9IjYiLz48L3N2Zz4=" type="image/svg+xml">
-    
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
@@ -28,7 +28,7 @@
         :root { 
             --custom-text: auto; 
             --widget-bg: rgba(255, 255, 255, 0.3);
-            --widget-blur: 12.8px; /* 20% blur default */
+            --widget-blur: 12.8px;
             --widget-border: rgba(255, 255, 255, 0.4);
             --widget-shadow-outer: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
             --widget-shadow-inner: inset 0 1px 1px rgba(255, 255, 255, 0.5);
@@ -77,7 +77,6 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* SEARCH BAR CSS MATCHING DOCK */
         #search-container {
             background: rgba(255,255,255,0.2); 
             backdrop-filter: blur(24px); 
@@ -316,7 +315,7 @@
     <div id="author-modal" class="fixed inset-0 z-[70] hidden flex items-center justify-center modal-overlay opacity-0 transition-opacity duration-300 text-current">
         <div class="glass-panel max-w-sm w-full p-8 relative flex flex-col items-center shadow-2xl mx-4 text-center">
             <button onclick="hideModal('author-modal')" class="absolute top-4 right-4 opacity-50 hover:opacity-100 transition cursor-pointer"><i data-lucide="x" class="w-5 h-5"></i></button>
-            <div class="w-16 h-16 bg-gradient-to-tr from-pink-500 to-orange-400 rounded-full flex items-center justify-center mb-4 text-white shadow-lg">
+            <div class="w-16 h-16 bg-gradient-to-tr from-pink-500 to-orange-400 rounded-full flex items-center justify-center mb-4 text-white shadow-lg mx-auto">
                 <span class="text-2xl">👋</span>
             </div>
             <h2 class="text-2xl font-bold mb-2 opacity-90">Gökhan Çetinkaya</h2>
@@ -771,7 +770,7 @@
             if(resizeWidget.type === 'timer') { newW = Math.max(1, Math.min(2, newW)); newH = 1; }
             if(resizeWidget.type === 'notes') { newW = Math.max(2, Math.min(4, newW)); newH = Math.max(1, Math.min(4, newH)); }
             if(resizeWidget.type === 'text') { newW = Math.max(1, Math.min(6, newW)); newH = Math.max(1, Math.min(6, newH)); }
-            if(resizeWidget.type === 'calculator') { newW = 2; newH = 2; } // Hesap makinesi sabit 2x2
+            if(resizeWidget.type === 'calculator') { newW = 2; newH = 2; } 
             if(resizeWidget.type === 'calendar') { newW = Math.max(1, Math.min(6, newW)); newH = Math.max(1, Math.min(4, newH)); }
 
             newW = Math.min(newW, activeCols); 
@@ -923,181 +922,6 @@
         }
         function autoUpdateWeather() { getCurrentWidgets().filter(w => w.type === 'weather').forEach(w => fetchWeather(w, true)); }
 
-        // MÜKEMMEL 4 HANELİ TİMER INPUT MANTIĞI
-        function handleTimerKeyDown(e, id) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                e.target.blur();
-                return;
-            }
-            const allowedKeys = ['Backspace', 'ArrowLeft', 'ArrowRight', 'Delete', 'Tab', ':'];
-            // Numara veya fonksiyon tuşu değilse engelle
-            if (!/^[0-9]$/.test(e.key) && !allowedKeys.includes(e.key) && !e.metaKey && !e.ctrlKey) {
-                e.preventDefault();
-            }
-        }
-
-        function handleTimerInput(e, id) {
-            let el = e.target;
-            let clean = el.value.replace(/[^0-9]/g, '');
-            if(clean.length > 4) clean = clean.slice(0, 4);
-            
-            // Eğer sayı varsa 20:00 formatına oturtarak yazdır (görsel olarak)
-            let formatted = clean;
-            if (clean.length > 2) {
-                formatted = clean.slice(0, clean.length - 2) + ':' + clean.slice(clean.length - 2);
-            }
-            el.value = formatted; // Input değerine de ':' ekliyoruz ki seçim pürüzsüz olsun
-            
-            let padded = clean.padEnd(4, '0');
-            let m = padded.slice(0, 2);
-            let s = padded.slice(2, 4);
-            
-            const w = getCurrentWidgets().find(w => w.id === id);
-            const isLarge = w.w > 1;
-            const dispEl = document.getElementById(`timer-disp-${id}`);
-            
-            if(dispEl) {
-                dispEl.innerHTML = formatTimerString(m, s, isLarge);
-            }
-        }
-
-        // Timer Operations
-        function adjTimer(id, diff) {
-            const w = getCurrentWidgets().find(w => w.id === id);
-            if(!w) return;
-            if (activeTimerId === id || finishedTimerId === id) return;
-            
-            let current = parseFloat(w.data.timerMinutes) || 25;
-            
-            if (current >= 5) {
-                if (diff > 0) current = Math.ceil((current + 0.1) / 5) * 5;
-                else current = Math.floor((current - 0.1) / 5) * 5;
-                if(current < 5) current = 4;
-            } else {
-                if (current <= 1 && diff < 0) current -= 0.25;
-                else if (current < 1 && diff > 0) current += 0.25;
-                else current += diff;
-            }
-            
-            if (current < 0.25) current = 0.25; 
-            if (current > 90) current = 90;
-            
-            w.data.timerMinutes = current;
-            saveState(); 
-            reRenderWidget(id);
-        }
-        
-        function setCustomTime(id, val) {
-            val = val.trim();
-            let mins = 25;
-            
-            if(val.includes(':')) {
-                let parts = val.split(':');
-                let m = parseInt(parts[0].replace(/[^0-9]/g, '')) || 0;
-                let s = parseInt(parts[1].replace(/[^0-9]/g, '')) || 0;
-                mins = m + (s / 60);
-            } else {
-                let clean = val.replace(/[^0-9]/g, '');
-                if (clean.length > 2) {
-                    let s = parseInt(clean.slice(-2)) || 0;
-                    let m = parseInt(clean.slice(0, -2)) || 0;
-                    mins = m + (s / 60);
-                } else if (clean.length > 0) {
-                    mins = parseInt(clean); 
-                }
-            }
-            
-            if(isNaN(mins) || mins <= 0) mins = 0.25;
-            if(mins > 90) mins = 90;
-            
-            const w = getCurrentWidgets().find(wd => wd.id === id);
-            if(w) { 
-                w.data.timerMinutes = mins; 
-                saveState(); 
-                resetTimer(id); 
-            }
-        }
-        
-        function toggleTimer(id) {
-            const w = getCurrentWidgets().find(w => w.id === id);
-            if(!w) return;
-            if (finishedTimerId === id) { resetTimer(id); return; }
-            if (activeTimerId === id) {
-                clearInterval(timerInterval); activeTimerId = null; reRenderWidget(id);
-            } else {
-                if(activeTimerId && activeTimerId !== id) {
-                    clearInterval(timerInterval); const old = activeTimerId; activeTimerId = null; reRenderWidget(old);
-                }
-                activeTimerId = id; const isDown = w.data.direction !== 'up';
-                if (timerRemaining === 0 && isDown) timerRemaining = (parseFloat(w.data.timerMinutes) || 25) * 60;
-                if (!isDown && timerElapsed === 0) timerElapsed = 0;
-                
-                timerInterval = setInterval(() => {
-                    if (isDown) {
-                        timerRemaining--;
-                        if (timerRemaining <= 0) timerFinished(id);
-                        else updateTimerDisplay(id);
-                    } else { timerElapsed++; updateTimerDisplay(id); }
-                }, 1000);
-                reRenderWidget(id);
-            }
-        }
-        
-        function resetTimer(id) {
-            if (activeTimerId === id) clearInterval(timerInterval);
-            activeTimerId = null; if (finishedTimerId === id) finishedTimerId = null;
-            timerRemaining = 0; timerElapsed = 0; reRenderWidget(id);
-        }
-        
-        function timerFinished(id) {
-            clearInterval(timerInterval); activeTimerId = null; finishedTimerId = id; timerRemaining = 0;
-            const w = getCurrentWidgets().find(wd => wd.id === id);
-            if(w && w.data.playSound !== false) playBellSound();
-            
-            reRenderWidget(id);
-            
-            const wrapper = document.querySelector(`[data-id="${id}"] .widget-content-wrapper`);
-            const disp = document.getElementById(`timer-disp-${id}`);
-            const acc = w.data.accentColor || appState.settings.accentColor || '#ef4444';
-            
-            if(wrapper && disp) {
-                const origShadow = wrapper.style.boxShadow;
-                const origColor = disp.style.color;
-                
-                wrapper.style.boxShadow = `inset 0 0 0 1000px ${acc}33`;
-                disp.style.color = acc;
-                
-                setTimeout(() => {
-                    wrapper.style.boxShadow = origShadow;
-                    disp.style.color = origColor || 'inherit';
-                }, 5000);
-            }
-            
-            const el = document.querySelector(`[data-id="${id}"]`);
-            if(el) el.classList.add('animate-jiggle-short');
-            setTimeout(() => { if(el) el.classList.remove('animate-jiggle-short'); }, 400);
-        }
-        
-        function updateTimerDisplay(id) {
-            const w = getCurrentWidgets().find(w => w.id === id); if(!w) return;
-            const isDown = w.data.direction !== 'up'; const totalSec = isDown ? timerRemaining : timerElapsed;
-            const dispEl = document.getElementById(`timer-disp-${id}`); 
-            if(dispEl) {
-                const isLarge = w.w > 1;
-                const m = String(Math.floor(totalSec/60)).padStart(2,'0');
-                const s = String(totalSec%60).padStart(2,'0');
-                dispEl.innerHTML = formatTimerString(m, s, isLarge);
-            }
-        }
-
-        function formatTimerString(m, s, isLarge) {
-            if (isLarge) {
-                return `<span class="timer-min">${m}</span><span class="relative -top-[0.05em] -ml-1">:</span><span class="timer-sec -ml-2">${s}</span>`;
-            }
-            return `<span class="timer-min">${m}</span><span class="relative -top-[0.05em] -ml-0.5">:</span><span class="timer-sec -ml-1">${s}</span>`;
-        }
-
         // Calculator Logic
         function calcPress(id, key) {
             const w = getCurrentWidgets().find(wd => wd.id === id);
@@ -1205,7 +1029,6 @@
             widgets.forEach(w => { if(w.type === 'weather') fetchWeather(w, true); });
             if(!isSearching) { initSortable(); initResizeHandlers(); } adjustGridAspect();
             
-            // Checklist sürükle bırak fonksiyonlarını aktif et
             widgets.forEach(w => {
                 if(w.type === 'notes' && w.data.isListMode) {
                     initTaskSortable(w.id);
@@ -1260,50 +1083,50 @@
 
         function getWidgetContent(w) {
             switch(w.type) {
-                case 'spacer':
+                case 'spacer': {
                     return isEditMode ? `<div class="w-full h-full border-2 border-dashed border-black/30 dark:border-white/30 rounded-[32px] flex items-center justify-center opacity-40 text-current"><i data-lucide="square-dashed" class="w-8 h-8"></i></div>` : `<div class="w-full h-full"></div>`;
-
-                case 'calculator':
+                }
+                case 'calculator': {
                     const disp = w.data.display || '0';
                     const acColorCalc = w.data.accentColor || appState.settings.accentColor || '#ef4444';
-                    const btnClass = "w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 rounded-full font-mono text-lg md:text-xl font-bold transition-all cursor-pointer hover:scale-105 active:scale-95 shrink-0";
-                    const btnClassOp = "w-10 h-10 md:w-12 md:h-12 flex items-center justify-center bg-black/10 dark:bg-white/20 hover:bg-black/20 dark:hover:bg-white/30 rounded-full font-mono text-lg md:text-xl font-bold transition-all cursor-pointer hover:scale-105 active:scale-95 shrink-0"; 
+                    const btnClass = "w-full aspect-square flex items-center justify-center bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 rounded-full font-mono text-xl md:text-2xl font-bold transition-all cursor-pointer hover:scale-105 active:scale-95 shrink-0";
+                    const btnClassOp = "w-full aspect-square flex items-center justify-center bg-black/10 dark:bg-white/20 hover:bg-black/20 dark:hover:bg-white/30 rounded-full font-mono text-xl md:text-2xl font-bold transition-all cursor-pointer hover:scale-105 active:scale-95 shrink-0"; 
                     
                     return `
-                    <div class="w-full h-full flex flex-col p-4 text-current">
-                        <div class="w-full flex-1 flex items-end justify-end pb-2 overflow-hidden px-2">
-                            <span class="text-4xl md:text-5xl font-extrabold tracking-tighter font-mono drop-shadow-sm truncate allow-select">${disp}</span>
+                    <div class="w-full h-full flex flex-col p-4 md:p-5 text-current">
+                        <div class="w-full flex-1 flex items-end justify-end pb-1 pt-2 md:pt-4 overflow-x-auto overflow-y-visible no-scrollbar">
+                            <span class="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tighter font-mono drop-shadow-sm allow-select leading-tight">${disp}</span>
                         </div>
-                        <div class="grid grid-cols-4 gap-2 w-full max-w-[240px] mx-auto pb-1">
+                        <div class="grid grid-cols-4 gap-1.5 md:gap-2 w-full mt-auto">
                             <button onclick="calcPress('${w.id}', 'C')" class="${btnClassOp} opacity-80">C</button>
                             <button onclick="calcPress('${w.id}', '±')" class="${btnClassOp} opacity-80">±</button>
                             <button onclick="calcPress('${w.id}', '%')" class="${btnClassOp} opacity-80">%</button>
-                            <button onclick="calcPress('${w.id}', '/')" class="${btnClassOp}" style="color: ${acColorCalc};">÷</button>
+                            <button onclick="calcPress('${w.id}', '/')" class="${btnClassOp}">÷</button>
                             
                             <button onclick="calcPress('${w.id}', '7')" class="${btnClass}">7</button>
                             <button onclick="calcPress('${w.id}', '8')" class="${btnClass}">8</button>
                             <button onclick="calcPress('${w.id}', '9')" class="${btnClass}">9</button>
-                            <button onclick="calcPress('${w.id}', '*')" class="${btnClassOp}" style="color: ${acColorCalc};">×</button>
+                            <button onclick="calcPress('${w.id}', '*')" class="${btnClassOp}">×</button>
                             
                             <button onclick="calcPress('${w.id}', '4')" class="${btnClass}">4</button>
                             <button onclick="calcPress('${w.id}', '5')" class="${btnClass}">5</button>
                             <button onclick="calcPress('${w.id}', '6')" class="${btnClass}">6</button>
-                            <button onclick="calcPress('${w.id}', '-')" class="${btnClassOp}" style="color: ${acColorCalc};">−</button>
+                            <button onclick="calcPress('${w.id}', '-')" class="${btnClassOp}">−</button>
                             
                             <button onclick="calcPress('${w.id}', '1')" class="${btnClass}">1</button>
                             <button onclick="calcPress('${w.id}', '2')" class="${btnClass}">2</button>
                             <button onclick="calcPress('${w.id}', '3')" class="${btnClass}">3</button>
-                            <button onclick="calcPress('${w.id}', '+')" class="${btnClassOp}" style="color: ${acColorCalc};">+</button>
+                            <button onclick="calcPress('${w.id}', '+')" class="${btnClassOp}">+</button>
                             
-                            <button onclick="calcPress('${w.id}', '0')" class="${btnClass} col-span-2 !w-full justify-start pl-5">0</button>
+                            <button onclick="calcPress('${w.id}', '0')" class="${btnClass.replace('aspect-square', '')} col-span-2 !w-full rounded-full h-full">0</button>
                             <button onclick="calcPress('${w.id}', '.')" class="${btnClass}">.</button>
                             <button onclick="calcPress('${w.id}', '=')" class="${btnClassOp}" style="background-color: ${acColorCalc}; color: white;">=</button>
                         </div>
                     </div>`;
-
-                case 'text':
+                }
+                case 'text': {
                     let textBgImg = '';
-                    if(w.data.bgImage) { const overlay = w.data.overlay !== false ? 'opacity-50 dark:opacity-40' : 'opacity-100'; textBgImg = `<img src="${w.data.bgImage}" class="absolute inset-0 w-full h-full object-cover z-0 ${overlay} transition-opacity duration-300" />`; }
+                    if(w.data.bgImage) { const overlayText = w.data.overlay !== false ? 'opacity-50 dark:opacity-40' : 'opacity-100'; textBgImg = `<img src="${w.data.bgImage}" class="absolute inset-0 w-full h-full object-cover z-0 ${overlayText} transition-opacity duration-300" />`; }
                     
                     const fontClass = w.data.customFont && w.data.fontFamily ? `font-${w.data.fontFamily}` : '';
                     let scaleStyle = `font-size: clamp(1rem, ${w.w * 1.5}rem + ${w.h * 1}rem, 10rem);`;
@@ -1318,10 +1141,10 @@
                             </h3>
                         </div>
                     </div>`;
-
-                case 'smart': 
+                }
+                case 'smart': {
                     let bgImg = '';
-                    if(w.data.bgImage) { const overlay = w.data.overlay !== false ? 'opacity-50 dark:opacity-40' : 'opacity-100'; bgImg = `<img src="${w.data.bgImage}" class="absolute inset-0 w-full h-full object-cover z-0 ${overlay} transition-opacity duration-300" />`; }
+                    if(w.data.bgImage) { const overlaySmart = w.data.overlay !== false ? 'opacity-50 dark:opacity-40' : 'opacity-100'; bgImg = `<img src="${w.data.bgImage}" class="absolute inset-0 w-full h-full object-cover z-0 ${overlaySmart} transition-opacity duration-300" />`; }
                     let iconEl = ''; if(w.data.icon) { iconEl = w.data.isEmoji ? `<span class="text-3xl lg:text-4xl drop-shadow-sm z-10">${w.data.icon}</span>` : `<i data-lucide="${w.data.icon}" class="w-8 h-8 lg:w-10 lg:h-10 opacity-80 z-10"></i>`; }
                     
                     let contentHtml = '';
@@ -1336,10 +1159,10 @@
                         return `<a href="${w.data.content.startsWith('http') ? w.data.content : 'https://'+w.data.content}" target="_blank" rel="noopener noreferrer" onclick="if(isEditMode) event.preventDefault();" class="cursor-pointer w-full h-full relative flex hover:bg-black/5 dark:hover:bg-white/5 transition-colors">${lockIcon}${contentHtml}</a>`; 
                     }
                     else { return `<div onclick="executeSmartAction('${w.id}')" class="cursor-pointer w-full h-full relative flex hover:bg-black/5 dark:hover:bg-white/5 transition-colors">${lockIcon}${contentHtml}</div>`; }
-
-                case 'clock': 
+                }
+                case 'clock': {
                     let clockBgImg = '';
-                    if(w.data.bgImage) { const overlay = w.data.overlay !== false ? 'opacity-50 dark:opacity-40' : 'opacity-100'; clockBgImg = `<img src="${w.data.bgImage}" class="absolute inset-0 w-full h-full object-cover z-0 ${overlay} transition-opacity duration-300" />`; }
+                    if(w.data.bgImage) { const overlayClock = w.data.overlay !== false ? 'opacity-50 dark:opacity-40' : 'opacity-100'; clockBgImg = `<img src="${w.data.bgImage}" class="absolute inset-0 w-full h-full object-cover z-0 ${overlayClock} transition-opacity duration-300" />`; }
                     
                     const isGiant = w.w >= 4 && w.h >= 3;
                     const isLarge = w.w >= 3 && w.h >= 2;
@@ -1359,8 +1182,8 @@
                         </div>
                         <p class="clock-date text-[10px] md:text-sm font-semibold uppercase tracking-widest opacity-60 mt-1 z-10" data-id="${w.id}">Date</p>
                     </div>`;
-
-                case 'timer':
+                }
+                case 'timer': {
                     const isPlaying = timerInterval && activeTimerId === w.id;
                     const isFinished = finishedTimerId === w.id;
                     const isDown = w.data.direction !== 'up';
@@ -1408,12 +1231,10 @@
                     <div class="w-full h-full flex items-center justify-between px-0 relative group/pomo z-10 text-current">
                         <div class="flex flex-col items-center justify-center relative w-fit h-full pl-4 md:pl-5">
                             <button id="t-plus-${w.id}" onclick="adjTimer('${w.id}', 1)" class="absolute -top-7 md:-top-8 w-6 h-6 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-0 group-hover/pomo:opacity-100 ${isPlaying||isFinished?'invisible':''}"><i data-lucide="plus" class="w-4 h-4"></i></button>
-                            
                             <div class="relative flex w-full justify-center">
                                 <input type="text" id="timer-input-${w.id}" class="timer-input-mask absolute inset-0 w-full h-full cursor-text z-20 text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tighter font-mono text-center" maxlength="5" value="${m}:${s}" oninput="handleTimerInput(event, '${w.id}')" onblur="setCustomTime('${w.id}', this.value)" onfocus="this.select()" onkeydown="handleTimerKeyDown(event, '${w.id}')">
                                 <h2 class="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tighter font-mono drop-shadow-sm leading-none pointer-events-none transition-opacity flex items-center justify-center" id="timer-disp-${w.id}" style="min-width: 3ch; text-align: center;">${displayHtml}</h2>
                             </div>
-                            
                             <button id="t-min-${w.id}" onclick="adjTimer('${w.id}', -1)" class="absolute -bottom-7 md:-bottom-8 w-6 h-6 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer opacity-0 group-hover/pomo:opacity-100 ${isPlaying||isFinished?'invisible':''}"><i data-lucide="minus" class="w-4 h-4"></i></button>
                         </div>
                         <div class="flex items-center justify-center pr-6 md:pr-8 h-full relative">
@@ -1424,7 +1245,7 @@
                                     </button>
                                     <button id="t-stop-${w.id}" onclick="resetTimer('${w.id}')" class="w-10 h-10 md:w-12 md:h-12 shrink-0 flex items-center justify-center bg-black/5 dark:bg-white/10 rounded-full hover:bg-black/10 dark:hover:bg-white/20 hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer">${getStopIcon(stopIconSize)}</button>
                                 </div>
-                                <div class="absolute top-full mt-1.5 flex justify-center w-full opacity-0 group-hover/pomo:opacity-100 transition-opacity left-[calc(50%)] md:left-[calc(50%-2px)] -translate-x-1/2">
+                                <div class="absolute top-full mt-1.5 flex justify-center w-full opacity-0 group-hover/pomo:opacity-100 transition-opacity left-[calc(50%+2px)] -translate-x-1/2">
                                     <button id="timer-sound-${w.id}" onclick="toggleTimerSound('${w.id}', event)" class="hover:scale-110 active:scale-95 transition-all cursor-pointer gpu-hover-layer text-current bg-transparent">
                                         ${getCustomSpeakerIcon(soundOn, w.id)}
                                     </button>
@@ -1432,8 +1253,8 @@
                             </div>
                         </div>
                     </div>`;
-
-                case 'weather': 
+                }
+                case 'weather': {
                     if(w.w === 1) { 
                         return `
                         <div class="flex flex-col w-full h-full items-center justify-center p-2 text-current gap-2">
@@ -1442,8 +1263,8 @@
                         </div>`; 
                     }
                     return `<div class="w-full h-full flex items-center justify-between px-6 py-4 md:px-8 relative text-current"><div class="animate-pulse h-8 bg-black/10 rounded w-1/2"></div></div>`;
-
-                case 'notes': 
+                }
+                case 'notes': {
                     const isList = w.data.isListMode;
                     const acColor = w.data.accentColor || appState.settings.accentColor || '#ef4444';
                     let noteBody = '';
@@ -1455,7 +1276,7 @@
                         
                         const renderTask = (t) => `
                             <div class="flex items-start gap-2 mb-2 group/task relative checklist-mode-task pr-4" id="node-${t.id}">
-                                <button onmousedown="event.preventDefault()" class="task-drag-handle mt-0.5 shrink-0 w-4 h-4 opacity-0 group-hover/task:opacity-50 cursor-grab flex items-center justify-center text-current"><i data-lucide="grip-vertical" class="w-3 h-3"></i></button>
+                                <button class="task-drag-handle mt-0.5 shrink-0 w-4 h-4 opacity-0 group-hover/task:opacity-50 cursor-grab flex items-center justify-center text-current"><i data-lucide="grip-vertical" class="w-3 h-3 pointer-events-none"></i></button>
                                 <button onmousedown="event.preventDefault()" onclick="toggleTask('${w.id}', '${t.id}')" class="mt-0.5 shrink-0 w-3.5 h-3.5 rounded-full border border-current flex items-center justify-center hover:bg-black/10 dark:hover:bg-white/10 transition-colors opacity-80 cursor-pointer">
                                     ${t.checked ? `<i data-lucide="check" class="w-2.5 h-2.5"></i>` : ''}
                                 </button>
@@ -1499,9 +1320,10 @@
                             </div>
                         </div>
                     `;
-
-                case 'calendar': 
+                }
+                case 'calendar': {
                     return generateCalendarHTML(w, Math.min(w.w, window.innerWidth < 768 ? 4 : 6), w.h);
+                }
             }
         }
 
@@ -1588,7 +1410,6 @@
         function execNoteCmd(cmd, id, val = null) { 
             if(cmd === 'hiliteColor') { 
                 let currentColor = document.queryCommandValue('backColor');
-                // Mevcut renk zaten uygulanmışsa veya default ise kaldır
                 if (currentColor !== 'transparent' && currentColor !== 'rgba(0, 0, 0, 0)') {
                     document.execCommand('backColor', false, 'transparent');
                 } else {
@@ -1598,7 +1419,6 @@
                 document.execCommand(cmd, false, null); 
             }
             saveNoteData(id);
-            // Seçimi korumak için removeAllRanges'ı sildik!
         }
         function saveNoteTitle(id) {
             const el = document.getElementById(`note-title-${id}`); 
@@ -1657,7 +1477,6 @@
                 const el = document.getElementById(`note-text-${id}`);
                 let lines = [];
                 if (el) {
-                    // HTML içindeki <br> ve <div> lerle oluşturulmuş satır başlarını temizle
                     const temp = document.createElement('div');
                     temp.innerHTML = el.innerHTML.replace(/<br\s*\/?>/gi, '\n').replace(/<\/div>\s*<div[^>]*>/gi, '\n').replace(/<div[^>]*>/gi, '').replace(/<\/div>/gi, '');
                     lines = temp.innerText.split('\n');
@@ -1690,7 +1509,6 @@
                 let beforeStr = el.innerText;
                 let afterStr = '';
                 
-                // Cursor pozisyonundan metni ikiye bölme
                 if (sel.rangeCount > 0) {
                     const range = sel.getRangeAt(0);
                     const pre = range.cloneRange();
@@ -1715,7 +1533,6 @@
                 
                 reRenderWidget(wId);
                 
-                // Yeni oluşan cümlenin başına cursoru odakla
                 setTimeout(() => {
                     const newEl = document.querySelector(`[data-id="${wId}"] #node-${newId} div[contenteditable]`);
                     if (newEl) {
@@ -1804,7 +1621,7 @@
             
             const taskHtml = `
                 <div class="flex items-start gap-2 mb-2 group/task relative checklist-mode-task pr-4" id="node-${newId}">
-                    <button onmousedown="event.preventDefault()" class="task-drag-handle mt-0.5 shrink-0 w-4 h-4 opacity-0 group-hover/task:opacity-50 cursor-grab flex items-center justify-center text-current"><i data-lucide="grip-vertical" class="w-3 h-3"></i></button>
+                    <button class="task-drag-handle mt-0.5 shrink-0 w-4 h-4 opacity-0 group-hover/task:opacity-50 cursor-grab flex items-center justify-center text-current"><i data-lucide="grip-vertical" class="w-3 h-3 pointer-events-none"></i></button>
                     <button onmousedown="event.preventDefault()" onclick="toggleTask('${wId}', '${newId}')" class="mt-0.5 shrink-0 w-3.5 h-3.5 rounded-full border border-current flex items-center justify-center hover:bg-black/10 dark:hover:bg-white/10 transition-colors opacity-80 cursor-pointer"></button>
                     <div contenteditable="true" onkeydown="handleTaskKey(event, '${wId}', '${newId}')" onblur="updateTask('${wId}', '${newId}', this.innerHTML)" class="allow-select flex-1 bg-transparent border-none outline-none text-sm font-medium opacity-80 focus:opacity-100"></div>
                     <button onmousedown="event.preventDefault()" onclick="deleteTask('${wId}', '${newId}')" class="opacity-0 group-hover/task:opacity-100 text-current transition-opacity absolute -right-4 px-1 hover:scale-110 active:scale-95 cursor-pointer flex items-center justify-center h-full bg-transparent border-none shadow-none"><i data-lucide="x" class="w-3.5 h-3.5"></i></button>
@@ -2041,6 +1858,20 @@
                         `;
                         const hasImg = !!w.data.bgImage;
                         setTimeout(() => refreshUploadUI(hasImg), 10);
+                    } else if(w.type === 'calculator') {
+                        document.getElementById('eb-title').innerText = "Edit Calculator";
+                        const useAccentColor = !!w.data.accentColor;
+                        specificHtml = `
+                            <div class="bg-black/5 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/10 flex flex-col gap-3 mb-3">
+                                ${createSettingRow('eb-use-accent-color', 'Custom Accent Color', useAccentColor, "document.getElementById('eb-accent-color-wrap').style.display = this.checked ? 'flex' : 'none'")}
+                                <div id="eb-accent-color-wrap" class="pt-1 flex items-center gap-3 mt-2" style="display: ${useAccentColor ? 'flex' : 'none'};">
+                                    <div class="color-dot w-8 h-8 shrink-0" style="background-color: ${w.data.accentColor || appState.settings.accentColor || '#ef4444'}">
+                                        <input type="color" id="eb-accent-color" value="${w.data.accentColor || appState.settings.accentColor || '#ef4444'}" oninput="this.parentElement.style.backgroundColor = this.value">
+                                    </div>
+                                    <input type="text" id="eb-accent-hex" value="${w.data.accentColor || appState.settings.accentColor || '#ef4444'}" oninput="document.getElementById('eb-accent-color').value = this.value; document.getElementById('eb-accent-color').parentElement.style.backgroundColor = this.value;" class="allow-select w-full bg-black/5 dark:bg-white/10 rounded-lg px-3 py-1.5 text-sm outline-none font-mono uppercase border border-transparent focus:ring-2 focus:ring-current/20 bg-transparent text-current">
+                                </div>
+                            </div>
+                        `;
                     } else if(w.type === 'weather') {
                         document.getElementById('eb-title').innerText = "Edit Weather";
                         specificHtml = `
@@ -2212,6 +2043,9 @@
                 w.data.customFont = document.getElementById('eb-custom-font')?.checked;
                 w.data.fontFamily = document.getElementById('eb-selected-font')?.value || 'inter';
                 w.data.overlay = document.getElementById('eb-img-overlay') ? document.getElementById('eb-img-overlay').checked : true;
+            }
+            if(w.type === 'calculator') {
+                w.data.accentColor = document.getElementById('eb-use-accent-color')?.checked ? document.getElementById('eb-accent-color').value : null;
             }
             if(w.type === 'weather') { w.data.city = document.getElementById('eb-city').value; fetchWeather(w, false); }
             if(w.type === 'timer') { 
