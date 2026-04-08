@@ -615,7 +615,7 @@
             });
         }
 
-        const LIGHT_DEFAULTS = { c1: '#fdfbfb', c2: '#ebedee' };
+        const LIGHT_DEFAULTS = { c1: '#d6d6d6', c2: '#c4c4c4' };
         const DARK_DEFAULTS = { c1: '#303030', c2: '#1a1a1a' };
         
         const ICONS = ['mail','hard-drive','link','music','map','video','message-circle','camera','shopping-cart','coffee','monitor','smartphone','pen-tool','folder','image','star','heart','settings','book','briefcase','calendar','clock','cloud','globe','key','lock','mic','moon','sun','umbrella','zap','battery','bell','activity','airplay','alarm-check','align-center','anchor','aperture','archive','award','bar-chart','bluetooth','bookmark','box','cast','check','clipboard','code','compass','copy','cpu','crosshair','database','download','droplet','eye','feather','film','flag','gift','headphones','home','info','layout','life-buoy','list','map-pin','maximize','menu','navigation','package','paperclip','pie-chart','play','power','printer','radio','refresh-cw','save','search','send','server','share','shield','sliders','speaker','square','target','terminal','thermometer','thumbs-up','toggle-left','tool','trash','trending-up','tv','type','unlock','upload','user','users','wifi','wind','x','zoom-in','sticky-note','accessibility','alarm-clock','alert-circle','align-justify','battery-charging','bell-off','bold','book-open','camera-off','check-circle','chevron-down','cloud-lightning','cloud-rain','cloud-snow','command','credit-card','crop','delete','disc','divide','download-cloud','edit','edit-2','external-link','fast-forward','file','file-text','filter','folder-plus','grid','hash','help-circle','hexagon','inbox','italic','layers','link-2','loader','log-in','log-out','maximize-2','mic-off','minimize','minus','more-horizontal','more-vertical','mouse-pointer','move','navigation-2','octagon','pause','percent','phone','phone-off','play-circle','plus','plus-circle','refresh-ccw','repeat','rewind','rotate-ccw','rotate-cw','rss','scissors','shield-off','shopping-bag','shuffle','sidebar','skip-back','skip-forward','slash','smile','stop-circle','sunrise','sunset','tablet','tag','thumbs-down','toggle-right','trash-2','trending-down','triangle','truck','underline','upload-cloud','user-check','user-minus','user-plus','user-x','video-off','voicemail','volume','volume-1','volume-2','volume-x','watch','wifi-off','zap-off','zoom-out','gamepad','bus','car','bike','train','plane','square-dashed'];
@@ -632,20 +632,20 @@
                 return parsed;
             }
             return {
-                settings: { theme: 'system', bgType: 'solid', angle: 90, glassBlur: 20, weekStart: 1, customTextColor: null, accentColor: '#ef4444', bgImage: null, lightColors: { ...LIGHT_DEFAULTS }, darkColors: { ...DARK_DEFAULTS }, fontFamily: 'inter', widgetBgMode: 'glass', widgetBgColor: { light: '#ffffff', dark: '#1a1a1a' } },
+                settings: { theme: 'light', bgType: 'solid', angle: 180, glassBlur: 20, weekStart: 1, customTextColor: null, accentColor: '#ef4444', bgImage: null, lightColors: { c1: '#d6d6d6', c2: '#c4c4c4' }, darkColors: { c1: '#303030', c2: '#1a1a1a' }, fontFamily: 'inter', widgetBgMode: 'glass', widgetBgColor: { light: '#ffffff', dark: '#1a1a1a' } },
                 spaces: {
                     'root': {
                         title: 'Home',
                         widgets: [
                             { id: 'w_clock', type: 'clock', w: 6, h: 2, data: {} },
-                            { id: 'w_weather', type: 'weather', w: 2, h: 1, data: { city: 'London' } },
+                            { id: 'w_weather', type: 'weather', w: 2, h: 1, data: { city: 'Ankara', transparent: false, textColor: null } },
                             { id: 'w_timer', type: 'timer', w: 2, h: 1, data: { timerMinutes: 25, direction: 'down', playSound: true } },
                             { id: 'w_calendar', type: 'calendar', w: 2, h: 2, data: {} },
                             { id: 'w_notes', type: 'notes', w: 2, h: 2, data: { text: "", title: "" } },
-                            { id: 'w_text', type: 'text', w: 2, h: 1, data: { text: "Focus Time", customFont: true, fontFamily: 'caveat', transparent: false } },
-                            { id: 'w_spacer', type: 'spacer', w: 2, h: 1, data: { transparent: true } },
                             { id: 'w_link1', type: 'smart', w: 1, h: 1, data: { action: 'link', content: 'https://gmail.com', title: 'Mail', icon: 'mail', isEmoji: false, bgImage: null, overlay: true } },
-                            { id: 'w_link2', type: 'smart', w: 1, h: 1, data: { action: 'link', content: 'https://drive.google.com', title: 'Drive', icon: 'hard-drive', isEmoji: false, bgImage: null, overlay: true } }
+                            { id: 'w_link2', type: 'smart', w: 1, h: 1, data: { action: 'link', content: 'https://drive.google.com', title: 'Drive', icon: 'hard-drive', isEmoji: false, bgImage: null, overlay: true } },
+                            { id: 'w_1775682561530', type: 'spacer', w: 2, h: 1, data: { transparent: true } },
+                            { id: 'w_text', type: 'text', w: 2, h: 1, data: { text: "Hello!", customFont: true, fontFamily: 'caveat', transparent: true, textColor: "#e779c5", overlay: true } }
                         ]
                     }
                 }
